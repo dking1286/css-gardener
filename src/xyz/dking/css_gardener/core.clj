@@ -58,7 +58,7 @@
 (defn style-index-content
   [index-ns style-out-filename style-vars]
   `((~'ns ~index-ns
-      (:require [garden.core :as ~'garden]
+     (:require [garden.core :as ~'garden]
                 ~@(map style-var->require-form style-vars)))
  
    (def fs# (js/require "fs"))
@@ -97,27 +97,3 @@
   (let [style-vars (all-style-vars (fs/glob "example/*.cljs"))]
     (create-index-file style-vars)
     (compile-index-file)))
-
-;; (main)
-
-;; (create-index-file)
-;; (compile-index-file)
-
-;; (.exists(io/file ".css-gardener/xyz/dking/css_gardener/out/index.cljs"))
-
-;; (compile-index-file)
-
-
-;; (style-index-content 'styles.core
-;;                      "styles.css"
-;;                      ['example.styles/style
-;;                       'another.example.styles/styles])
-
-;; (let [content (style-index-content 'styles.core
-;;                                    "styles.css"
-;;                                    ['example.styles/style
-;;                                     'another.example.styles/style])]
-;;   (build/compile {} content))
-
-;; (style-index-content 'hello.world ['example/style 'another.example/style])
-;; (style-vars (analyze-file-ns (io/file "example/example.cljs")))
