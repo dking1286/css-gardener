@@ -7,7 +7,12 @@
         garden {:mvn/version "1.3.9"}}
 
  :aliases
- {:dev
+ {;; Installs dependencies and then does nothing.
+  ;; Roughly equivalent to lein deps
+  :install-deps
+  {:main-opts ["-e" "nil"]}
+  
+  :dev
   {:extra-paths ["dev" "test"]}
   
   :test
