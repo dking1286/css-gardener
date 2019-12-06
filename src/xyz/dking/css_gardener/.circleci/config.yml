@@ -1,0 +1,27 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: clojure:openjdk-8-tools-deps
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - clj-dependencies-{{ checksum "deps.edn" }}
+            # fallback to using the latest cache if no exact match is found
+            - clj-dependencies-
+
+      - run: clojure -A:install-deps
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: clj-dependencies-{{ checksum "deps.edn" }}
+
+      # run tests!
+      - run: clojure -A:test
