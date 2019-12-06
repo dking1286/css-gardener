@@ -1,5 +1,6 @@
 (ns xyz.dking.css-gardener.utils
-  (:require [me.raynes.fs :as fs]))
+  (:require [me.raynes.fs :as fs])
+  (:import [java.util UUID]))
 
 (defn map-vals
   "Maps over a seq of key-value pairs, applying the mapping function to
@@ -29,3 +30,8 @@
   (->> globs
        (mapcat fs/glob)
        (unique-by #(.getName %))))
+
+(defn uuid
+  "Creates a uuid string."
+  []
+  (.toString (UUID/randomUUID)))
