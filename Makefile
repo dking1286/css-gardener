@@ -1,8 +1,14 @@
-.PHONY: test deploy
+.PHONY: test deploy-core cli deploy-cli
 
 test:
-	clj -A:test
+	clojure "-A:test"
 
-deploy: test
-	clj -Spom
+deploy-core: test
+	clojure "-Spom"
 	mvn deploy
+
+cli:
+	clojure "-A:shadow-cljs" release cli
+
+deploy-cli: test cli
+	npm publish
