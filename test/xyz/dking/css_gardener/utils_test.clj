@@ -32,20 +32,20 @@
 
 (deftest unique-files-test
   (testing "returns a list of unique files"
-    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")
-            (fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")]
+    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")
+            (fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")]
            (utils/unique-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
                                 "test/xyz/dking/css_gardener/test_example/style_vars.cljs"
                                 "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs"]))))
   (testing "excludes non-existent files"
-    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")
-            (fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")]
+    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")
+            (fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")]
            (utils/unique-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
                                 "test/xyz/dking/css_gardener/test_example/blah.cljs"
                                 "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs"]))))
   (testing "expands globs"
-    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")
-            (fs/absolute "test/xyz/dking/css_gardener/test_example/multiple_style_vars.cljs")
-            (fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")]
-           (utils/unique-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
-                                "test/xyz/dking/css_gardener/test_example/*.cljs"])))))
+    (is (= [(fs/absolute "test/xyz/dking/css_gardener/test_example/multiple_style_vars.cljs")
+            (fs/absolute "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs")
+            (fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")]
+            (utils/unique-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
+                                   "test/xyz/dking/css_gardener/test_example/*.cljs"])))))

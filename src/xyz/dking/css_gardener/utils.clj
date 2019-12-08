@@ -29,6 +29,7 @@
   [globs]
   (->> globs
        (mapcat fs/glob)
+       (sort-by #(.getName %))
        (unique-by #(.getName %))))
 
 (defn uuid
