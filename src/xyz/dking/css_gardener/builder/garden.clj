@@ -7,16 +7,15 @@
             [xyz.dking.css-gardener.repl :as repl]
             [xyz.dking.css-gardener.utils :as utils]))
 
-(defn- all-files
-  [{:keys [input-files] :as config}]
-  (utils/unique-files input-files))
-
-(defn- get-style
+(defn get-style
+  "Gets the value of a namespace-qualified var in a cljs namespace."
   [repl-env style-var]
   (repl/eval repl-env `(~'require  (~'quote [~(namespace style-var)])))
-  (edn/read-string (repl/eval repl-env `(identity ~style-var))))
+  (repl/eval repl-env style-var))
 
 (defn- get-all-styles
+  "Gets a seq of the values of all the style vars in a seq of
+  files."
   [repl-env files]
   (->> files
        analyzer/all-style-vars
@@ -32,27 +31,13 @@
     (let [files (utils/unique-files (:input-files config))
           styles (get-all-styles repl-env files)
           style-string (apply garden/css styles)]
-      style-string))
+      (spit (:output-file config) style-string)))
   (watch [this config]
     ;; Implement me
     ))
 
-(defn new-garden-builder
-  []
+(defmethod get-builder :garden
+  [_]
   (let [repl-env (repl/new-repl-env)]
     (->GardenBuilder repl-env)))
 
-(defmethod get-builder :garden
-  [_]
-  (new-garden-builder))
-
-;; (def builder (new-garden-builder))
-;; (def repl-env (:repl-env builder))
-
-;; (builder/start builder)
-;; (builder/build builder {:input-files ["test/xyz/dking/css_gardener/test_example/*"]})
-
-;; (repl/eval repl-env '(require (quote [xyz.dking.css-gardener.test-example.style-vars])))
-;; (repl/eval repl-env 'xyz.dking.css-gardener.test-example.style-vars/style)
-;; (def foo 'bar)
-;; `(~'require (~'quote [~foo]))

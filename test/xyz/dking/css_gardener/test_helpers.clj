@@ -1,8 +1,11 @@
 (ns xyz.dking.css-gardener.test-helpers
-  (:require [xyz.dking.css-gardener.repl :as repl]
-            [xyz.dking.css-gardener.utils :as utils]))
+  (:require [clojure.java.io :as io]
+            [xyz.dking.css-gardener.repl :as repl]
+            [xyz.dking.css-gardener.utils :as utils])
+  (:import [java.io File]))
 
 (def ^:dynamic *repl-env* nil)
+(def ^:dynamic *temp-file* nil)
 
 (defn- random-out-dir
   "Generates a random cache directory for the test repl.
@@ -22,3 +25,15 @@
     (binding [*repl-env* repl-env]
       (run-tests))
     (repl/stop-repl-env repl-env)))
+
+(defn with-temp-file
+  "Test fixture that creates a temp file with a random name for testing.
+
+  The temp file is bound to *temp-file*."
+  [run-tests]
+  (let [file (File/createTempFile (str "css-gardener-test-" (utils/uuid))
+                                  ".txt")]
+    (.deleteOnExit file)
+    (binding [*temp-file* file]
+      (run-tests))
+    (.delete file)))
