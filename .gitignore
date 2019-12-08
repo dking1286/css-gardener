@@ -1,4 +1,5 @@
 .cpcache
-.nrepl-port
 .css-gardener
+.nrepl-port
+.shadow-cljs
 target

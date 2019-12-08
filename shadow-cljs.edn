@@ -1,0 +1,7 @@
+{:source-paths ["src"]
+
+ :deps {:aliases [:shadow-cljs]}
+
+ :builds {:cli {:target :node-script
+                :main xyz.dking.css-gardener.cli.main/main
+                :output-to "target/cli/main.js"}}}

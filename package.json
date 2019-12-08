@@ -1,0 +1,20 @@
+{
+  "name": "css-gardener",
+  "version": "0.1.0",
+  "description": "A delightful stylesheet experience for ClojureScript applications",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener"
+  },
+  "files": [
+    "src/xyz/dking/css_gardener/cli/*",
+    "target/cli/main.js"
+  ],
+  "bin": "target/cli/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Daniel King",
+  "license": "EPL-2.0"
+}
