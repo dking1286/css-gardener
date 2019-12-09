@@ -6,33 +6,40 @@
             [xyz.dking.css-gardener.test-helpers :refer [*repl-env*
                                                          *temp-file*
                                                          with-repl-env
+                                                         start-repl-env
                                                          with-temp-file]]
             [xyz.dking.css-gardener.utils :as utils]))
 
-(use-fixtures :once with-repl-env)
-(use-fixtures :each with-temp-file)
+(def ^:private ^:dynamic *builder* nil)
 
-(deftest ^:integration get-style-test
-  (testing "reads style struct from the given var"
-    (is (= (gbuilder/get-style
-            *repl-env* 'xyz.dking.css-gardener.test-example.style-vars/style)
-           [:div {:background-color :green}]))))
+(defn- with-builder
+  [run-tests]
+  (let [gb (gbuilder/->GardenBuilder (atom false) *repl-env*)]
+    (builder/start gb)
+    (binding [*builder* gb]
+      (run-tests))
+    (builder/stop gb)))
+
+(use-fixtures :once with-repl-env)
+(use-fixtures :each with-builder with-temp-file)
 
 (deftest ^:integration build-test
+  (testing "throws :not-started when build is called before start"
+    (let [gb (gbuilder/->GardenBuilder (atom false) *repl-env*)]
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (builder/build gb {})))))
   (testing "builds a css stylesheet from the passed in list of files"
-    (let [gb (gbuilder/->GardenBuilder *repl-env*)
-          temp-file-name (.getAbsolutePath *temp-file*)
+    (let [temp-file-name (.getAbsolutePath *temp-file*)
           config {:input-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"]
                   :output-file temp-file-name}]
-      (builder/build gb config)
+      (builder/build *builder* config)
       (is (s/includes? (slurp temp-file-name)
                        "background-color: green"))))
   (testing "works with computed style vars"
-    (let [gb (gbuilder/->GardenBuilder *repl-env*)
-          temp-file-name (.getAbsolutePath *temp-file*)
+    (let [temp-file-name (.getAbsolutePath *temp-file*)
           config {:input-files ["test/xyz/dking/css_gardener/test_example/computed_style_var.cljs"]
                   :output-file temp-file-name}]
-      (builder/build gb config)
+      (builder/build *builder* config)
       (is (s/includes? (slurp temp-file-name)
                        "background-color: green"))
       (is (s/includes? (slurp temp-file-name)

@@ -3,9 +3,10 @@
             [xyz.dking.css-gardener.repl :as repl]
             [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.test-helpers :refer [*repl-env*
-                                                         with-repl-env]]))
+                                                         with-repl-env
+                                                         start-repl-env]]))
 
-(use-fixtures :once with-repl-env)
+(use-fixtures :once with-repl-env start-repl-env)
 
 (deftest ^:integration test-eval
   (testing "evaluates math expressions"
