@@ -26,4 +26,14 @@
                   :output-file temp-file-name}]
       (builder/build gb config)
       (is (s/includes? (slurp temp-file-name)
-                       "background-color: green")))))
+                       "background-color: green"))))
+  (testing "works with computed style vars"
+    (let [gb (gbuilder/->GardenBuilder *repl-env*)
+          temp-file-name (.getAbsolutePath *temp-file*)
+          config {:input-files ["test/xyz/dking/css_gardener/test_example/computed_style_var.cljs"]
+                  :output-file temp-file-name}]
+      (builder/build gb config)
+      (is (s/includes? (slurp temp-file-name)
+                       "background-color: green"))
+      (is (s/includes? (slurp temp-file-name)
+                       "background-color: red")))))
