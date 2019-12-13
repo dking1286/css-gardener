@@ -21,10 +21,16 @@
   The cljs repl is bound to *repl-env*."
   [run-tests]
   (let [repl-env (repl/new-repl-env (random-out-dir))]
-    (repl/start-repl-env repl-env)
     (binding [*repl-env* repl-env]
-      (run-tests))
-    (repl/stop-repl-env repl-env)))
+      (run-tests))))
+
+(defn start-repl-env
+  "Test fixture that starts and stops the repl bound to
+  *repl-env*."
+  [run-tests]
+  (repl/start-repl-env *repl-env*)
+  (run-tests)
+  (repl/stop-repl-env *repl-env*))
 
 (defn with-temp-file
   "Test fixture that creates a temp file with a random name for testing.
