@@ -8,3 +8,7 @@
     (builder/start b)
     (builder/build b config)
     (builder/stop b)))
+
+(defn watch
+  [config]
+  (throw (UnsupportedOperationException. "Watch not implemented yet.")))

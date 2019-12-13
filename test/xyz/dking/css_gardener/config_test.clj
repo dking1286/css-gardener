@@ -36,7 +36,7 @@
              (:input-files result)))))
   (testing "missing input-files"
     (let [result (config/from-cli-args ["-i"])]
-      (is (= [] (:input-files result)))))
+      (is (= nil (:input-files result)))))
   (testing "empty input-files"
     (let [result (config/from-cli-args ["-i" ""])]
       (is (= [] (:input-files result))))))
