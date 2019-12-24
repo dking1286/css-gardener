@@ -1,6 +1,14 @@
 (ns xyz.dking.css-gardener.utils
-  (:require [me.raynes.fs :as fs])
-  (:import [java.util UUID]))
+  (:require [clojure.string :as str]
+            [me.raynes.fs :as fs])
+  (:import java.util.UUID))
+
+(defn trace
+  "Logs a value and returns it unchanged."
+  ([val] (trace nil val))
+  ([message val]
+   (when message (println message))
+   val))
 
 (defn map-vals
   "Maps over a seq of key-value pairs, applying the mapping function to
@@ -24,13 +32,29 @@
          (lazy-seq (cons next-item
                          (unique-by f (rest seq) (conj seen next-key)))))))))
 
+(defn globstar
+  "Returns a seq of files matching a recursive glob containing **."
+  [glob]
+  (let [star-stars (re-seq #"\/\*\*\/" glob)]
+    (cond
+      (= (count star-stars) 0) (fs/glob glob)
+
+      (>= (count star-stars) 2)
+      (throw (ex-info "Multiple \"**\" expansions not supported."
+                      {:type :multiple-star-star-not-supported}))
+                                        
+      :else
+      (let [[beginning end] (str/split glob #"\/\*\*\/")]
+        (->> (fs/walk (fn [root dirs files] root) beginning)
+             (mapcat #(fs/glob % end)))))))
+
 (defn unique-files
   "Gets a seq of all the unique files matching a seq of globs."
   [globs]
   (->> globs
-       (mapcat fs/glob)
+       (mapcat globstar)
        (sort-by #(.getName %))
-       (unique-by #(.getName %))))
+       (unique-by #(fs/absolute %))))
 
 (defn uuid
   "Creates a uuid string."
