@@ -24,9 +24,6 @@
       (is (= {:type :garden} (:result result))))))
 
 (deftest from-cli-args-test
-  (testing "parsing cli args"
-    (let [result (config/from-cli-args ["-h"])]
-      (is (true? (:help result)))))
   (testing "parsing type"
     (let [result (config/from-cli-args ["-t" "garden"])]
       (is (= :garden (:type result)))))
