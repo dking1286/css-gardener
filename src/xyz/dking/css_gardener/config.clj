@@ -48,12 +48,7 @@
 
    ["-c" "--config-file CONFIG_FILE"
     "Configuration file name"
-    :default default-config-file]
-
-   ["-w" "--watch"
-    "Whether or not to watch and rebuild on change"]
-
-   ["-h" "--help"]])
+    :default default-config-file]])
 
 (defn from-cli-args
   "Parses command line args into a configuration map."

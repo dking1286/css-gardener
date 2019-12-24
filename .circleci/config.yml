@@ -16,7 +16,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - clj-dependencies-
 
-      - run: clojure -A:install-deps
+      - run: clojure -A:test:install-deps
 
       - save_cache:
           paths:
