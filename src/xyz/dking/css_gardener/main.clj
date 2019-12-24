@@ -19,7 +19,8 @@
        (not= config-file config/default-config-file)))
 
 (defn main
-  [& args]
+  "The main process of css-gardener."
+  [command & args]
   (let [{:keys [help watch config-file] :as cli-config}
         (config/from-cli-args args)
 
@@ -28,7 +29,7 @@
 
         config
         (merge file-config cli-config)]
-    (if (:help config)
+    (if (or (= command "--help") (= command "-h"))
       (println help-message)
       (do
         (when (missing-default-config-file? status config-file)
@@ -38,9 +39,11 @@
           (println (str "WARNING: Configuration file " config-file
                         " not found, using only command line args.")))
         
-        (if (:watch config)
-          (watch config)
-          (build config))))))
+        (case command
+          "watch" (watch config)
+          "build" (build config)
+          (throw (ex-info (str "Unknown command \"" command "\".")
+                          {:type :unknown-command})))))))
 
 (defn -main
   [& args]
