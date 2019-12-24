@@ -1,8 +1,8 @@
 (ns xyz.dking.css-gardener.analyzer
-  (:require [clojure.java.io :as io]
-            [clojure.string :as string]
-            [cljs.analyzer.api :as analyzer]
+  (:require [cljs.analyzer.api :as analyzer]
             [cljs.env :as env]
+            [clojure.java.io :as io]
+            [clojure.string :as string]
             [xyz.dking.css-gardener.logging :as logging]
             [xyz.dking.css-gardener.utils :refer [map-vals]]))
 

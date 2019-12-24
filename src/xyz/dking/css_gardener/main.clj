@@ -18,7 +18,7 @@
   (and (= status :failure)
        (not= config-file config/default-config-file)))
 
-(defn -main
+(defn main
   [& args]
   (let [{:keys [help watch config-file] :as cli-config}
         (config/from-cli-args args)
@@ -41,3 +41,7 @@
         (if (:watch config)
           (watch config)
           (build config))))))
+
+(defn -main
+  [& args]
+  (apply main args))

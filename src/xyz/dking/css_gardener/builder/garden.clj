@@ -1,9 +1,7 @@
 (ns xyz.dking.css-gardener.builder.garden
-  (:require [clojure.edn :as edn]
-            [garden.core :as garden]
+  (:require [garden.core :as garden]
             [xyz.dking.css-gardener.analyzer :as analyzer]
-            [xyz.dking.css-gardener.builder
-             :as builder :refer [Builder get-builder]]
+            [xyz.dking.css-gardener.builder :refer [Builder get-builder]]
             [xyz.dking.css-gardener.errors :as errors]
             [xyz.dking.css-gardener.repl :as repl]
             [xyz.dking.css-gardener.utils :as utils]))
