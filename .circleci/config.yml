@@ -16,7 +16,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - clj-dependencies-
 
-      - run: clojure -A:test:install-deps
+      - run: clojure -A:test:shadow-cljs:install-deps
 
       - save_cache:
           paths:
@@ -24,4 +24,4 @@ jobs:
           key: clj-dependencies-{{ checksum "deps.edn" }}
 
       # run tests!
-      - run: make test
+      - run: clojure -A:test -m cognitect.test-runner
