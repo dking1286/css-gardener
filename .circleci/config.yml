@@ -24,4 +24,4 @@ jobs:
           key: clj-dependencies-{{ checksum "deps.edn" }}
 
       # run tests!
-      - run: clojure -A:test
+      - run: make test
