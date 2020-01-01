@@ -96,7 +96,8 @@
 
   Any arguments are passed as command line arguments to css-gardener."
   [& args]
-  (let [{:keys [status type message]}
+  (let [verbose? (seq (filter #{"-v" "--verbose"} args))
+        {:keys [status type message]}
         (-> (find-project-configurations "shadow-cljs.edn"
                                          "deps.edn"
                                          "project.clj"
@@ -106,10 +107,18 @@
       (do
         (println message)
         (js/process.exit 1))
-      (let [project-classpath (project-classpath type)
-            classpath (make-classpath project-classpath)
-            java-args (apply make-java-args classpath args)]
-        (run-child-process "." "java" java-args)))))
+      (do
+        (when verbose?
+          (println message))
+        (let [project-classpath (project-classpath type)
+              classpath (make-classpath project-classpath)
+              java-args (apply make-java-args classpath args)]
+          (when verbose?
+            (println "Inferred project classpath:")
+            (println (str classpath "\n\n"))
+            (println "Invoking java via command:")
+            (println (str "java " (str/join " " java-args))))
+          (run-child-process "." "java" java-args))))))
 
 (defn ^:dev/before-load before-load
   []
