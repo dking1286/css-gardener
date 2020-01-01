@@ -7,14 +7,19 @@
     "url": "https://github.com/dking1286/css-gardener"
   },
   "files": [
-    "src/xyz/dking/css_gardener/cli/*",
+    "src/*",
+    "target/java-deps/*",
     "target/cli/main.js"
   ],
   "bin": "target/cli/main.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
   "author": "Daniel King",
-  "license": "EPL-2.0"
+  "license": "EPL-2.0",
+  "dependencies": {
+    "which": "^2.0.2"
+  },
+  "devDependencies": {
+    "source-map-support": "^0.5.16",
+    "ws": "^7.2.1"
+  }
 }
