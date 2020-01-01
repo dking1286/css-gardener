@@ -21,6 +21,7 @@ java-deps:
 # Builds the node js binary for npm distribution
 npm-binary:
 	clojure -A:shadow-cljs -m shadow.cljs.devtools.cli release cli
+	chmod +x target/cli/main.js
 
 # Deploys the Clojure code to Clojars
 deploy-clojars: test
