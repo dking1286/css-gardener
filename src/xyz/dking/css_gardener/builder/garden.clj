@@ -1,7 +1,8 @@
 (ns xyz.dking.css-gardener.builder.garden
-  (:require [garden.core :as garden]
+  (:require [clojure.java.io :as io]
+            [garden.core :as garden]
             [xyz.dking.css-gardener.analyzer :as analyzer]
-            [xyz.dking.css-gardener.builder :refer [Builder get-builder]]
+            [xyz.dking.css-gardener.builder :refer [Builder]]
             [xyz.dking.css-gardener.errors :as errors]
             [xyz.dking.css-gardener.repl :as repl]
             [xyz.dking.css-gardener.utils :as utils]))
@@ -35,15 +36,19 @@
       (throw (errors/not-started (str "start must be called before build"))))
     (let [files (utils/unique-files (:input-files config))
           styles (get-all-styles repl-env files)
-          style-string (apply garden/css styles)]
-      (spit (:output-file config) style-string)))
+          style-string (apply garden/css styles)
+          output-file (io/file (:output-file config))]
+      (io/make-parents output-file)
+      (spit output-file style-string)))
 
   (watch [this config]
     ;; Implement me
     ))
 
-(defmethod get-builder :garden
+(defn new-builder
+  "Creates a GardenBuilder instance."
   [_]
-  (let [repl-env (repl/new-repl-env)]
-    (->GardenBuilder (atom false) repl-env)))
+  (let [started? (atom false)
+        repl-env (repl/new-repl-env)]
+    (->GardenBuilder started? repl-env)))
 
