@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: clojure:openjdk-8-tools-deps
+      - image: dking1286/css-gardener-ci-runner
 
     working_directory: ~/repo
 
@@ -12,16 +12,17 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - clj-dependencies-{{ checksum "deps.edn" }}
+            - clj-dependencies-{{ checksum "deps.edn" }}-{{ checksum "package.json" }}
             # fallback to using the latest cache if no exact match is found
             - clj-dependencies-
 
-      - run: clojure -A:test:shadow-cljs:install-deps
+      - run: make deps
 
       - save_cache:
           paths:
             - ~/.m2
-          key: clj-dependencies-{{ checksum "deps.edn" }}
+            - ~/repo/node_modules
+          key: clj-dependencies-{{ checksum "deps.edn" }}-{{ checksum "package.json" }}
 
       # run tests!
-      - run: clojure -A:test -m cognitect.test-runner
+      - run: make test
