@@ -89,7 +89,3 @@ RUN addgroup -g 1000 node \
   && echo "npm version: $(npm -v)" \
   && echo "npx version: $(npx -v)"
 
-# Remove unneeded shell utilities
-# (keep "make" because it is used by the project)
-RUN apk del curl bash
-
