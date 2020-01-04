@@ -1,4 +1,4 @@
-{:source-paths ["src"]
+{:source-paths ["src" "test"]
 
  :deps {:aliases [:shadow-cljs]}
 
@@ -13,4 +13,7 @@
         :source-map false
         :release
         {:output-to "target/cli/main.js"
-         :closure-defines {xyz.dking.css-gardener.cli.main/RUN_MAIN true}}}}}
+         :closure-defines {xyz.dking.css-gardener.cli.main/RUN_MAIN true}}}
+  :cli-test {:target :node-test
+             :output-to "target/cli-test/main.js"
+             :dev {:autorun true}}}}
