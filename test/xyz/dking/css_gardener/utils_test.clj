@@ -71,4 +71,4 @@
             (fs/absolute "test/xyz/dking/css_gardener/test_example/nested/nested/no_style_vars.cljs")
             (fs/absolute "test/xyz/dking/css_gardener/test_example/style_vars.cljs")]
             (utils/unique-files ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
-                                 "test/xyz/dking/css_gardener/**/*.cljs"])))))
+                                 "test/xyz/dking/css_gardener/test_example/**/*.cljs"])))))

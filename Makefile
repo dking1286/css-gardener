@@ -1,5 +1,18 @@
 .PHONY: clean test
 
+# Builds the docker image for running the CI pipeline
+ci-runner-docker-image:
+	docker build -t dking1286/css-gardener-ci-runner .
+
+# Deploys the docker image for running the CI pipeline
+deploy-ci-runner-docker-image:
+	docker push dking1286/css-gardener-ci-runner
+
+# Downloads and installs all project dependencies
+deps:
+	clojure -A:dev:test:shadow-cljs:pack -e 'nil'
+	npm install
+
 # Cleans all of the output directories
 clean:
 	rm -rf .cpcache .css-gardener .shadow-cljs target
@@ -7,6 +20,12 @@ clean:
 # Runs all of the tests for the project
 test:
 	clojure -A:test -m cognitect.test-runner
+	clojure -A:test:shadow-cljs -m shadow.cljs.devtools.cli release cli-test
+	node target/cli-test/main.js
+
+# Watches and reruns ClojureScript tests on change
+cljs-tests-watch:
+	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch cli-test
 
 # Copies all of the java dependencies into target/java-deps
 # This directory is included in the npm package, and is on
