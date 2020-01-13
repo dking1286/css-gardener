@@ -48,7 +48,11 @@
 
    ["-c" "--config-file CONFIG_FILE"
     "Configuration file name"
-    :default default-config-file]])
+    :default default-config-file]
+
+   ["-l" "--log-level LEVEL"
+    "Log level"
+    :default :info]])
 
 (defn from-cli-args
   "Parses command line args into a configuration map."
