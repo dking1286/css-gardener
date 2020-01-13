@@ -7,6 +7,10 @@
 (def ^:dynamic *repl-env* nil)
 (def ^:dynamic *temp-file* nil)
 
+(defmacro with-fixture
+  [fixture & body]
+  `(~fixture (fn [] ~@body)))
+
 (defn- random-out-dir
   "Generates a random cache directory for the test repl.
 
@@ -37,9 +41,13 @@
 
   The temp file is bound to *temp-file*."
   [run-tests]
-  (let [file (File/createTempFile (str "css-gardener-test-" (utils/uuid))
-                                  ".txt")]
+  (let [file (File/createTempFile
+              (str "css-gardener-test-" (utils/uuid))
+              ".txt")]
     (.deleteOnExit file)
-    (binding [*temp-file* file]
-      (run-tests))
-    (.delete file)))
+    (try
+      (binding [*temp-file* file]
+        (run-tests))
+      (finally
+        (.delete file)))))
+
