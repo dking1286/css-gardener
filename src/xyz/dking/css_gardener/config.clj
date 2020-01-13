@@ -13,6 +13,17 @@
 
 (def default-config-file "css-gardener.edn")
 
+(def default-config
+  {:garden {:type :garden
+            :input-files ["src/**/style.cljs"]
+            :output-file "public/css/style.css"}
+   :scss {:type :scss
+          :input-files ["src/**/style.scss"]
+          :output-file "public/css/style.css"}
+   :css {:type :css
+         :input-files ["src/**/style.css"]
+         :output-file "public/css/style.css"}})
+
 (defn from-file
   "Gets a configuration map from a configuration file."
   [filename]
