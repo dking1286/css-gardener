@@ -3,7 +3,7 @@
             ["fs" :as fs]
             ["which" :as which]
             [clojure.string :as str]
-            [xyz.dking.css-gardener.configuration
+            [xyz.dking.css-gardener.project-configuration
              :refer [find-project-configurations
                      get-project-configuration-type]]))
 

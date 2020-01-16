@@ -1,4 +1,4 @@
-(ns xyz.dking.css-gardener.configuration
+(ns xyz.dking.css-gardener.project-configuration
   (:require [xyz.dking.css-gardener.utils.files :as files]
             #?(:clj [clojure.data.json :as json])))
 
