@@ -27,6 +27,7 @@
   (println which-type-message)
   (loop []
     (print "Please enter a number: ")
+    (flush)
     (let [input (parse-number-input (read-line))
           choice (get type-choices (dec input))]
       (if choice
@@ -45,5 +46,5 @@
                          ", file already exists."))
       (let [config-map (config/default-config type)]
         (logging/info (str "Creating configuration file " config-file "."))
-        (spit config-file (pr-str config-map))))))
+        (spit config-file (str/replace (pr-str config-map) ", " "\n "))))))
 
