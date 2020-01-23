@@ -1,0 +1,3 @@
+{:type :scss
+ :input-files ["src/**/style.scss"]
+ :output-file "public/css/style.css"}

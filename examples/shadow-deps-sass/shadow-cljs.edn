@@ -1,0 +1,14 @@
+{:source-paths ["src"]
+
+ :deps true
+
+ :nrepl {:port 8081
+         :middleware [cider.nrepl/cider-middleware
+                      refactor-nrepl.middleware/wrap-refactor]}
+
+ :builds {:app {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:init-fn main.core/main}}
+                :devtools {:http-port 8080
+                           :http-root "public"}}}}
