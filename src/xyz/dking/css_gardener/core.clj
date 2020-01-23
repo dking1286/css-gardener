@@ -10,7 +10,7 @@
   [config]
   (case (:type config)
     :garden (garden/new-builder config)
-    :sass (sass/new-builder config)
+    :scss (sass/new-builder config)
     (throw (ex-info
             (str "Unknown :type property " (:type config) " found in config.")
             {:type :unknown-builder-type}))))
@@ -38,7 +38,8 @@
         full-config (augment-config config)]
     (builder/start b)
     (builder/build b full-config)
-    (builder/stop b)))
+    (builder/stop b)
+    (System/exit 0)))
 
 (defn watch
   [config]

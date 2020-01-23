@@ -11,7 +11,7 @@
 (deftest sass-builder-build-test
   (testing "logs an error when a stylesheet is invalid"
     (let [temp-file-name (.getAbsolutePath *temp-file*)
-          config {:type :sass
+          config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/invalid.scss"]
                   :output-file temp-file-name}
           output (with-out-str (build config))]
@@ -19,7 +19,7 @@
       (is (str/includes? output "Invalid CSS"))))
   (testing "builds a css stylesheet from the passed-in list of files"
     (let [temp-file-name (.getAbsolutePath *temp-file*)
-          config {:type :sass
+          config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/_styles1.scss"]
                   :output-file temp-file-name}]
       (build config)
@@ -27,7 +27,7 @@
                          "background-color: green"))))
   (testing "works with computed styles"
     (let [temp-file-name (.getAbsolutePath *temp-file*)
-          config {:type :sass
+          config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/styles3.scss"]
                   :output-file temp-file-name}]
       (build config)
