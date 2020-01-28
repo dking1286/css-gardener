@@ -1,13 +1,19 @@
 (ns xyz.dking.css-gardener.utils
-  (:require [clojure.string :as str]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [me.raynes.fs :as fs])
   (:import java.util.UUID))
+
+(s/fdef trace
+  :args (s/cat :message (s/? (s/nilable string?)) :val any?)
+  :fn #(= (:ret %) (-> % :args :val)))
 
 (defn trace
   "Logs a value and returns it unchanged."
   ([val] (trace nil val))
   ([message val]
-   (when message (println message))
+   (when message (print message))
+   (println val)
    val))
 
 (defn map-vals
