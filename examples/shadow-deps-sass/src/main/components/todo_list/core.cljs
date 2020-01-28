@@ -5,4 +5,5 @@
   [& items]
   [:div.todo-list
    "This is a list"
-   [:ul (for [item items] [todo-list-item item])]])
+   [:ul (for [item items]
+          ^{:key item} [todo-list-item item])]])
