@@ -1,6 +1,16 @@
 (ns user
-  (:require [clojure.tools.namespace.repl :as ctnr]))
+  (:require [clojure.tools.namespace.repl :as ctnr]
+            [orchestra.spec.test :as orchestra]))
+
+(defn setup
+  []
+  (orchestra/instrument))
+
+(defn teardown
+  []
+  (orchestra/unstrument))
 
 (defn reset
   []
-  (ctnr/refresh))
+  (teardown)
+  (ctnr/refresh :after `setup))
