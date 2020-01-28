@@ -1,10 +1,11 @@
 (ns xyz.dking.css-gardener.builder.sass
-  (:require [xyz.dking.css-gardener.builder :refer [Builder]]
-            [xyz.dking.css-gardener.utils :as utils]
+  (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.java.io :as io]
-            [xyz.dking.css-gardener.logging :as logging]))
-
+            [hawk.core :as hawk]
+            [xyz.dking.css-gardener.builder :refer [Builder]]
+            [xyz.dking.css-gardener.logging :as logging]
+            [xyz.dking.css-gardener.utils :as utils]
+            [clojure.spec.alpha :as s]))
 
 (defn compile-sass
   "Compiles a single scss file. Returns a map of the form
@@ -24,27 +25,26 @@
       (catch io.bit3.jsass.CompilationException e
         (assoc file-info :error e)))))
 
-(defrecord ScssBuilder []
+(defn sass-file?
+  [file]
+  (let [filename (.getName file)]
+    (str/ends-with? filename ".scss")))
+
+(defrecord ScssBuilder [watcher cached-files]
   Builder
   (start [this]) ;; Do nothing                                       
   
-  (stop [this]) ;; Do nothing
+  (stop [this]
+    (when-let [w @watcher]
+      (hawk/stop! w)
+      (reset! watcher nil)))
   
   (build [this config]
-    (let [files (:unique-input-files config)
-          compiled-files (pmap compile-sass files)]
-      (if-some [error (first (filter :error compiled-files))]
-        (logging/error (str "Error while compiling scss file " (:file error)
-                            ": " (:error error)))
-        (let [styles (map :result compiled-files)
-              style-string (str/join "\n\n" styles)
-              output-file (io/file (:output-file config))]
-          (io/make-parents output-file)
-          (spit output-file style-string)))))
+    (pmap compile-sass (:unique-input-files config)))
   
-  (watch [this config])) ;; To be implemented
+  (watch [this config])) ;; Implement me
 
 (defn new-builder
   [_]
-  (->ScssBuilder))
+  (->ScssBuilder (atom nil) (atom {})))
 

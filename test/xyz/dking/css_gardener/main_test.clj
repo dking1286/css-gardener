@@ -26,11 +26,11 @@
                           "WARNING")))
   (testing "builds a stylesheet from the passed-in options"
     (main "build"
-          "--type" "garden"
-          "--input-files" "test/xyz/dking/css_gardener/test_example/style_vars.cljs,test/xyz/dking/css_gardener/test_example/multiple_style_vars.cljs"
+          "--type" "scss"
+          "--input-files" "test/xyz/dking/css_gardener/test_example/scss/_styles1.scss,test/xyz/dking/css_gardener/test_example/scss/_styles2.scss"
           "--output-file" (.getAbsolutePath *temp-file*))
     (let [styles (slurp *temp-file*)]
       (is (string/includes? styles "background-color: green"))
-      (is (string/includes? styles "background-color: blue")))))
+      (is (string/includes? styles "color: red")))))
 
 

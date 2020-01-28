@@ -46,4 +46,5 @@
 
 (defn -main
   [& args]
-  (apply main args))
+  (apply main args)
+  (System/exit 0))

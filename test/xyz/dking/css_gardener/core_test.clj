@@ -15,7 +15,7 @@
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/invalid.scss"]
                   :output-file temp-file-name}
           output (with-out-str (build config))]
-      (is (str/includes? output "Error while compiling scss file"))
+      (is (str/includes? output "Error while compiling file"))
       (is (str/includes? output "Invalid CSS"))))
   (testing "builds a css stylesheet from the passed-in list of files"
     (let [temp-file-name (.getAbsolutePath *temp-file*)

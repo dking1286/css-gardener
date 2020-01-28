@@ -1,15 +1,25 @@
 (ns xyz.dking.css-gardener.config
   (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.tools.cli :as cli])
-  (:import [java.io FileNotFoundException]))
+            [clojure.tools.cli :as cli]
+            [xyz.dking.css-gardener.utils :as utils])
+  (:import java.io.FileNotFoundException))
 
-(s/def ::type keyword?)
+(s/def ::type #{:garden :scss :css})
 (s/def ::input-files (s/coll-of string? :kind vector? :min-count 1))
 (s/def ::output-file string?)
 
 (s/def ::config (s/keys :req-un [::type ::input-files ::output-file]))
+
+(s/def ::file #(instance? java.io.File %))
+(s/def ::text string?)
+(s/def ::file-details (s/keys :req-un [::file ::text]))
+(s/def ::unique-input-files (s/coll-of ::file-details))
+
+(s/def ::augmented-config (s/and ::config
+                                 (s/keys :req-un [::unique-input-files])))
 
 (def default-config-file "css-gardener.edn")
 
@@ -23,6 +33,28 @@
    :css {:type :css
          :input-files ["src/**/style.css"]
          :output-file "public/css/style.css"}})
+
+(s/fdef file-details
+  :args (s/cat :file ::file)
+  :ret (s/nilable ::file-details))
+
+(defn file-details
+  [file]
+  (let [jfile (io/file file)]
+    (if-not (.exists jfile)
+      nil
+      {:file file
+       :text (slurp jfile)})))
+
+(s/fdef augment-config
+  :args (s/cat :config ::config)
+  :ret ::augmented-config)
+
+(defn augment-config
+  [config]
+  (let [unique-input-files (->> (utils/unique-files (:input-files config))
+                                (map file-details))]
+    (assoc config :unique-input-files unique-input-files)))
 
 (defn from-file
   "Gets a configuration map from a configuration file."
