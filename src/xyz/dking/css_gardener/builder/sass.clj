@@ -42,7 +42,7 @@
   (build [this config]
     (pmap compile-sass (:unique-input-files config)))
   
-  (watch [this config])) ;; Implement me
+  (watch [this config on-change])) ;; Implement me
 
 (defn new-builder
   [_]

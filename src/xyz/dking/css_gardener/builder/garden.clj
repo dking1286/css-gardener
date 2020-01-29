@@ -41,7 +41,7 @@
       (io/make-parents output-file)
       (spit output-file style-string)))
 
-  (watch [this config]
+  (watch [this config on-change]
     ;; Implement me
     ))
 
