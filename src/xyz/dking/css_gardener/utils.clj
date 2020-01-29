@@ -22,6 +22,17 @@
   [f & args]
   (apply map (fn [[key val]] [key (f val)]) args))
 
+(s/fdef to-map
+  :args (s/cat :key-fn (s/fspec :args (s/cat :element any?))
+               :seq sequential?)
+  :ret map?)
+
+(defn to-map
+  "Converts a sequence to a map, calling the key-fn on each element to determine
+  the corresponding key."
+  [key-fn seq]
+  (into {} (map (fn [x] [(key-fn x) x])) seq))
+
 (defn unique-by
   "Gets a sequence of unique values in a seq, with uniqueness
   determined by a passed-in function."

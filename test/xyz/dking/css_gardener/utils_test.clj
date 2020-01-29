@@ -30,6 +30,22 @@
                                    {:name "hello"}
                                    {:name "world"}])))))
 
+(deftest to-map-test
+  (testing "uses the key-fn to generate the keys"
+    (let [input [{:hello "world"} {:hello "bar"}]
+          output {"world" {:hello "world"}
+                  "bar" {:hello "bar"}}]
+      (is (= (utils/to-map :hello input)
+             output))))
+  (testing "takes the last element when keys collide"
+    (let [input [{:hello "world" :foo "foo"}
+                 {:hello "bar"}
+                 {:hello "world" :bar "bar"}]
+          output {"world" {:hello "world" :bar "bar"}
+                  "bar" {:hello "bar"}}]
+      (is (= (utils/to-map :hello input)
+             output)))))
+
 (deftest globstar-test
   (testing "has the same behavior as fs/glob if there is no ** in the pattern"
     (is (= (utils/globstar "test/xyz/dking/css_gardener/test_example/*.cljs")

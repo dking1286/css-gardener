@@ -25,11 +25,6 @@
       (catch io.bit3.jsass.CompilationException e
         (assoc file-info :error e)))))
 
-(defn sass-file?
-  [file]
-  (let [filename (.getName file)]
-    (str/ends-with? filename ".scss")))
-
 (defrecord ScssBuilder [watcher cached-files]
   Builder
   (start [this]) ;; Do nothing                                       
@@ -42,7 +37,13 @@
   (build [this config]
     (pmap compile-sass (:unique-input-files config)))
   
-  (watch [this config on-change])) ;; Implement me
+  (watch [this config on-change]) ;; Implement me
+
+  (style-file? [this absolute-path]
+    (str/ends-with? absolute-path ".scss"))
+
+  (build-file [this file-details]
+    (compile-sass file-details)))
 
 (defn new-builder
   [_]
