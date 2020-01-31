@@ -38,7 +38,7 @@
     (spit output style-string)))
 
 (s/fdef output-compiled-files
-  :args (s/cat :compiled-files (s/coll-of ::builder/output-file)
+  :args (s/cat :compiled-files (s/nilable (s/coll-of ::builder/output-file))
                :output-files string?)
   :ret nil?)
 
