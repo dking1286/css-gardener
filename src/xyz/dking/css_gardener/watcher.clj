@@ -2,11 +2,22 @@
   (:require [hawk.core :as hawk]))
 
 (defprotocol Watcher
-  (watch [this paths callback]))
+  (watch [this paths callback])
+  (stop [this]))
 
-(defrecord HawkWatcher []
+(defrecord HawkWatcher [watcher]
   Watcher
   (watch [this paths callback]
-    (hawk/watch! [{:paths paths
-                   :handler (fn [_ {:keys [file]}]
-                              (callback (.getAbsolutePath file)))}])))
+    (let [w (hawk/watch! [{:paths paths
+                           :handler (fn [_ {:keys [file]}]
+                                      (callback (.getAbsolutePath file)))}])]
+      (reset! watcher w)))
+  
+  (stop [this]
+    (when @watcher
+      (hawk/stop! @watcher)
+      (reset! watcher nil))))
+
+(defn hawk-watcher
+  []
+  (->HawkWatcher (atom nil)))

@@ -2,7 +2,7 @@
   (:require [xyz.dking.css-gardener.builder.garden :as garden]
             [xyz.dking.css-gardener.builder.sass :as sass]
             [xyz.dking.css-gardener.config :as config]
-            [xyz.dking.css-gardener.core :refer [build init watch]]
+            [xyz.dking.css-gardener.core :as core]
             [xyz.dking.css-gardener.logging :as logging]
             [xyz.dking.css-gardener.watcher :as watcher]))
 
@@ -41,7 +41,7 @@
     (reset! logging/log-level log-level)
     (cond
       (or (= command "--help") (= command "-h")) (println help-message)
-      (= command "init") (init config)
+      (= command "init") (core/init config)
       :else
       (do
         (when (missing-default-config-file? status config-file)
@@ -52,10 +52,11 @@
           (logging/info (str "WARNING: Configuration file " config-file
                              " not found, using only command line args.")))
         (let [builder (get-builder config)
-              watcher (watcher/->HawkWatcher)]
+              watcher (watcher/hawk-watcher)
+              done? (promise)]
           (case command
-            "watch" (watch builder watcher config)
-            "build" (build builder config)
+            "watch" (core/watch builder watcher done? config)
+            "build" (core/build builder config)
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))))
 

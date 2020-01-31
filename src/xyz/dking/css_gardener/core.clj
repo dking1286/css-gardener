@@ -11,7 +11,6 @@
             [xyz.dking.css-gardener.watcher :as watcher]))
 
 (def ^:private cached-files (atom {}))
-(def ^:private done-watching? (promise))
 
 (defn- get-first-error
   [compiled-files]
@@ -77,7 +76,7 @@
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [builder watcher config]
+  [builder watcher done? config]
   (let [full-config (config/augment-config config)
         output-file (:output-file config)]
     (builder/start builder)
@@ -85,5 +84,5 @@
       (output-compiled-files compiled-files output-file)
       (reset! cached-files (utils/to-map :file compiled-files))
       (watcher/watch watcher ["."] #(handle-file-change builder output-file %))
-      @done-watching?)))
+      @done?)))
 
