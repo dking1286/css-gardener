@@ -1,28 +1,16 @@
 (ns xyz.dking.css-gardener.core
   (:require [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
+            [hawk.core :as hawk]
             [xyz.dking.css-gardener.builder :as builder]
-            [xyz.dking.css-gardener.builder.garden :as garden]
-            [xyz.dking.css-gardener.builder.sass :as sass]
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.init :as init]
-            [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.logging :as logging]
-            [clojure.spec.alpha :as s]
-            [hawk.core :as hawk]))
+            [xyz.dking.css-gardener.utils :as utils]))
 
 (def ^:private cached-files (atom {}))
 (def ^:private done-watching? (promise))
-
-(defn- get-builder
-  "Gets an instance of the builder type specified in the config map."
-  [config]
-  (case (:type config)
-    :garden (garden/new-builder config)
-    :scss (sass/new-builder config)
-    (throw (ex-info
-            (str "Unknown :type property " (:type config) " found in config.")
-            {:type :unknown-builder-type}))))
 
 (defn- get-first-error
   [compiled-files]
@@ -80,27 +68,25 @@
 
 (defn build
   "Executes a single build of the user's stylesheet."
-  [config]
-  (let [b (get-builder config)
-        full-config (config/augment-config config)
+  [builder config]
+  (let [full-config (config/augment-config config)
         output-file (:output-file config)]
-    (builder/start b)
-    (let [compiled-files (builder/build b full-config)]
+    (builder/start builder)
+    (let [compiled-files (builder/build builder full-config)]
       (output-compiled-files compiled-files output-file))
-    (builder/stop b)))
+    (builder/stop builder)))
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [config]
-  (let [b (get-builder config)
-        full-config (config/augment-config config)
+  [builder config]
+  (let [full-config (config/augment-config config)
         output-file (:output-file config)]
-    (builder/start b)
-    (let [compiled-files (builder/build b full-config)]
+    (builder/start builder)
+    (let [compiled-files (builder/build builder full-config)]
       (output-compiled-files compiled-files output-file)
       (reset! cached-files (utils/to-map :file compiled-files))
       (hawk/watch! [{:paths ["."]
                      :handler (fn [_ {:keys [file]}]
-                                (handle-file-change b output-file file))}])
+                                (handle-file-change builder output-file file))}])
       @done-watching?)))
 

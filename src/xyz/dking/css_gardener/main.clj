@@ -1,5 +1,7 @@
 (ns xyz.dking.css-gardener.main
-  (:require [xyz.dking.css-gardener.config :as config]
+  (:require [xyz.dking.css-gardener.builder.garden :as garden]
+            [xyz.dking.css-gardener.builder.sass :as sass]
+            [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.core :refer [build init watch]]
             [xyz.dking.css-gardener.logging :as logging]))
 
@@ -17,6 +19,16 @@
   [status config-file]
   (and (= status :failure)
        (not= config-file config/default-config-file)))
+
+(defn- get-builder
+  "Gets an instance of the builder type specified in the config map."
+  [config]
+  (case (:type config)
+    :garden (garden/new-builder config)
+    :scss (sass/new-builder config)
+    (throw (ex-info
+            (str "Unknown :type property " (:type config) " found in config.")
+            {:type :unknown-builder-type}))))
 
 (defn main
   "The main process of css-gardener."
@@ -37,12 +49,13 @@
                              " not found, using command line args.")))
         (when (missing-custom-config-file? status config-file)
           (logging/info (str "WARNING: Configuration file " config-file
-                             " not found, using only command line args.")))      
-        (case command
-          "watch" (watch config)
-          "build" (build config)
-          (throw (ex-info (str "Unknown command \"" command "\".")
-                          {:type :unknown-command})))))))
+                             " not found, using only command line args.")))
+        (let [builder (get-builder config)]
+          (case command
+            "watch" (watch builder config)
+            "build" (build builder config)
+            (throw (ex-info (str "Unknown command \"" command "\".")
+                            {:type :unknown-command}))))))))
 
 (defn -main
   [& args]

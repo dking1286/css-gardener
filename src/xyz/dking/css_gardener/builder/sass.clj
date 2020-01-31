@@ -25,14 +25,11 @@
       (catch io.bit3.jsass.CompilationException e
         (assoc file-info :error e)))))
 
-(defrecord ScssBuilder [watcher cached-files]
+(defrecord ScssBuilder []
   Builder
   (start [this]) ;; Do nothing                                       
   
-  (stop [this]
-    (when-let [w @watcher]
-      (hawk/stop! w)
-      (reset! watcher nil)))
+  (stop [this]) ;; Do nothing
   
   (build [this config]
     (pmap compile-sass (:unique-input-files config)))
@@ -47,5 +44,5 @@
 
 (defn new-builder
   [_]
-  (->ScssBuilder (atom nil) (atom {})))
+  (->ScssBuilder))
 
