@@ -7,7 +7,8 @@
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.init :as init]
             [xyz.dking.css-gardener.logging :as logging]
-            [xyz.dking.css-gardener.utils :as utils]))
+            [xyz.dking.css-gardener.utils :as utils]
+            [xyz.dking.css-gardener.watcher :as watcher]))
 
 (def ^:private cached-files (atom {}))
 (def ^:private done-watching? (promise))
@@ -50,16 +51,14 @@
       (logging/info (success-message output-file)))))
 
 (defn- handle-file-change
-  [builder output-file file]
-  (let [filename (.getName file)
-        abs-path (.getAbsolutePath file)]
-    (when (builder/style-file? builder abs-path)
-      (logging/info (str "Detected file changes: " filename))
-      (let [file-info (config/file-details abs-path)
-            compiled-file (builder/build-file builder file-info)]
-        (swap! cached-files assoc (:file compiled-file) compiled-file)
-        (let [compiled-files (vals @cached-files)]
-          (output-compiled-files compiled-files output-file))))))
+  [builder output-file changed-file]
+  (when (builder/style-file? builder changed-file)
+    (logging/info (str "Detected file changes: " changed-file))
+    (let [file-info (config/file-details changed-file)
+          compiled-file (builder/build-file builder file-info)]
+      (swap! cached-files assoc (:file compiled-file) compiled-file)
+      (let [compiled-files (vals @cached-files)]
+        (output-compiled-files compiled-files output-file)))))
 
 (defn init
   "Initializes a css-gardener project in the current directory."
@@ -78,15 +77,13 @@
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [builder config]
+  [builder watcher config]
   (let [full-config (config/augment-config config)
         output-file (:output-file config)]
     (builder/start builder)
     (let [compiled-files (builder/build builder full-config)]
       (output-compiled-files compiled-files output-file)
       (reset! cached-files (utils/to-map :file compiled-files))
-      (hawk/watch! [{:paths ["."]
-                     :handler (fn [_ {:keys [file]}]
-                                (handle-file-change builder output-file file))}])
+      (watcher/watch watcher ["."] #(handle-file-change builder output-file %))
       @done-watching?)))
 

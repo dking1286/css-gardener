@@ -3,7 +3,8 @@
             [xyz.dking.css-gardener.builder.sass :as sass]
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.core :refer [build init watch]]
-            [xyz.dking.css-gardener.logging :as logging]))
+            [xyz.dking.css-gardener.logging :as logging]
+            [xyz.dking.css-gardener.watcher :as watcher]))
 
 (def help-message
   "TODO")
@@ -50,9 +51,10 @@
         (when (missing-custom-config-file? status config-file)
           (logging/info (str "WARNING: Configuration file " config-file
                              " not found, using only command line args.")))
-        (let [builder (get-builder config)]
+        (let [builder (get-builder config)
+              watcher (watcher/->HawkWatcher)]
           (case command
-            "watch" (watch builder config)
+            "watch" (watch builder watcher config)
             "build" (build builder config)
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))))
