@@ -81,10 +81,18 @@
       (let [compiled-files (vals @cached-files)]
         (output-compiled-files compiled-files output-file)))))
 
+(s/fdef init
+  :args (s/cat :config ::config/config))
+
 (defn init
   "Initializes a css-gardener project in the current directory."
   [config]
   (init/initialize-project config))
+
+(s/fdef build
+  :args (s/cat :builder ::builder/builder
+               :reader ::gio/reader
+               :config ::config/config))
 
 (defn build
   "Executes a single build of the user's stylesheet."
@@ -95,6 +103,12 @@
     (let [compiled-files (builder/build builder full-config)]
       (output-compiled-files compiled-files output-file))
     (builder/stop builder)))
+
+(s/fdef watch
+  :args (s/cat :builder ::builder/builder
+               :watcher ::watcher/watcher
+               :reader ::gio/reader
+               :done? #(instance? clojure.lang.IDeref %)))
 
 (defn watch
   "Compiles the user's stylesheets on change."

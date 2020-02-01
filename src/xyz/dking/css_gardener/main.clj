@@ -4,7 +4,8 @@
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.core :as core]
             [xyz.dking.css-gardener.logging :as logging]
-            [xyz.dking.css-gardener.watcher :as watcher]))
+            [xyz.dking.css-gardener.watcher :as watcher]
+            [xyz.dking.css-gardener.io :as gio]))
 
 (def help-message
   "TODO")
@@ -53,10 +54,11 @@
                              " not found, using only command line args.")))
         (let [builder (get-builder config)
               watcher (watcher/hawk-watcher)
+              reader (gio/new-file-reader)
               done? (promise)]
           (case command
-            "watch" (core/watch builder watcher done? config)
-            "build" (core/build builder config)
+            "watch" (core/watch builder watcher reader done? config)
+            "build" (core/build builder reader config)
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))))
 
