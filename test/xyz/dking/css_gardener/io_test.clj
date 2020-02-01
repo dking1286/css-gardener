@@ -2,16 +2,41 @@
   (:require [clojure.test :refer :all]
             [xyz.dking.css-gardener.io :as sut]
             [xyz.dking.css-gardener.test-helpers :refer :all]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [me.raynes.fs :as fs]))
 
 (deftest stub-reader-read-file-test
   (testing "returns nil when the file does not exist"
-    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"})]
+    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"}
+                                 {}
+                                 {})]
       (is (nil? (sut/read-file r "/goodbye/world.scss")))))
   (testing "returns the file text when the file exists"
-    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"})]
+    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"}
+                                 {}
+                                 {})]
       (is (= "some styles"
              (sut/read-file r "/hello/world.scss"))))))
+
+(deftest stub-reader-get-absolute-path-test
+  (testing "returns the absolute path corresponding to the relative path passed in"
+    (let [r (sut/new-stub-reader {}
+                                 {"world.scss" "/hello/world.scss"}
+                                 {})]
+      (is (= "/hello/world.scss"
+             (sut/get-absolute-path r "world.scss"))))))
+
+(deftest stub-reader-expand-globs-test
+  (testing "returns the absolute paths corresponding to the passed in globs"
+    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"}
+                                 {"world.scss" "/hello/world.scss"}
+                                 {"*.scss" ["/hello/world.scss"
+                                            "/hello/foo.scss"]
+                                  "**/*.scss" ["/hello/foo/bar.scss"
+                                               "/hello/world.scss"
+                                               "/hello/foo.scss"]})]
+      (is (= ["/hello/foo.scss" "/hello/foo/bar.scss" "/hello/world.scss"]
+             (sut/expand-globs r ["*.scss" "**/*.scss"]))))))
 
 (deftest file-reader-read-file-test
   (testing "returns nil when the file does not exist"
@@ -23,6 +48,21 @@
       (let [r (sut/new-file-reader)]
         (is (= (sut/read-file r (.getAbsolutePath *temp-file*))
                "some styles"))))))
+
+(deftest file-reader-get-absolute-path-test
+  (testing "returns the absolute path corresponding to the relative path passed in"
+    (let [r (sut/new-file-reader)]
+      (is (= (str (System/getProperty "user.dir") "/hello.txt")
+             (sut/get-absolute-path r "hello.txt"))))))
+
+(deftest file-reader-expand-globs-test
+  (testing "returns the absolute paths corresponding to the passed in globs"
+    (let [r (sut/new-file-reader)]
+      (is (= [(.getAbsolutePath (io/file "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs"))
+              (.getAbsolutePath (io/file "test/xyz/dking/css_gardener/test_example/style_vars.cljs"))]
+             (sut/expand-globs r ["test/xyz/dking/css_gardener/test_example/style_vars.cljs"
+                                  "test/xyz/dking/css_gardener/test_example/style_vars.cljs"
+                                  "test/xyz/dking/css_gardener/test_example/no_style_vars.cljs"]))))))
 
 (deftest stub-writer-write-file-test
   (testing "writes the file to the files atom"

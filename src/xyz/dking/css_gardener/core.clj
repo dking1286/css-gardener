@@ -6,11 +6,33 @@
             [xyz.dking.css-gardener.builder :as builder]
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.init :as init]
+            [xyz.dking.css-gardener.io :as gio]
             [xyz.dking.css-gardener.logging :as logging]
             [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.watcher :as watcher]))
 
 (def ^:private cached-files (atom {}))
+
+(s/fdef file-details
+  :args (s/cat :reader ::gio/reader
+               :file ::gio/absolute-path)
+  :ret ::config/file-details)
+
+(defn- file-details
+  [reader file]
+  {:file file
+   :text (gio/read-file reader file)})
+
+(s/fdef augment-config
+  :args (s/cat :reader ::gio/reader
+               :config ::config/config)
+  :ret ::config/augmented-config)
+
+(defn- augment-config
+  [reader config]
+  (let [unique-input-files (->> (gio/expand-globs reader (:input-files config))
+                                (map #(file-details reader %)))]
+    (assoc config :unique-input-files unique-input-files)))
 
 (defn- get-first-error
   [compiled-files]
@@ -50,10 +72,10 @@
       (logging/info (success-message output-file)))))
 
 (defn- handle-file-change
-  [builder output-file changed-file]
+  [builder reader output-file changed-file]
   (when (builder/style-file? builder changed-file)
     (logging/info (str "Detected file changes: " changed-file))
-    (let [file-info (config/file-details changed-file)
+    (let [file-info (file-details reader changed-file)
           compiled-file (builder/build-file builder file-info)]
       (swap! cached-files assoc (:file compiled-file) compiled-file)
       (let [compiled-files (vals @cached-files)]
@@ -66,9 +88,9 @@
 
 (defn build
   "Executes a single build of the user's stylesheet."
-  [builder config]
-  (let [full-config (config/augment-config config)
-        output-file (:output-file config)]
+  [builder reader config]
+  (let [full-config (augment-config reader config)
+        output-file (gio/get-absolute-path reader (:output-file config))]
     (builder/start builder)
     (let [compiled-files (builder/build builder full-config)]
       (output-compiled-files compiled-files output-file))
@@ -76,8 +98,8 @@
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [builder watcher done? config]
-  (let [full-config (config/augment-config config)
+  [builder watcher reader done? config]
+  (let [full-config (augment-config reader config)
         output-file (:output-file config)]
     (builder/start builder)
     (let [compiled-files (builder/build builder full-config)]

@@ -5,7 +5,8 @@
              :refer
              [*temp-file* with-temp-file]]
             [clojure.string :as str]
-            [xyz.dking.css-gardener.builder.sass :as sass]))
+            [xyz.dking.css-gardener.builder.sass :as sass]
+            [xyz.dking.css-gardener.io :as gio]))
 
 (use-fixtures :each with-temp-file)
 
@@ -16,7 +17,8 @@
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/invalid.scss"]
                   :output-file temp-file-name}
           builder (sass/new-builder config)
-          output (with-out-str (build builder config))]
+          reader (gio/new-file-reader)
+          output (with-out-str (build builder reader config))]
       (is (str/includes? output "Error while compiling file"))
       (is (str/includes? output "Invalid CSS"))))
   (testing "builds a css stylesheet from the passed-in list of files"
@@ -24,8 +26,9 @@
           config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/_styles1.scss"]
                   :output-file temp-file-name}
-          builder (sass/new-builder config)]
-      (build builder config)
+          builder (sass/new-builder config)
+          reader (gio/new-file-reader)]
+      (build builder reader config)
       (is (str/includes? (slurp temp-file-name)
                          "background-color: green"))))
   (testing "works with computed styles"
@@ -33,8 +36,9 @@
           config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/styles3.scss"]
                   :output-file temp-file-name}
-          builder (sass/new-builder config)]
-      (build builder config)
+          builder (sass/new-builder config)
+          reader (gio/new-file-reader)]
+      (build builder reader config)
       (is (str/includes? (slurp temp-file-name)
                          "background-color: red")))))
 
