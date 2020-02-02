@@ -1,11 +1,13 @@
 (ns xyz.dking.css-gardener.main
-  (:require [xyz.dking.css-gardener.builder.garden :as garden]
+  (:require [clojure.spec.alpha :as s]
+            [orchestra.spec.test :as orchestra]
+            [xyz.dking.css-gardener.builder.garden :as garden]
             [xyz.dking.css-gardener.builder.sass :as sass]
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.core :as core]
+            [xyz.dking.css-gardener.io :as gio]
             [xyz.dking.css-gardener.logging :as logging]
-            [xyz.dking.css-gardener.watcher :as watcher]
-            [xyz.dking.css-gardener.io :as gio]))
+            [xyz.dking.css-gardener.watcher :as watcher]))
 
 (def help-message
   "TODO")
@@ -32,6 +34,11 @@
             (str "Unknown :type property " (:type config) " found in config.")
             {:type :unknown-builder-type}))))
 
+(s/fdef main
+  :args (s/cat :command string?
+               :args (s/* string?))
+  :ret future?)
+
 (defn main
   "The main process of css-gardener."
   [command & args]
@@ -41,8 +48,12 @@
         log-level (:log-level config)]
     (reset! logging/log-level log-level)
     (cond
-      (or (= command "--help") (= command "-h")) (println help-message)
-      (= command "init") (core/init config)
+      (or (= command "--help") (= command "-h"))
+      (future (println help-message))
+      
+      (= command "init")
+      (future (core/init config))
+
       :else
       (do
         (when (missing-default-config-file? status config-file)
@@ -55,14 +66,19 @@
         (let [builder (get-builder config)
               watcher (watcher/hawk-watcher)
               reader (gio/new-file-reader)
+              writer (gio/new-file-writer)
               done? (promise)]
           (case command
-            "watch" (core/watch builder watcher reader done? config)
-            "build" (core/build builder reader config)
+            "watch"
+            (future (core/watch builder watcher reader writer done? config))
+            
+            "build"
+            (future (core/build builder reader writer config))
+            
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))))
 
 (defn -main
   [& args]
-  (apply main args)
+  @(apply main args)
   (System/exit 0))

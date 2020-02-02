@@ -18,7 +18,8 @@
                   :output-file temp-file-name}
           builder (sass/new-builder config)
           reader (gio/new-file-reader)
-          output (with-out-str (build builder reader config))]
+          writer (gio/new-file-writer)
+          output (with-out-str (build builder reader writer config))]
       (is (str/includes? output "Error while compiling file"))
       (is (str/includes? output "Invalid CSS"))))
   (testing "builds a css stylesheet from the passed-in list of files"
@@ -27,8 +28,9 @@
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/_styles1.scss"]
                   :output-file temp-file-name}
           builder (sass/new-builder config)
-          reader (gio/new-file-reader)]
-      (build builder reader config)
+          reader (gio/new-file-reader)
+          writer (gio/new-file-writer)]
+      (build builder reader writer config)
       (is (str/includes? (slurp temp-file-name)
                          "background-color: green"))))
   (testing "works with computed styles"
@@ -37,8 +39,9 @@
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/styles3.scss"]
                   :output-file temp-file-name}
           builder (sass/new-builder config)
-          reader (gio/new-file-reader)]
-      (build builder reader config)
+          reader (gio/new-file-reader)
+          writer (gio/new-file-writer)]
+      (build builder reader writer config)
       (is (str/includes? (slurp temp-file-name)
                          "background-color: red")))))
 
