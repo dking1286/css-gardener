@@ -38,6 +38,15 @@
       (is (= ["/hello/foo.scss" "/hello/foo/bar.scss" "/hello/world.scss"]
              (sut/expand-globs r ["*.scss" "**/*.scss"]))))))
 
+(deftest stub-reader-update-files-test
+  (testing "updates the text returned by reading a file"
+    (let [r (sut/new-stub-reader {"/hello/world.scss" "some styles"}
+                                 {}
+                                 {})]
+      (is (= (sut/read-file r "/hello/world.scss") "some styles"))
+      (sut/update-file! r "/hello/world.scss" "some other text")
+      (is (= (sut/read-file r "/hello/world.scss") "some other text")))))
+
 (deftest file-reader-read-file-test
   (testing "returns nil when the file does not exist"
     (let [r (sut/new-file-reader)]

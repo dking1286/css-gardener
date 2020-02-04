@@ -1,11 +1,7 @@
 (ns xyz.dking.css-gardener.builder.sass
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [hawk.core :as hawk]
-            [xyz.dking.css-gardener.builder :refer [Builder]]
-            [xyz.dking.css-gardener.logging :as logging]
-            [xyz.dking.css-gardener.utils :as utils]
-            [clojure.spec.alpha :as s]))
+            [xyz.dking.css-gardener.builder :refer [Builder]]))
 
 (defn compile-sass
   "Compiles a single scss file. Returns a map of the form
@@ -27,18 +23,6 @@
 
 (defrecord ScssBuilder []
   Builder
-  (start [this]) ;; Do nothing                                       
-  
-  (stop [this]) ;; Do nothing
-  
-  (build [this config]
-    (pmap compile-sass (:unique-input-files config)))
-  
-  (watch [this config on-change]) ;; Implement me
-
-  (style-file? [this absolute-path]
-    (str/ends-with? absolute-path ".scss"))
-
   (build-file [this file-details]
     (compile-sass file-details)))
 

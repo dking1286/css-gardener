@@ -38,7 +38,7 @@
 (defrecord StubReader [files paths globs-map]
   Reader
   (read-file [this abs-path]
-    (get files abs-path))
+    (get @files abs-path))
   
   (get-absolute-path [this relative-path]
     (get paths relative-path))
@@ -57,7 +57,12 @@
 
 (defn new-stub-reader
   [files paths globs-map]
-  (->StubReader files paths globs-map))
+  (->StubReader (atom files) paths globs-map))
+
+(defn update-file!
+  "Updates the text of the file that will be returned by the stub reader."
+  [stub-reader abs-path new-text]
+  (swap! (:files stub-reader) assoc abs-path new-text))
 
 ;; Filesystem reader implementation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -109,6 +114,10 @@
 (defn new-stub-writer
   []
   (->StubWriter (atom {})))
+
+(defn get-written-file
+  [stub-writer path]
+  (-> stub-writer :files deref (get path)))
 
 ;; Filesystem writer implementation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

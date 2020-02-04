@@ -9,8 +9,6 @@
             [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.watcher :as watcher]))
 
-(def ^:private cached-files (atom {}))
-
 (s/fdef file-details
   :args (s/cat :reader ::gio/reader
                :file ::gio/absolute-path)
@@ -53,7 +51,7 @@
 (s/fdef output-compiled-files
   :args (s/cat :writer ::gio/writer
                :compiled-files (s/nilable (s/coll-of ::builder/output-file))
-               :output-files string?)
+               :output-file string?)
   :ret nil?)
 
 (defn- output-compiled-files
@@ -65,14 +63,13 @@
       (logging/info (success-message output-file)))))
 
 (defn- handle-file-change
-  [builder reader writer output-file changed-file]
-  (when (builder/style-file? builder changed-file)
-    (logging/info (str "Detected file changes: " changed-file))
-    (let [file-info (file-details reader changed-file)
-          compiled-file (builder/build-file builder file-info)]
-      (swap! cached-files assoc (:file compiled-file) compiled-file)
-      (let [compiled-files (vals @cached-files)]
-        (output-compiled-files writer compiled-files output-file)))))
+  [builder reader writer cached-files output-file changed-file]
+  (logging/info (str "Detected file changes: " changed-file))
+  (let [file-info (file-details reader changed-file)
+        compiled-file (builder/build-file builder file-info)]
+    (swap! cached-files assoc (:file compiled-file) compiled-file)
+    (let [compiled-files (vals @cached-files)]
+      (output-compiled-files writer compiled-files output-file))))
 
 (s/fdef init
   :args (s/cat :config ::config/config))
@@ -92,31 +89,31 @@
   "Executes a single build of the user's stylesheet."
   [builder reader writer config]
   (let [full-config (augment-config reader config)
-        output-file (gio/get-absolute-path reader (:output-file config))]
-    (builder/start builder)
-    (let [compiled-files (builder/build builder full-config)]
-      (output-compiled-files writer compiled-files output-file))
-    (builder/stop builder)))
+        output-file (gio/get-absolute-path reader (:output-file config))
+        input-files (:unique-input-files full-config)
+        compiled-files (pmap #(builder/build-file builder %) input-files)]
+    (output-compiled-files writer compiled-files output-file)))
 
 (s/fdef watch
   :args (s/cat :builder ::builder/builder
                :watcher ::watcher/watcher
                :reader ::gio/reader
                :writer ::gio/writer
-               :done? #(instance? clojure.lang.IDeref %)))
+               :done? #(instance? clojure.lang.IDeref %)
+               :config ::config/config))
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [builder watcher reader writer done? config]
+  [builder watcher reader writer cached-files config]
   (let [full-config (augment-config reader config)
-        output-file (gio/get-absolute-path reader (:output-file config))]
-    (builder/start builder)
-    (let [compiled-files (builder/build builder full-config)
-          files-by-name (utils/to-map :file compiled-files)]
-      (output-compiled-files compiled-files output-file)
-      (reset! cached-files files-by-name)
-      (watcher/watch watcher
-                     ["."]
-                     #(handle-file-change builder reader writer output-file %))
-      @done?)))
+        output-file (gio/get-absolute-path reader (:output-file config))
+        input-files (:unique-input-files full-config)
+        compiled-files (pmap #(builder/build-file builder %) input-files)
+        files-by-name (utils/to-map :file compiled-files)]
+    (output-compiled-files writer compiled-files output-file)
+    (reset! cached-files files-by-name)
+    (watcher/watch
+     watcher
+     ["."]
+     #(handle-file-change builder reader writer cached-files output-file %))))
 
