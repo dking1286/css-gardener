@@ -1,7 +1,5 @@
 (ns xyz.dking.css-gardener.main
   (:require [clojure.spec.alpha :as s]
-            [orchestra.spec.test :as orchestra]
-            [xyz.dking.css-gardener.builder.garden :as garden]
             [xyz.dking.css-gardener.builder.sass :as sass]
             [xyz.dking.css-gardener.config :as config]
             [xyz.dking.css-gardener.core :as core]
@@ -28,7 +26,6 @@
   "Gets an instance of the builder type specified in the config map."
   [config]
   (case (:type config)
-    :garden (garden/new-builder config)
     :scss (sass/new-builder config)
     (throw (ex-info
             (str "Unknown :type property " (:type config) " found in config.")
@@ -36,8 +33,7 @@
 
 (s/fdef main
   :args (s/cat :command string?
-               :args (s/* string?))
-  :ret future?)
+               :args (s/* string?)))
 
 (defn main
   "The main process of css-gardener."
@@ -49,10 +45,10 @@
     (reset! logging/log-level log-level)
     (cond
       (or (= command "--help") (= command "-h"))
-      (future (println help-message))
+      (println help-message)
       
       (= command "init")
-      (future (core/init config))
+      (core/init config)
 
       :else
       (do
@@ -64,21 +60,21 @@
           (logging/info (str "WARNING: Configuration file " config-file
                              " not found, using only command line args.")))
         (let [builder (get-builder config)
-              watcher (watcher/hawk-watcher)
+              watcher (watcher/new-hawk-watcher)
               reader (gio/new-file-reader)
               writer (gio/new-file-writer)
-              done? (promise)]
+              cached-files (atom {})]
           (case command
             "watch"
-            (future (core/watch builder watcher reader writer done? config))
+            (core/watch builder watcher reader writer cached-files config)
             
             "build"
-            (future (core/build builder reader writer config))
+            (core/build builder reader writer config)
             
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))))
 
 (defn -main
   [& args]
-  @(apply main args)
+  (apply main args)
   (System/exit 0))
