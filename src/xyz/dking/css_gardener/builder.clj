@@ -44,11 +44,15 @@
              :result (str output-prefix ": " (:text file-details)))))
 
   (get-dependencies [this file-details]
-    (get dependencies (:file file-details))))
+    (get @dependencies (:file file-details))))
 
 (defn new-stub-builder
   [{:keys [output-prefix dependencies error?]}]
-  (->StubBuilder output-prefix dependencies error?))
+  (->StubBuilder output-prefix (atom dependencies) error?))
+
+(defn update-dependencies!
+  [stub-builder file deps]
+  (swap! (:dependencies stub-builder) assoc file deps))
 
 ;; Other builder functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -173,4 +173,57 @@
       (watcher/trigger-change-callback watcher "/some/third/file")
       ;; /some/file should have been recompiled
       (is (str/includes? (gio/get-written-file writer "/some/output/file")
+                         "Input was: Changed text"))))
+  (testing "caches each change"
+    (let [config {:type :scss
+                  :input-files ["some/file" "some/other/file"]
+                  :output-file "some/output/file"}
+          watcher (watcher/new-stub-watcher)
+          reader (gio/new-stub-reader {"/some/file" "Text of the file"
+                                       "/some/other/file" "Text of the other file"}
+                                      {"some/output/file" "/some/output/file"}
+                                      {"some/file" ["/some/file"]
+                                       "some/other/file" ["/some/other/file"]})
+          writer (gio/new-stub-writer)
+          builder (builder/new-stub-builder {:output-prefix "Input was"
+                                             :error? false
+                                             :dependencies {"/some/file" ["/some/third/file"]}})
+          cache (atom {})]
+      (watch builder watcher reader writer cache config)
+      ;; Change /some/file
+      (gio/update-file! reader "/some/file" "Changed text")
+      (watcher/trigger-change-callback watcher "/some/file")
+      ;; Change /some/other/file
+      (gio/update-file! reader "/some/other/file" "Other changed text")
+      (watcher/trigger-change-callback watcher "/some/other/file")
+      ;; Changes to /some/other/file should be present in the output
+      (is (str/includes? (gio/get-written-file writer "/some/output/file")
+                         "Input was: Other changed text"))
+      ;; Changes to /some/file should persist in the output
+      (is (str/includes? (gio/get-written-file writer "/some/output/file")
+                         "Input was: Changed text"))))
+  (testing "picks up changes to the dependencies"
+    (let [config {:type :scss
+                  :input-files ["some/file" "some/other/file"]
+                  :output-file "some/output/file"}
+          watcher (watcher/new-stub-watcher)
+          reader (gio/new-stub-reader {"/some/file" "Text of the file"
+                                       "/some/other/file" "Text of the other file"}
+                                      {"some/output/file" "/some/output/file"}
+                                      {"some/file" ["/some/file"]
+                                       "some/other/file" ["/some/other/file"]})
+          writer (gio/new-stub-writer)
+          builder (builder/new-stub-builder {:output-prefix "Input was"
+                                             :error? false
+                                             :dependencies {"/some/file" ["/some/third/file"]}})
+          cache (atom {})]
+      (watch builder watcher reader writer cache config)
+      ;; Add another dependency of /some/file
+      (builder/update-dependencies! builder "/some/file" ["/some/third/file"
+                                                          "/some/fourth/file"])
+      (watcher/trigger-change-callback watcher "/some/file")
+      ;; /some/file should be recompiled when the new dependency changes
+      (gio/update-file! reader "/some/file" "Changed text")
+      (watcher/trigger-change-callback watcher "/some/fourth/file")
+      (is (str/includes? (gio/get-written-file writer "/some/output/file")
                          "Input was: Changed text")))))
