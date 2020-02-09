@@ -7,7 +7,12 @@
             [xyz.dking.css-gardener.io :as gio]
             [xyz.dking.css-gardener.logging :as logging]
             [xyz.dking.css-gardener.utils :as utils]
-            [xyz.dking.css-gardener.watcher :as watcher]))
+            [xyz.dking.css-gardener.watcher :as watcher]
+            [clojure.tools.namespace.dependency :as dependency]))
+
+(def lock (Object.))
+
+(s/def ::compiled? boolean?)
 
 (s/fdef file-details
   :args (s/cat :reader ::gio/reader
@@ -19,16 +24,14 @@
   {:file file
    :text (gio/read-file reader file)})
 
-(s/fdef augment-config
+(s/fdef unique-input-files
   :args (s/cat :reader ::gio/reader
-               :config ::config/config)
-  :ret ::config/augmented-config)
+               :input-file-globs (s/coll-of string?))
+  :ret (s/coll-of string?))
 
-(defn- augment-config
-  [reader config]
-  (let [unique-input-files (->> (gio/expand-globs reader (:input-files config))
-                                (map #(file-details reader %)))]
-    (assoc config :unique-input-files unique-input-files)))
+(defn- unique-input-files
+  [reader input-file-globs]
+  (gio/expand-globs reader input-file-globs))
 
 (defn- get-first-error
   [compiled-files]
@@ -62,17 +65,105 @@
       (gio/write-file writer output-file style-string)
       (logging/info (success-message output-file)))))
 
-(defn- handle-file-change
-  [builder reader writer cached-files output-file changed-file]
-  (logging/info (str "Detected file changes: " changed-file))
-  (let [file-info (file-details reader changed-file)
-        compiled-file (builder/build-file builder file-info)]
-    (swap! cached-files assoc (:file compiled-file) compiled-file)
-    (let [compiled-files (vals @cached-files)]
-      (output-compiled-files writer compiled-files output-file))))
+(s/fdef input-file?
+  :args (s/cat :input-file-paths (s/coll-of ::gio/absolute-path :kind set?)
+               :changed-file ::gio/absolute-path)
+  :ret boolean?)
 
-(s/fdef init
-  :args (s/cat :config ::config/config))
+(defn- input-file?
+  [input-file-paths changed-file]
+  (contains? input-file-paths changed-file))
+
+(s/fdef dependent-input-files
+  :args (s/cat :dependency-graph ::builder/dependency-graph
+               :changed-file ::gio/absolute-path)
+  :ret (s/coll-of ::gio/absolute-path))
+
+(defn- dependent-input-files
+  [dependency-graph changed-file]
+  (dependency/transitive-dependents dependency-graph changed-file))
+
+(s/fdef get-files-to-recompile
+  :args (s/cat :dependency-graph ::builder/dependency-graph
+               :input-file-paths (s/coll-of ::gio/absolute-path :kind set?)
+               :changed-file ::gio/absolute-path)
+  :ret (s/coll-of ::gio/absolute-path :kind set?))
+
+(defn- get-files-to-recompile
+  [dependency-graph input-file-paths changed-file]
+  (if (input-file? input-file-paths changed-file)
+    #{changed-file}
+    (dependent-input-files dependency-graph changed-file)))
+
+(s/fdef recompile
+  :args (s/cat :reader ::gio/reader
+               :builder ::builder/builder
+               :files-to-recompile (s/coll-of ::gio/absolute-path :kind set?)
+               :file ::builder/output-file)
+  ;; TODO: This return spec is not complete, doesn't contain the result
+  :ret (s/and ::config/file-details
+              (s/keys :opt-un [::compiled?])))
+
+(defn- recompile
+  [reader builder files-to-recompile file]
+  (if-not (contains? files-to-recompile (:file file))
+    file
+    (let [new-file-details (file-details reader (:file file))
+          compiled (builder/build-file builder
+                                       new-file-details)]
+      (assoc compiled :compiled? true))))
+
+(defn- update-cached-files!
+  [cache compiled-files]
+  ;; TODO: Implement
+  )
+
+(defn- update-cached-dependency-graph!
+  [cache compiled-files]
+  ;; TODO: Implement
+  )
+
+(defn- handle-file-change
+  [builder reader writer cache input-file-globs output-file changed-file]
+  (locking lock
+    (let [input-file-paths
+          (set (unique-input-files reader input-file-globs))
+          
+          cached-files
+          (:files-by-name @cache)
+          
+          dependency-graph
+          (:dependency-graph @cache)
+          
+          files-to-recompile
+          (get-files-to-recompile dependency-graph input-file-paths
+                                  changed-file)
+          
+          compiled-files
+          (pmap #(recompile reader builder files-to-recompile %)
+                (vals cached-files))]
+      (output-compiled-files writer compiled-files output-file)
+      ;; (locking lock
+      ;;   ;; Changed file is one of the input files
+      ;;   (when (contains? input-file-paths changed-file)
+      ;;     (if (contains? (:files-by-name @cached-files))
+      ;;       (logging/info (str "Detected new file: " changed-file))
+      ;;       (logging/info (str "Detected file changes: " changed-file)))
+      ;;     (swap! cached-files assoc-in [:files-by-name changed-file]
+      ;;            (-> (file-details reader changed-file)
+      ;;                (assoc :needs-recompile? true))))
+      ;;   ;; Changed file is a dependency of one of the input files
+      ;;   ;; Rewrite this part, get all the files that need recompile, and build them
+      ;;   (let [file-info (file-details reader changed-file)
+      ;;         compiled-file (builder/build-file builder file-info)]
+      ;;     (swap! cached-files
+      ;;            update :files-by-name
+      ;;            assoc (:file compiled-file) compiled-file)
+      ;;     (let [compiled-files (-> @cached-files :files-by-name vals)]
+      ;;       (output-compiled-files writer compiled-files output-file))))
+      ))
+  (s/fdef init
+    :args (s/cat :config ::config/config)))
 
 (defn init
   "Initializes a css-gardener project in the current directory."
@@ -88,9 +179,10 @@
 (defn build
   "Executes a single build of the user's stylesheet."
   [builder reader writer config]
-  (let [full-config (augment-config reader config)
+  (let [input-file-globs (:input-files config)
+        input-files (->> (unique-input-files reader input-file-globs)
+                         (map #(file-details reader %)))
         output-file (gio/get-absolute-path reader (:output-file config))
-        input-files (:unique-input-files full-config)
         compiled-files (pmap #(builder/build-file builder %) input-files)]
     (output-compiled-files writer compiled-files output-file)))
 
@@ -99,21 +191,26 @@
                :watcher ::watcher/watcher
                :reader ::gio/reader
                :writer ::gio/writer
-               :done? #(instance? clojure.lang.IDeref %)
+               :cached-files #(instance? clojure.lang.IDeref %)
                :config ::config/config))
 
 (defn watch
   "Compiles the user's stylesheets on change."
   [builder watcher reader writer cached-files config]
-  (let [full-config (augment-config reader config)
+  (let [input-file-globs (:input-files config)
+        input-files (->> (unique-input-files reader input-file-globs)
+                         (map #(file-details reader %)))
         output-file (gio/get-absolute-path reader (:output-file config))
-        input-files (:unique-input-files full-config)
         compiled-files (pmap #(builder/build-file builder %) input-files)
-        files-by-name (utils/to-map :file compiled-files)]
+        files-by-name (utils/to-map :file compiled-files)
+        dependency-graph (builder/get-dependency-graph builder compiled-files)]
     (output-compiled-files writer compiled-files output-file)
-    (reset! cached-files files-by-name)
+    (swap! cached-files assoc
+           :files-by-name files-by-name
+           :dependency-graph dependency-graph)
     (watcher/watch
      watcher
      ["."]
-     #(handle-file-change builder reader writer cached-files output-file %))))
+     #(handle-file-change builder reader writer cached-files
+                          input-file-globs output-file %))))
 
