@@ -36,19 +36,28 @@
                :args (s/* string?)))
 
 (defn main
-  "The main process of css-gardener."
+  "The main process of css-gardener.
+
+  Returns a deref-able object. When deref'ed, the thread will block until the
+  operation is done."
   [command & args]
   (let [{:keys [config-file] :as cli-config} (config/from-cli-args args)
-        {:keys [status reason result]} (config/from-file config-file)
+        {:keys [status result]} (config/from-file config-file)
         config (merge result cli-config)
-        log-level (:log-level config)]
+        log-level (:log-level config)
+        done? (promise)]
     (reset! logging/log-level log-level)
     (cond
       (or (= command "--help") (= command "-h"))
-      (println help-message)
+      (do
+        (println help-message)
+        (deliver done? true))
+      
       
       (= command "init")
-      (core/init config)
+      (do
+        (core/init config)
+        (deliver done? true))
 
       :else
       (do
@@ -63,18 +72,21 @@
               watcher (watcher/new-hawk-watcher)
               reader (gio/new-file-reader)
               writer (gio/new-file-writer)
-              cached-files (atom {})]
+              cache (atom {})]
           (case command
             "watch"
-            (core/watch builder watcher reader writer cached-files config)
+            (core/watch builder watcher reader writer cache config)
             
             "build"
-            (core/build builder reader writer config)
+            (do
+              (core/build builder reader writer config)
+              (deliver done? true))
             
             (throw (ex-info (str "Unknown command \"" command "\".")
-                            {:type :unknown-command}))))))))
+                            {:type :unknown-command}))))))
+    done?))
 
 (defn -main
   [& args]
-  (apply main args)
+  @(apply main args)
   (System/exit 0))

@@ -12,8 +12,6 @@
 
 (def lock (Object.))
 
-(s/def ::compiled? boolean?)
-
 (s/fdef file-details
   :args (s/cat :reader ::gio/reader
                :file ::gio/absolute-path)
@@ -78,8 +76,7 @@
                :files-to-recompile (s/coll-of ::gio/absolute-path :kind set?)
                :file ::builder/output-file)
   ;; TODO: This return spec is not complete, doesn't contain the result
-  :ret (s/and ::config/file-details
-              (s/keys :opt-un [::compiled?])))
+  :ret (s/and ::config/file-details))
 
 (defn- recompile
   [reader builder files-to-recompile file]
@@ -144,12 +141,12 @@
                :watcher ::watcher/watcher
                :reader ::gio/reader
                :writer ::gio/writer
-               :cached-files #(instance? clojure.lang.IDeref %)
+               :cache #(instance? clojure.lang.IDeref %)
                :config ::config/config))
 
 (defn watch
   "Compiles the user's stylesheets on change."
-  [builder watcher reader writer cached-files config]
+  [builder watcher reader writer cache config]
   (let [input-file-globs (:input-files config)
         input-files (->> (gio/expand-globs reader input-file-globs)
                          (map #(file-details reader %)))
@@ -158,12 +155,11 @@
         files-by-name (utils/to-map :file compiled-files)
         dependency-graph (builder/get-dependency-graph builder compiled-files)]
     (output-compiled-files writer compiled-files output-file)
-    (swap! cached-files assoc
+    (swap! cache assoc
            :files-by-name files-by-name
            :dependency-graph dependency-graph)
     (watcher/watch
      watcher
      ["."]
-     #(handle-file-change builder reader writer cached-files
+     #(handle-file-change builder reader writer cache
                           input-file-globs output-file %))))
-
