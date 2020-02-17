@@ -1,5 +1,6 @@
 .cpcache
 .css-gardener
+.idea
 .nrepl-port
 .shadow-cljs
 node_modules
