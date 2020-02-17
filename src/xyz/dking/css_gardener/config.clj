@@ -1,10 +1,8 @@
 (ns xyz.dking.css-gardener.config
   (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.tools.cli :as cli]
-            [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.io :as gio])
   (:import java.io.FileNotFoundException))
 

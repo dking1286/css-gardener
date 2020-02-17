@@ -31,10 +31,6 @@
             (str "Unknown :type property " (:type config) " found in config.")
             {:type :unknown-builder-type}))))
 
-(s/fdef main
-  :args (s/cat :command string?
-               :args (s/* string?)))
-
 (defn main
   "The main process of css-gardener.
 
@@ -85,6 +81,10 @@
             (throw (ex-info (str "Unknown command \"" command "\".")
                             {:type :unknown-command}))))))
     done?))
+
+(s/fdef main
+  :args (s/cat :command string?
+               :args (s/* string?)))
 
 (defn -main
   [& args]

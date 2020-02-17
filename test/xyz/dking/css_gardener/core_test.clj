@@ -8,13 +8,14 @@
             [xyz.dking.css-gardener.test-helpers
              :refer
              [*temp-file* with-temp-file]]
-            [xyz.dking.css-gardener.watcher :as watcher]))
+            [xyz.dking.css-gardener.watcher :as watcher])
+  (:import [java.io File]))
 
 (use-fixtures :each with-temp-file)
 
 (deftest sass-builder-build-test
   (testing "logs an error when a stylesheet is invalid"
-    (let [temp-file-name (.getAbsolutePath *temp-file*)
+    (let [temp-file-name (.getAbsolutePath ^File *temp-file*)
           config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/invalid.scss"]
                   :output-file temp-file-name}
@@ -25,7 +26,7 @@
       (is (str/includes? output "Error while compiling file"))
       (is (str/includes? output "Invalid CSS"))))
   (testing "builds a css stylesheet from the passed-in list of files"
-    (let [temp-file-name (.getAbsolutePath *temp-file*)
+    (let [temp-file-name (.getAbsolutePath ^File *temp-file*)
           config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/_styles1.scss"]
                   :output-file temp-file-name}
@@ -36,7 +37,7 @@
       (is (str/includes? (slurp temp-file-name)
                          "background-color: green"))))
   (testing "works with computed styles"
-    (let [temp-file-name (.getAbsolutePath *temp-file*)
+    (let [temp-file-name (.getAbsolutePath ^File *temp-file*)
           config {:type :scss
                   :input-files ["test/xyz/dking/css_gardener/test_example/scss/styles3.scss"]
                   :output-file temp-file-name}

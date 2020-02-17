@@ -1,6 +1,7 @@
 (ns xyz.dking.css-gardener.watcher
   (:require [hawk.core :as hawk]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s])
+  (:import [java.io File]))
 
 (declare Watcher)
 
@@ -16,7 +17,7 @@
 
 (defrecord StubWatcher [on-changes]
   Watcher
-  (watch [this paths callback]
+  (watch [_ _ callback]
     (reset! on-changes callback)))
 
 (defn new-stub-watcher
@@ -32,13 +33,14 @@
 
 (defrecord HawkWatcher [watcher]
   Watcher
-  (watch [this paths callback]
-    (let [w (hawk/watch! [{:paths paths
-                           :handler (fn [_ {:keys [file]}]
-                                      (callback (.getAbsolutePath file)))}])]
+  (watch [_ paths callback]
+    (let [w (hawk/watch!
+              [{:paths paths
+                :handler (fn [_ {:keys [file]}]
+                           (callback (.getAbsolutePath ^File file)))}])]
       (reset! watcher w)))
   
-  (stop [this]
+  (stop [_]
     (when @watcher
       (hawk/stop! @watcher)
       (reset! watcher nil))))

@@ -4,10 +4,6 @@
             [me.raynes.fs :as fs])
   (:import java.util.UUID))
 
-(s/fdef trace
-  :args (s/cat :message (s/? (s/nilable string?)) :val any?)
-  :fn #(= (:ret %) (-> % :args :val)))
-
 (defn trace
   "Logs a value and returns it unchanged."
   ([val] (trace nil val))
@@ -16,22 +12,27 @@
    (println val)
    val))
 
+(s/fdef trace
+  :args (s/cat :message (s/? (s/nilable string?))
+               :val any?)
+  :fn #(= (:ret %) (-> % :args :val)))
+
 (defn map-vals
   "Maps over a seq of key-value pairs, applying the mapping function to
   each value."
   [f & args]
   (apply map (fn [[key val]] [key (f val)]) args))
 
-(s/fdef to-map
-  :args (s/cat :key-fn (s/fspec :args (s/cat :element any?))
-               :seq sequential?)
-  :ret map?)
-
 (defn to-map
   "Converts a sequence to a map, calling the key-fn on each element to determine
   the corresponding key."
   [key-fn seq]
   (into {} (map (fn [x] [(key-fn x) x])) seq))
+
+(s/fdef to-map
+  :args (s/cat :key-fn (s/fspec :args (s/cat :element any?))
+               :seq sequential?)
+  :ret map?)
 
 (defn unique-by
   "Gets a sequence of unique values in a seq, with uniqueness
@@ -62,7 +63,7 @@
                                         
       :else
       (let [[beginning end] (str/split glob #"\/\*\*\/")]
-        (->> (fs/walk (fn [root dirs files] root) beginning)
+        (->> (fs/walk (fn [root _ _] root) beginning)
              (mapcat #(fs/glob % end)))))))
 
 (defn unique-files

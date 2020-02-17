@@ -18,6 +18,10 @@
          (s/or :success (s/keys :req-un [::result])
                :failure (s/keys :req-un [::error]))))
 
+(defprotocol Builder
+  (build-file [builder file-details])
+  (get-dependencies [builder file-details]))
+
 (s/fdef build-file
   :args (s/cat :builder ::builder
                :file-details ::config/file-details)
@@ -28,22 +32,18 @@
                :file-details ::config/file-details)
   :ret (s/coll-of ::gio/absolute-path))
 
-(defprotocol Builder
-  (build-file [builder file-details])
-  (get-dependencies [builder file-details]))
-
 ;; Stub Builder implementation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defrecord StubBuilder [output-prefix dependencies error?]
   Builder
-  (build-file [this file-details]
+  (build-file [_ file-details]
     (if error?
       (assoc file-details
              :error (Exception. (str output-prefix ": " (:text file-details))))
       (assoc file-details
              :result (str output-prefix ": " (:text file-details)))))
 
-  (get-dependencies [this file-details]
+  (get-dependencies [_ file-details]
     (get @dependencies (:file file-details))))
 
 (defn new-stub-builder
@@ -63,14 +63,14 @@
   (->> (get-dependencies builder file)
        (map (fn [dep] [(:file file) dep]))))
 
-(s/fdef get-dependency-graph
-  :args (s/cat :builder ::builder
-               :files (s/coll-of ::config/file-details))
-  :ret ::dependency-graph)
-
 (defn get-dependency-graph
   [builder files]
   (->> files
        (mapcat #(get-dependency-graph-nodes builder %))
        (reduce (fn [graph [file dep]] (dependency/depend graph file dep))
                (dependency/graph))))
+
+(s/fdef get-dependency-graph
+  :args (s/cat :builder ::builder
+               :files (s/coll-of ::config/file-details))
+  :ret ::dependency-graph)

@@ -8,19 +8,20 @@
             [xyz.dking.css-gardener.logging :as logging]
             [xyz.dking.css-gardener.utils :as utils]
             [xyz.dking.css-gardener.watcher :as watcher]
-            [clojure.tools.namespace.dependency :as dependency]))
+            [clojure.tools.namespace.dependency :as dependency])
+  (:import [clojure.lang IDeref]))
 
 (def lock (Object.))
-
-(s/fdef file-details
-  :args (s/cat :reader ::gio/reader
-               :file ::gio/absolute-path)
-  :ret ::config/file-details)
 
 (defn- file-details
   [reader file]
   {:file file
    :text (gio/read-file reader file)})
+
+(s/fdef file-details
+  :args (s/cat :reader ::gio/reader
+               :file ::gio/absolute-path)
+  :ret ::config/file-details)
 
 (defn- get-first-error
   [compiled-files]
@@ -40,12 +41,6 @@
        (map :result)
        (str/join "\n\n")))
 
-(s/fdef output-compiled-files
-  :args (s/cat :writer ::gio/writer
-               :compiled-files (s/nilable (s/coll-of ::builder/output-file))
-               :output-file string?)
-  :ret nil?)
-
 (defn- output-compiled-files
   [writer compiled-files output-file]
   (if-some [error (get-first-error compiled-files)]
@@ -54,11 +49,11 @@
       (gio/write-file writer output-file style-string)
       (logging/info (success-message output-file)))))
 
-(s/fdef get-files-to-recompile
-  :args (s/cat :dependency-graph ::builder/dependency-graph
-               :input-file-paths (s/coll-of ::gio/absolute-path :kind set?)
-               :changed-file ::gio/absolute-path)
-  :ret (s/coll-of ::gio/absolute-path :kind set?))
+(s/fdef output-compiled-files
+  :args (s/cat :writer ::gio/writer
+               :compiled-files (s/nilable (s/coll-of ::builder/output-file))
+               :output-file string?)
+  :ret nil?)
 
 (defn- get-files-to-recompile
   [dependency-graph input-file-paths changed-file]
@@ -70,13 +65,11 @@
     ;; any input files that depend on it.
     (dependency/transitive-dependents dependency-graph changed-file)))
 
-(s/fdef recompile
-  :args (s/cat :reader ::gio/reader
-               :builder ::builder/builder
-               :files-to-recompile (s/coll-of ::gio/absolute-path :kind set?)
-               :file ::builder/output-file)
-  ;; TODO: This return spec is not complete, doesn't contain the result
-  :ret (s/and ::config/file-details))
+(s/fdef get-files-to-recompile
+  :args (s/cat :dependency-graph ::builder/dependency-graph
+               :input-file-paths (s/coll-of ::gio/absolute-path :kind set?)
+               :changed-file ::gio/absolute-path)
+  :ret (s/coll-of ::gio/absolute-path :kind set?))
 
 (defn- recompile
   [reader builder files-to-recompile file]
@@ -84,6 +77,14 @@
     file
     (let [new-file-details (file-details reader (:file file))]
       (builder/build-file builder new-file-details))))
+
+(s/fdef recompile
+  :args (s/cat :reader ::gio/reader
+               :builder ::builder/builder
+               :files-to-recompile (s/coll-of ::gio/absolute-path :kind set?)
+               :file ::builder/output-file)
+  ;; TODO: This return spec is not complete, doesn't contain the result
+  :ret (s/and ::config/file-details))
 
 (defn- handle-file-change
   [builder reader writer cache input-file-globs output-file changed-file]
@@ -112,19 +113,13 @@
                                                              compiled-files))
       (output-compiled-files writer compiled-files output-file))))
 
-(s/fdef init
-  :args (s/cat :config ::config/config))
-
 (defn init
   "Initializes a css-gardener project in the current directory."
   [config]
   (init/initialize-project config))
 
-(s/fdef build
-  :args (s/cat :builder ::builder/builder
-               :reader ::gio/reader
-               :writer ::gio/writer
-               :config ::config/config))
+(s/fdef init
+  :args (s/cat :config ::config/config))
 
 (defn build
   "Executes a single build of the user's stylesheet."
@@ -136,12 +131,10 @@
         compiled-files (pmap #(builder/build-file builder %) input-files)]
     (output-compiled-files writer compiled-files output-file)))
 
-(s/fdef watch
+(s/fdef build
   :args (s/cat :builder ::builder/builder
-               :watcher ::watcher/watcher
                :reader ::gio/reader
                :writer ::gio/writer
-               :cache #(instance? clojure.lang.IDeref %)
                :config ::config/config))
 
 (defn watch
@@ -163,3 +156,11 @@
      ["."]
      #(handle-file-change builder reader writer cache
                           input-file-globs output-file %))))
+
+(s/fdef watch
+  :args (s/cat :builder ::builder/builder
+               :watcher ::watcher/watcher
+               :reader ::gio/reader
+               :writer ::gio/writer
+               :cache #(instance? IDeref %)
+               :config ::config/config))
