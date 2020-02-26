@@ -17,15 +17,25 @@ deps:
 clean:
 	rm -rf .cpcache .css-gardener .shadow-cljs target
 
-# Runs all of the tests for the project
-test:
-	clojure -A:test -m cognitect.test-runner
-	clojure -A:test:shadow-cljs -m shadow.cljs.devtools.cli release cli-test
-	node target/cli-test/main.js
+# Builds and watches the main cljs bundle for development
+cljs-main-watch:
+	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch main
+
+# Runs the cljs repl for development
+# Note: For this to work, you must run `make cljs-main-watch`
+# in another terminal
+cljs-main-repl:
+	node target/main-dev/main.js
 
 # Watches and reruns ClojureScript tests on change
 cljs-tests-watch:
-	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch cli-test
+	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch main-test
+
+# Runs all of the tests for the project
+test:
+	clojure -A:test -m cognitect.test-runner
+	clojure -A:test:shadow-cljs -m shadow.cljs.devtools.cli release main-test
+	node target/main-test/main.js
 
 # Copies all of the java dependencies into target/java-deps
 # This directory is included in the npm package, and is on
