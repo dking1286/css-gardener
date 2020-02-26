@@ -6,7 +6,18 @@
                       refactor-nrepl.middleware/wrap-refactor]}
 
  :builds
- {:cli {:target :node-script
+ {:main {:target :node-script
+         :output-to "target/main-dev/main.js"
+         :main xyz.dking.css-gardener.main/main
+         :closure-defines {xyz.dking.css-gardener.main/RUN_MAIN false}
+         :source-map false
+         :release
+         {:output-to "target/main/main.js"
+          :closure-defines {xyz.dking.css-gardener.mair/RUN_MAIN true}}}
+  :main-test {:target :node-test
+              :output-to "target/main-test/main.js"
+              :dev {:autorun true}}
+  :cli {:target :node-script
         :output-to "target/cli-dev/main.js"
         :main xyz.dking.css-gardener.cli.main/main
         :closure-defines {xyz.dking.css-gardener.cli.main/RUN_MAIN false}
