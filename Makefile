@@ -19,7 +19,7 @@ clean:
 
 # Builds and watches the main cljs bundle for development
 cljs-main-watch:
-	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch main
+	npx shadow-cljs watch main
 
 # Runs the cljs repl for development
 # Note: For this to work, you must run `make cljs-main-watch`
@@ -29,12 +29,12 @@ cljs-main-repl:
 
 # Watches and reruns ClojureScript tests on change
 cljs-tests-watch:
-	clojure -A:dev:shadow-cljs -m shadow.cljs.devtools.cli watch main-test
+	npx shadow-cljs watch main-test
 
 # Runs all of the tests for the project
 test:
 	clojure -A:test -m cognitect.test-runner
-	clojure -A:test:shadow-cljs -m shadow.cljs.devtools.cli release main-test
+	npx shadow-cljs release main-test
 	node target/main-test/main.js
 
 # Copies all of the java dependencies into target/java-deps
@@ -49,7 +49,7 @@ java-deps:
 
 # Builds the node js binary for npm distribution
 npm-binary:
-	clojure -A:shadow-cljs -m shadow.cljs.devtools.cli release cli
+	npx shadow-cljs release cli
 	chmod +x target/cli/main.js
 
 # Deploys the Clojure code to Clojars

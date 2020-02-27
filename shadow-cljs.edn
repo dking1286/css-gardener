@@ -1,9 +1,6 @@
-{:source-paths ["src" "test"]
+{:deps {:aliases [:shadow-cljs]}
 
- :deps {:aliases [:shadow-cljs]}
-
- :nrepl {:middleware [cider.nrepl/cider-middleware
-                      refactor-nrepl.middleware/wrap-refactor]}
+ :nrepl {:port 8081}
 
  :builds
  {:main {:target :node-script
@@ -24,7 +21,4 @@
         :source-map false
         :release
         {:output-to "target/cli/main.js"
-         :closure-defines {xyz.dking.css-gardener.cli.main/RUN_MAIN true}}}
-  :cli-test {:target :node-test
-             :output-to "target/cli-test/main.js"
-             :dev {:autorun true}}}}
+         :closure-defines {xyz.dking.css-gardener.cli.main/RUN_MAIN true}}}}}

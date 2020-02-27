@@ -19,6 +19,7 @@
     "which": "^2.0.2"
   },
   "devDependencies": {
+    "shadow-cljs": "^2.8.88",
     "source-map-support": "^0.5.16",
     "ws": "^7.2.1"
   }
