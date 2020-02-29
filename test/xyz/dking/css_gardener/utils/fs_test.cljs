@@ -29,6 +29,25 @@
                (<! (sut/glob "test/xyz/dking/css_gardener/test_example/nested/**/*.cljs"))))
         (done)))))
 
+(deftest unique-files-expands-globs
+  (testing "expands globs passed in"
+    (async done
+      (go
+        (is (= ["test/xyz/dking/css_gardener/test_example/nested/nested/no_style_vars.cljs"
+                "test/xyz/dking/css_gardener/test_example/nested/no_style_vars.cljs"]
+               (<! (sut/unique-files ["test/xyz/dking/css_gardener/test_example/nested/**/*.cljs"]))))
+        (done)))))
+
+(deftest unique-files-removes-duplicates
+  (testing "expands globs, removing duplicate files"
+    (async done
+      (go
+        (is (= ["test/xyz/dking/css_gardener/test_example/nested/nested/no_style_vars.cljs"
+                "test/xyz/dking/css_gardener/test_example/nested/no_style_vars.cljs"]
+               (<! (sut/unique-files ["test/xyz/dking/css_gardener/test_example/nested/**/*.cljs"
+                                      "test/xyz/dking/css_gardener/test_example/nested/**/*.cljs"]))))
+        (done)))))
+
 (deftest exists-no-file-test
   (testing "returns a channel that yields false when the file does not exist"
     (async done
