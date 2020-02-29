@@ -16,6 +16,7 @@
   "author": "Daniel King",
   "license": "EPL-2.0",
   "dependencies": {
+    "glob": "^7.1.6",
     "which": "^2.0.2"
   },
   "devDependencies": {
