@@ -1,4 +1,5 @@
-(ns xyz.dking.css-gardener.v1.main)
+(ns xyz.dking.css-gardener.v1.main
+  (:require [xyz.dking.css-gardener.v1.args]))
 
 (declare RUN_MAIN)
 

@@ -34,4 +34,18 @@
 
 (defn map
   [f ch]
-  (transform (cljs.core/map f) ch))
+  (transform (cljs.core/map (fn [x]
+                              (if (ex-data x)
+                                x
+                                (f x))))
+             ch))
+
+(defn trace
+  ([ch] (trace nil ch))
+  ([prefix ch]
+   (transform (cljs.core/map (fn [x]
+                               (if prefix
+                                 (println (str prefix x))
+                                 (println x))
+                               x))
+              ch)))
