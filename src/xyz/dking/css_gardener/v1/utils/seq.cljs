@@ -1,4 +1,4 @@
-(ns xyz.dking.css-gardener.utils.seq)
+(ns xyz.dking.css-gardener.v1.utils.seq)
 
 (defn unique-by
   "Gets a sequence of unique values in a seq, with uniqueness

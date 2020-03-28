@@ -1,6 +1,6 @@
-(ns xyz.dking.css-gardener.utils.seq-test
+(ns xyz.dking.css-gardener.v1.utils.seq-test
   (:require [clojure.test :refer [deftest testing is]]
-            [xyz.dking.css-gardener.utils.seq :refer [unique-by]]))
+            [xyz.dking.css-gardener.v1.utils.seq :refer [unique-by]]))
 
 (deftest unique-by-test
   (testing "returns nil when nil is passed in."

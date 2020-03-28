@@ -1,4 +1,4 @@
-(ns xyz.dking.css-gardener.utils.errors
+(ns xyz.dking.css-gardener.v1.utils.errors
   (:require [clojure.string :as string]))
 
 (defn not-found

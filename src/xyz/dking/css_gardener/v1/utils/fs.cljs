@@ -1,12 +1,10 @@
-(ns xyz.dking.css-gardener.utils.fs
+(ns xyz.dking.css-gardener.v1.utils.fs
   (:refer-clojure :exclude [exists?])
   (:require ["fs" :as fs]
             ["glob" :as node-glob]
-            [clojure.core.async :as ca :refer [go >! chan]]
-            [clojure.string :as string]
-            [xyz.dking.css-gardener.utils.async :as a]
-            [xyz.dking.css-gardener.utils.errors :as errors]
-            [xyz.dking.css-gardener.utils.seq :refer [unique]]))
+            [clojure.core.async :as ca]
+            [xyz.dking.css-gardener.v1.utils.async :as a]
+            [xyz.dking.css-gardener.v1.utils.seq :refer [unique]]))
 
 (defn glob
   [pattern]

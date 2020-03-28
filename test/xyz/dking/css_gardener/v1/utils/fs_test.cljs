@@ -1,8 +1,8 @@
-(ns xyz.dking.css-gardener.utils.fs-test
+(ns xyz.dking.css-gardener.v1.utils.fs-test
   (:require [clojure.core.async :refer [go <!]]
             [clojure.test :refer [deftest testing is async]]
-            [xyz.dking.css-gardener.utils.fs :as sut]
-            [xyz.dking.css-gardener.utils.errors :as errors]
+            [xyz.dking.css-gardener.v1.utils.fs :as sut]
+            [xyz.dking.css-gardener.v1.utils.errors :as errors]
             [clojure.string :as string]))
 
 (deftest glob-not-found

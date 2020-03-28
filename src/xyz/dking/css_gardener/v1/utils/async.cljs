@@ -1,7 +1,7 @@
-(ns xyz.dking.css-gardener.utils.async
+(ns xyz.dking.css-gardener.v1.utils.async
   (:refer-clojure :exclude [map])
-  (:require [clojure.core.async :refer [go go-loop >! chan put! close! pipe]]
-            [xyz.dking.css-gardener.utils.errors :as errors]))
+  (:require [clojure.core.async :refer [go chan put! close! pipe]]
+            [xyz.dking.css-gardener.v1.utils.errors :as errors]))
 
 (defn callback->channel
   [f & args]

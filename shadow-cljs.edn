@@ -1,16 +1,20 @@
-{:deps {:aliases [:dev :test :shadow-cljs]}
+{:source-paths ["src" "dev" "test"]
+
+ :dependencies [[org.clojure/core.async "1.0.567"]
+                [org.clojure/tools.cli "0.4.2"]
+                [org.clojure/tools.namespace "0.3.1"]]
 
  :nrepl {:port 8081}
 
  :builds
  {:main {:target :node-script
          :output-to "target/main-dev/main.js"
-         :main xyz.dking.css-gardener.main/main
-         :closure-defines {xyz.dking.css-gardener.main/RUN_MAIN false}
+         :main xyz.dking.css-gardener.v1.main/main
+         :closure-defines {xyz.dking.css-gardener.v1.main/RUN_MAIN false}
          :source-map false
          :release
          {:output-to "target/main/main.js"
-          :closure-defines {xyz.dking.css-gardener.main/RUN_MAIN true}}}
+          :closure-defines {xyz.dking.css-gardener.v1.main/RUN_MAIN true}}}
 
   :main-test {:target :node-test
               :output-to "target/main-test-dev/main.js"
