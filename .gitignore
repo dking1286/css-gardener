@@ -1,6 +1,4 @@
-.cpcache
-.css-gardener
-.nrepl-port
 .shadow-cljs
+.vscode
 node_modules
 target

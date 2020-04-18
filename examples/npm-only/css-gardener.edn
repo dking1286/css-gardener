@@ -1,3 +1,0 @@
-{:type :garden
- :input-files ["src/**/style.cljs"]
- :output-file "public/css/style.css"}
