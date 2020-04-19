@@ -1,0 +1,19 @@
+{
+  "name": "@css-gardener/css-transformer",
+  "version": "0.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npx shadow-cljs release main"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener/css-transformer"
+  },
+  "author": "Daniel King",
+  "license": "EPL-2.0",
+  "devDependencies": {
+    "shadow-cljs": "^2.8.98"
+  }
+}

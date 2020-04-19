@@ -1,0 +1,30 @@
+{
+  "name": "@css-gardener/core",
+  "version": "0.0.0",
+  "description": "The core functionality of the css-gardener tool",
+  "main": "dist/main.js",
+  "bin": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener/packages/css-gardener-core"
+  },
+  "keywords": [
+    "css",
+    "cljs",
+    "clojure",
+    "clojurescript",
+    "stylesheet",
+    "style"
+  ],
+  "author": "Daniel King",
+  "license": "EPL-2.0",
+  "dependencies": {
+    "@css-gardener/css-transformer": "^0.0.0"
+  },
+  "devDependencies": {
+    "shadow-cljs": "^2.8.98"
+  }
+}
