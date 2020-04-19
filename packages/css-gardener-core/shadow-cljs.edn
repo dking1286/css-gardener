@@ -1,0 +1,6 @@
+{:source-paths ["src"]
+ 
+ :builds {:main {:target :node-script
+                 :output-to "target/main-dev/main.js"
+                 :main css-gardener.core.main/main
+                 :release {:output-to "dist/main.js"}}}}
