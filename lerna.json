@@ -1,6 +1,6 @@
 {
   "packages": [
-    "packages/*"
+    "packages/css-gardener-core"
   ],
   "version": "0.0.0"
 }
