@@ -5,6 +5,7 @@
   "main": "dist/main.js",
   "bin": "dist/main.js",
   "scripts": {
+    "release": "shadow-cljs release main",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,10 +22,5 @@
   ],
   "author": "Daniel King",
   "license": "EPL-2.0",
-  "dependencies": {
-    "@css-gardener/css-transformer": "^0.0.0"
-  },
-  "devDependencies": {
-    "shadow-cljs": "^2.8.98"
-  }
+  "dependencies": {}
 }
