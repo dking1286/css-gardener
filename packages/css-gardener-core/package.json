@@ -7,7 +7,8 @@
   "scripts": {
     "repl": "node target/main-dev/main.js",
     "release": "shadow-cljs release main",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test-watch": "shadow-cljs watch main-test",
+    "test": "shadow-cljs release main-test && node target/main-test/main.js"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,8 @@
   ],
   "author": "Daniel King",
   "license": "EPL-2.0",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "shadow-cljs": "^2.8.101"
+  }
 }
