@@ -1,6 +1,20 @@
-{:source-paths ["src"]
+{:dependencies [[org.clojure/core.async "1.1.587"]
+                [org.clojure/tools.namespace "1.0.0"]]
+
+ :source-paths ["src"]
  
  :builds {:main {:target :node-script
                  :output-to "target/main-dev/main.js"
                  :main css-gardener.core.main/main
-                 :release {:output-to "dist/main.js"}}}}
+                 :release {:output-to "dist/main.js"
+                           ;; Need simple optimizations for now, because
+                           ;; we are using with-redefs in
+                           ;; css-gardener.core.cljs-parsing
+                           ;; TODO: Switch back to advanced when this is fixed
+                           :compiler-options {:optimizations :simple}}}
+          
+          :main-test {:target :node-test
+                      :output-to "target/main-test-dev/main.js"
+                      :autorun true
+                      :release {:output-to "target/main-test/main.js"
+                                :autorun false}}}}
