@@ -6,12 +6,7 @@
  :builds {:main {:target :node-script
                  :output-to "target/main-dev/main.js"
                  :main css-gardener.core.main/main
-                 :release {:output-to "dist/main.js"
-                           ;; Need simple optimizations for now, because
-                           ;; we are using with-redefs in
-                           ;; css-gardener.core.cljs-parsing
-                           ;; TODO: Switch back to advanced when this is fixed
-                           :compiler-options {:optimizations :simple}}}
+                 :release {:output-to "dist/main.js"}}
           
           :main-test {:target :node-test
                       :output-to "target/main-test-dev/main.js"
