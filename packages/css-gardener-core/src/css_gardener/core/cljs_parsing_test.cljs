@@ -1,6 +1,6 @@
 (ns css-gardener.core.cljs-parsing-test
   (:require ["path" :as path]
-            [clojure.core.async :refer [chan go <! >!]]
+            [clojure.core.async :refer [go <!]]
             [clojure.test :refer [deftest testing is async]]
             [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
                                                     ns-name->relative-path
@@ -9,6 +9,8 @@
                                                     stylesheet-deps-from-ns-decl
                                                     all-deps-from-ns-decl]]
             [css-gardener.core.utils.errors :as errors]))
+
+(def cwd (path/resolve "."))
 
 (deftest t-deps-from-ns-decl
   (testing "parses namespace dependencies"
@@ -34,8 +36,6 @@
   (testing "Converts string namespaces into file names"
     (is (= "@css-gardener/sass-transformer"
            (ns-name->relative-path "@css-gardener/sass-transformer")))))
-
-(def cwd (path/resolve "."))
 
 (deftest t-ns-name->possible-absolute-paths
   (testing "Converts symbol namespaces to possible absolute paths"
