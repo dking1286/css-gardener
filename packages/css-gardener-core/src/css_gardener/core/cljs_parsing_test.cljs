@@ -7,7 +7,6 @@
                                                     ns-name->possible-absolute-paths
                                                     ns-name->absolute-path
                                                     stylesheet-deps-from-ns-decl
-                                                    all-deps-from-ns-decl
                                                     all-deps-from-file]]
             [css-gardener.core.utils.errors :as errors]))
 
