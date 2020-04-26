@@ -1,15 +1,8 @@
-(ns css-gardener.core.main)
+(ns css-gardener.core.main
+  (:require [css-gardener.core.config]
+            [css-gardener.core.cljs-parsing]
+            [css-gardener.core.dependency]))
 
 (defn main
   [& _]
   (println "hello world"))
-
-(defn do-stuff
-  []
-  (let [transformer (js/require "@css-gardener/css-transformer")]
-    (-> (.enter transformer "hello")
-        (.then (fn [result] (println result)))
-        (.then (fn [_] (js/process.exit 0))))))
-
-(comment
-  (do-stuff))

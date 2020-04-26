@@ -4,9 +4,10 @@
  :source-paths ["src"]
  
  :builds {:main {:target :node-script
-                 :output-to "target/main-dev/main.js"
+                 :output-to "dist/main.js"
                  :main css-gardener.core.main/main
-                 :release {:output-to "dist/main.js"}}
+                 :dev {:output-to "target/main-dev/main.js"
+                       :main css-gardener.core.main-dev/main}}
           
           :main-test {:target :node-test
                       :output-to "target/main-test-dev/main.js"

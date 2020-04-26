@@ -7,5 +7,9 @@
   },
   "dependencies": {
     "@css-gardener/core": "file:packages/css-gardener-core"
+  },
+  "scripts": {
+    "release": "lerna run --parallel release",
+    "test": "lerna run --parallel test"
   }
 }
