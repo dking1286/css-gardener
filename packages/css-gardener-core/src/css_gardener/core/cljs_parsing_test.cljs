@@ -7,7 +7,8 @@
                                                     ns-name->possible-absolute-paths
                                                     ns-name->absolute-path
                                                     stylesheet-deps-from-ns-decl
-                                                    all-deps-from-ns-decl]]
+                                                    all-deps-from-ns-decl
+                                                    all-deps-from-file]]
             [css-gardener.core.utils.errors :as errors]))
 
 (def cwd (path/resolve "."))
@@ -76,19 +77,20 @@
       (is #{"/path/to/current/styles.scss"}
           (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
 
-(deftest t-all-deps-from-ns-decl
+(deftest t-all-deps-from-file
   (async done
     (go
       (testing "returns the set of all dependencies"
-        (let [ns-decl '(ns
-                         ^{:css-gardener/require ["./styles.scss"]}
-                         hello.world
-                         (:require [some.other.namespace]))
-              current-file (str cwd "/src/hello/world.cljs")
+        (let [absolute-path (str cwd "/src/hello/world.cljs")
+              content (binding [*print-meta* true] 
+                        (pr-str '(ns
+                                   ^{:css-gardener/require ["./styles.scss"]}
+                                   hello.world
+                                   (:require [some.other.namespace])))) 
+              file {:absolute-path absolute-path :content content}
               source-paths ["src" "test"]
               exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
           (is (= #{(str cwd "/src/some/other/namespace.cljs")
-                   (str cwd "/src/hello/styles.scss")}
-                 (<! (all-deps-from-ns-decl
-                      ns-decl current-file source-paths exists?))))))
+                   (str cwd "/src/hello/styles.scss")} 
+                 (<! (all-deps-from-file file source-paths exists?))))))
       (done))))

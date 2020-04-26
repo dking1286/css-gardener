@@ -3,7 +3,8 @@
             [clojure.core.async :refer [go merge <!]]
             [clojure.string :as string]
             [clojure.tools.namespace.parse :as parse]
-            [css-gardener.core.utils.async :refer [take-all]]
+            [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
+            [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
@@ -113,7 +114,7 @@
                                ns-name source-paths)
                               (map #(go {:path % :exists? (<! (exists? %))}))
                               merge
-                              (take-all 5000)
+                              (a/take-all 5000)
                               <!
                               (filter :exists?)
                               (map :path))]
@@ -131,7 +132,7 @@
   (->> (deps-from-ns-decl ns-decl)
        (map #(ns-name->absolute-path % source-paths exists?))
        merge
-       (take-all 5000)))
+       (a/take-all 5000)))
 
 (defn- stylesheet-deps-relative-paths
   [ns-decl]
@@ -146,8 +147,16 @@
        (map #(path/resolve (path/dirname current-file) %))
        set))
 
-(defn all-deps-from-ns-decl
+(defn- all-deps-from-ns-decl
   [ns-decl current-file source-paths exists?]
-  (go
-    (into (stylesheet-deps-from-ns-decl ns-decl current-file)
-          (<! (cljs-deps-from-ns-decl ns-decl source-paths exists?)))))
+  (->> (cljs-deps-from-ns-decl ns-decl source-paths exists?)
+       (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
+
+(defn- read-ns-decl
+  [content]
+  (parse/read-ns-decl (string-push-back-reader content)))
+
+(defn all-deps-from-file
+  [{:keys [absolute-path content]} source-paths exists?]
+  (let [ns-decl (read-ns-decl content)]
+    (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?)))
