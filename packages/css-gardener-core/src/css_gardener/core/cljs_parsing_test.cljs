@@ -5,7 +5,9 @@
             [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
                                                     ns-name->relative-path
                                                     ns-name->possible-absolute-paths
-                                                    ns-name->absolute-path]]
+                                                    ns-name->absolute-path
+                                                    stylesheet-deps-from-ns-decl
+                                                    all-deps-from-ns-decl]]
             [css-gardener.core.utils.errors :as errors]))
 
 (deftest t-deps-from-ns-decl
@@ -50,7 +52,7 @@
         (let [ns-name 'hello.world
               source-paths ["src" "test"]
               exists? (fn [_] (go false))]
-          (is (nil? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+          (is (errors/not-found? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
       (testing "returns the absolute path when one file matches the ns-name"
         (let [ns-name 'hello.world
               file-name (str cwd "/src/hello/world.cljs")
@@ -63,4 +65,29 @@
               source-paths ["src" "test"]
               exists? (fn [_] (go true))]
           (is (errors/conflict? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+      (done))))
+
+(deftest t-stylesheet-deps-from-ns-decl
+  (testing "returns an empty set when there is no css-gardener/require metadata on the namespace name"
+    (let [ns-decl '(ns hello.world)]
+      (is (empty? (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
+  (testing "returns an absolute path when css-gardener/require contains a path relative to the source-paths"
+    (let [ns-decl '(ns ^{:css-gardener/require ["./styles.scss"]} hello.world)]
+      (is #{"/path/to/current/styles.scss"}
+          (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
+
+(deftest t-all-deps-from-ns-decl
+  (async done
+    (go
+      (testing "returns the set of all dependencies"
+        (let [ns-decl '(ns ^{:css-gardener/require ["./styles.scss"]}
+                        hello.world
+                         (:require [some.other.namespace]))
+              current-file (str cwd "/src/hello/world.cljs")
+              source-paths ["src" "test"]
+              exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
+          (is (= #{(str cwd "/src/some/other/namespace.cljs")
+                   (str cwd "/src/hello/styles.scss")}
+                 (<! (all-deps-from-ns-decl
+                      ns-decl current-file source-paths exists?))))))
       (done))))
