@@ -1,5 +1,4 @@
 .shadow-cljs
-.vscode
 dist
 node_modules
 target
