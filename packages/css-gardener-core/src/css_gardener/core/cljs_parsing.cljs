@@ -1,4 +1,9 @@
-(ns css-gardener.core.cljs-parsing)
+(ns css-gardener.core.cljs-parsing
+  (:require ["path" :as path]
+            [clojure.core.async :refer [go go-loop merge <!]]
+            [clojure.string :as string]
+            [css-gardener.core.utils.async :refer [take-all]]
+            [css-gardener.core.utils.errors :as errors]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
 ;; namespace. Instead of copying this, fork the repo and publish my own
@@ -72,3 +77,49 @@
   :require clauses but not :load."
   [decl]
   (set (mapcat deps-from-ns-form decl)))
+
+;; End forked code from clojure.tools.namespace.parse
+
+(defn ns-name->relative-path
+  [ns-name]
+  (if (string? ns-name)
+    ns-name
+    (-> (str ns-name)
+        (string/replace #"\." path/sep)
+        (string/replace #"-" "_"))))
+
+(def ^:private cljs-file-extensions #{".cljs" ".cljc"})
+
+(defn ns-name->possible-absolute-paths
+  [ns-name source-paths]
+  (set (for [source-path source-paths
+             extension cljs-file-extensions]
+         (let [filename (str (ns-name->relative-path ns-name) extension)]
+           (path/resolve source-path filename)))))
+
+(defn ns-name->absolute-path
+  "Gets the absolute path to the cljs file in the current project matching the
+  namespace name.
+
+  Args:
+    ns-name: symbol or string ns name
+    source-paths: paths relative to the project root to search for the file
+    exists?: Function that returns a core async channel with a boolean
+      indicating whether or not a file exists."
+  [ns-name source-paths exists?]
+  (go
+    (let [existing-files (->> (ns-name->possible-absolute-paths
+                               ns-name source-paths)
+                              (map #(go {:path % :exists? (<! (exists? %))}))
+                              merge
+                              (take-all 5000)
+                              <!
+                              (filter :exists?)
+                              (map :path))]
+      (case (count existing-files)
+        0 nil
+        1 (first existing-files)
+        (errors/conflict (str "More than 1 file found matching namespace "
+                              ns-name
+                              ": "
+                              existing-files))))))

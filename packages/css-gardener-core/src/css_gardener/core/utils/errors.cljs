@@ -13,6 +13,29 @@
   [err]
   (= :not-found (-> err ex-data :type)))
 
+(defn conflict
+  "Creates an error indicating that a uniqueness constraint was violated"
+  [message]
+  (ex-info (str "Conflict: " message)
+           {:type :conflict}))
+
+(defn conflict?
+  "Determines if an error is of type :conflict."
+  [err]
+  (= :conflict (-> err ex-data :type)))
+
+(defn deadline-exceeded
+  "Creates an error indicating that an async operation timed out."
+  ([] (deadline-exceeded "Deadline exceeded"))
+  ([message]
+   (ex-info (str message)
+            {:type :deadline-exceeded})))
+
+(defn deadline-exceeded?
+  "Determines if an error is a deadline exceeded error."
+  [err]
+  (= :deadline-exceeded (-> err ex-data :type)))
+
 (defn unexpected-error
   [cause]
   (ex-info "An unexpected error occurred"
