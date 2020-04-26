@@ -1,6 +1,6 @@
 (ns css-gardener.core.utils.async
   (:refer-clojure :exclude [map])
-  (:require [clojure.core.async :refer [go chan put! close! pipe]]
+  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe <! alts! timeout]]
             [css-gardener.core.utils.errors :as errors]))
 
 (defn callback->channel
@@ -49,3 +49,14 @@
                                  (println x))
                                x))
               ch)))
+
+(defn take-all
+  [timeout-millis ch]
+  (let [timeout-ch (timeout timeout-millis)]
+    (go-loop [results []]
+      (let [[result port] (alts! [ch timeout-ch])]
+        (if (identical? port timeout-ch)
+          (errors/deadline-exceeded)
+          (if (nil? result)
+            results
+            (recur (conj results result))))))))
