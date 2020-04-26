@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: theasp/clojurescript-nodejs:latest
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      
+      # TODO: Cache the downloaded dependencies
+      - run: npm install
+      - run: npx lerna bootstrap
+      - run: npx lerna run --parallel test
