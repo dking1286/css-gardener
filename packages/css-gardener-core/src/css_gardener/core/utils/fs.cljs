@@ -13,5 +13,5 @@
   "Reads the contents of a file as a UTF-8 string"
   [filename]
   (a/node-callback->channel
-   fs/readFile filename fs/constants.UTF8 (fn [err contents]
-                                            (or err contents))))
+   fs/readFile filename "utf8" (fn [err contents]
+                                 (or err contents))))
