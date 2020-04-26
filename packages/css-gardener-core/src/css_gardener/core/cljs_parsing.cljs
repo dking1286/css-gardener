@@ -1,7 +1,8 @@
 (ns css-gardener.core.cljs-parsing
   (:require ["path" :as path]
-            [clojure.core.async :refer [go go-loop merge <!]]
+            [clojure.core.async :refer [go merge <!]]
             [clojure.string :as string]
+            [clojure.tools.namespace.parse :as parse]
             [css-gardener.core.utils.async :refer [take-all]]
             [css-gardener.core.utils.errors :as errors]))
 
@@ -117,9 +118,36 @@
                               (filter :exists?)
                               (map :path))]
       (case (count existing-files)
-        0 nil
+        0 (errors/not-found (js/Error. (str "No file matching namespace "
+                                            ns-name)))
         1 (first existing-files)
         (errors/conflict (str "More than 1 file found matching namespace "
                               ns-name
                               ": "
                               existing-files))))))
+
+(defn cljs-deps-from-ns-decl
+  [ns-decl source-paths exists?]
+  (->> (deps-from-ns-decl ns-decl)
+       (map #(ns-name->absolute-path % source-paths exists?))
+       merge
+       (take-all 5000)))
+
+(defn- stylesheet-deps-relative-paths
+  [ns-decl]
+  (-> (parse/name-from-ns-decl ns-decl)
+      meta
+      :css-gardener/require
+      set))
+
+(defn stylesheet-deps-from-ns-decl
+  [ns-decl current-file]
+  (->> (stylesheet-deps-relative-paths ns-decl)
+       (map #(path/resolve (path/dirname current-file) %))
+       set))
+
+(defn all-deps-from-ns-decl
+  [ns-decl current-file source-paths exists?]
+  (go
+    (into (stylesheet-deps-from-ns-decl ns-decl current-file)
+          (<! (cljs-deps-from-ns-decl ns-decl source-paths exists?)))))
