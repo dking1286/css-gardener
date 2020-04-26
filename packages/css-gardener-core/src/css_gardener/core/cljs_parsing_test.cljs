@@ -80,8 +80,9 @@
   (async done
     (go
       (testing "returns the set of all dependencies"
-        (let [ns-decl '(ns ^{:css-gardener/require ["./styles.scss"]}
-                        hello.world
+        (let [ns-decl '(ns
+                         ^{:css-gardener/require ["./styles.scss"]}
+                         hello.world
                          (:require [some.other.namespace]))
               current-file (str cwd "/src/hello/world.cljs")
               source-paths ["src" "test"]

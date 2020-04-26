@@ -1,7 +1,9 @@
 {:align-associative? false
  
  :indents {clojure.test/async [[:inner 0]]
-           async [[:inner 0]]}
+           async [[:inner 0]]
+           ns [[:inner 0]]}
+
  :clojure.test/async-example
  (clojure.test/async done
    (something-else))
