@@ -5,11 +5,12 @@
             [clojure.tools.namespace.parse :as parse]
             [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
             [css-gardener.core.utils.async :as a]
-            [css-gardener.core.utils.errors :as errors]))
+            [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs :as fs]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
 ;; namespace. Instead of copying this, fork the repo and publish my own
-;; fork on Clojars.
+;; fork on Clojars. Or, fix it upstream
 ;; 
 ;; https://github.com/clojure/tools.namespace
 ;; https://github.com/clojure/tools.namespace/blob/master/src/main/clojure/clojure/tools/namespace/parse.cljc#L61
@@ -92,6 +93,10 @@
 
 (def ^:private cljs-file-extensions #{".cljs" ".cljc"})
 
+(defn cljs-file?
+  [file]
+  (contains? cljs-file-extensions (path/extname (:absolute-path file))))
+
 (defn ns-name->possible-absolute-paths
   [ns-name source-paths]
   (set (for [source-path source-paths
@@ -152,11 +157,9 @@
   (->> (cljs-deps-from-ns-decl ns-decl source-paths exists?)
        (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
 
-(defn- read-ns-decl
-  [content]
-  (parse/read-ns-decl (string-push-back-reader content)))
-
 (defn all-deps-from-file
-  [{:keys [absolute-path content]} source-paths exists?]
-  (let [ns-decl (read-ns-decl content)]
-    (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?)))
+  ([file source-paths] (all-deps-from-file file source-paths fs/exists?))
+  ([file source-paths exists?]
+   (let [{:keys [absolute-path content]} file
+         ns-decl (parse/read-ns-decl (string-push-back-reader content))]
+     (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?))))
