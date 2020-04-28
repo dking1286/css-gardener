@@ -7,7 +7,7 @@
                                                     ns-name->possible-absolute-paths
                                                     ns-name->absolute-path
                                                     stylesheet-deps-from-ns-decl
-                                                    all-deps-from-file]]
+                                                    cljs-deps]]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.testing :refer [instrument-specs]]))
 
@@ -79,7 +79,7 @@
       (is #{"/path/to/current/styles.scss"}
           (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
 
-(deftest t-all-deps-from-file
+(deftest t-cljs-deps
   (async done
     (go
       (testing "returns the set of all dependencies"
@@ -94,5 +94,5 @@
               exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
           (is (= #{(str cwd "/src/some/other/namespace.cljs")
                    (str cwd "/src/hello/styles.scss")} 
-                 (<! (all-deps-from-file file source-paths exists?))))))
+                 (<! (cljs-deps exists? file source-paths))))))
       (done))))
