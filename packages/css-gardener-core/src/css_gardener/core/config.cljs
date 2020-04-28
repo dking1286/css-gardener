@@ -1,6 +1,10 @@
-(ns ^{:doc "Defines the configuration map for css-gardener."}
- css-gardener.core.config
-  (:require [clojure.spec.alpha :as s]))
+(ns
+  ^{:doc "Defines the configuration map for css-gardener."}
+  css-gardener.core.config
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as string]
+            [css-gardener.core.file :as file]
+            [css-gardener.core.utils.errors :as errors]))
 
 (s/def ::infer-source-paths-and-builds string?)
 
@@ -15,6 +19,7 @@
 
 (s/def ::node-module string?)
 (s/def ::options map?)
+(s/def ::dependency-resolver (s/keys :req-un [::node-module]))
 (s/def ::transformer (s/keys :req-un [::node-module] :opt-un [::options]))
 (s/def ::transformers (s/coll-of ::transformer :kind vector?))
 (s/def ::rule (s/keys :req-un [::transformers]))
@@ -25,3 +30,24 @@
    (s/keys :req-un [::rules])
    (s/or :explicit (s/keys :req-un [::source-paths ::builds])
          :inferred (s/keys :req-un [::infer-source-paths-and-builds]))))
+
+(s/fdef matching-rule
+  :args (s/cat :config ::config
+               :file ::file/file))
+
+(defn matching-rule
+  "Gets the rule in the configuration map matching a file."
+  [config file]
+  (let [matching-rules (->> (:rules config)
+                            (filter (fn [[re _]]
+                                      (re-find re (:absolute-path file))))
+                            vec)]
+    (case (count matching-rules)
+      0 (errors/not-found (js/Error. (str "No rule found in configuration "
+                                          "matching file "
+                                          (:absolute-path file))))
+      1 (second (first matching-rules))
+      (errors/conflict (str "More than 1 rule fould matching file "
+                            (:absolute-path file)
+                            " : "
+                            (string/join "," (map first matching-rules)))))))
