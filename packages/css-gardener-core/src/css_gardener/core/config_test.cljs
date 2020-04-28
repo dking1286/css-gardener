@@ -1,7 +1,10 @@
 (ns css-gardener.core.config-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [css-gardener.core.config :as sut]
-            [css-gardener.core.utils.errors :as errors]))
+            [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+
+(use-fixtures :once instrument-specs)
 
 (def config
   {:source-paths ["src"]

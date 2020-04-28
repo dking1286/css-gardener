@@ -1,14 +1,17 @@
 (ns css-gardener.core.cljs-parsing-test
   (:require ["path" :as path]
             [clojure.core.async :refer [go <!]]
-            [clojure.test :refer [deftest testing is async]]
+            [clojure.test :refer [deftest testing is use-fixtures async]]
             [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
                                                     ns-name->relative-path
                                                     ns-name->possible-absolute-paths
                                                     ns-name->absolute-path
                                                     stylesheet-deps-from-ns-decl
                                                     all-deps-from-file]]
-            [css-gardener.core.utils.errors :as errors]))
+            [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+
+(use-fixtures :once instrument-specs)
 
 (def cwd (path/resolve "."))
 
