@@ -2,9 +2,12 @@
   (:require ["path" :as path]
             [clojure.core.async :refer [go <!]]
             [clojure.string :as s]
-            [clojure.test :refer [deftest testing is async]]
+            [clojure.test :refer [deftest testing is use-fixtures async]]
             [css-gardener.core.file :as sut]
-            [css-gardener.core.utils.errors :as errors]))
+            [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+
+(use-fixtures :once instrument-specs)
 
 (def cwd (path/resolve "."))
 
