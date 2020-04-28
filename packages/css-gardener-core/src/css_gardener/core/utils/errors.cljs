@@ -1,6 +1,11 @@
 (ns css-gardener.core.utils.errors
   (:require [clojure.string :as string]))
 
+(defn invalid-config
+  "Creates an error indicating that the configuration was invalid."
+  [message]
+  (ex-info message {:type :invalid-config}))
+
 (defn not-found
   "Creates an error indicating that a requested resource was not found."
   [cause]
