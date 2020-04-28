@@ -6,7 +6,7 @@
             [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.fs :as fs]))
+            [integrant.core :as ig]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
 ;; namespace. Instead of copying this, fork the repo and publish my own
@@ -157,9 +157,12 @@
   (->> (cljs-deps-from-ns-decl ns-decl source-paths exists?)
        (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
 
-(defn all-deps-from-file
-  ([file source-paths] (all-deps-from-file file source-paths fs/exists?))
-  ([file source-paths exists?]
-   (let [{:keys [absolute-path content]} file
-         ns-decl (parse/read-ns-decl (string-push-back-reader content))]
-     (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?))))
+(defn- cljs-deps
+  [exists? file source-paths]
+  (let [{:keys [absolute-path content]} file
+        ns-decl (parse/read-ns-decl (string-push-back-reader content))]
+    (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?)))
+
+(defmethod ig/init-key :cljs-deps
+  [_ {{:keys [exists?]} :fs}]
+  (partial cljs-deps exists?))
