@@ -1,6 +1,7 @@
 (ns css-gardener.core.utils.fs
   (:refer-clojure :exclude [exists?])
   (:require ["fs" :as fs]
+            [clojure.core.async :refer [go]]
             [css-gardener.core.utils.async :as a]
             [integrant.core :as ig]))
 
@@ -17,7 +18,15 @@
    fs/readFile filename "utf8" (fn [err contents]
                                  (or err contents))))
 
-(defmethod ig/init-key :fs
-  [_ _]
-  {:exists? exists?
-   :read-file read-file})
+(defmethod ig/init-key ::exists?
+  [_ {:keys [return-value existing-files]}]
+  (cond
+    return-value (a/constantly return-value)
+    existing-files (fn [file] (go (existing-files file)))
+    :else exists?))
+
+(defmethod ig/init-key ::read-file
+  [_ {:keys [return-value]}]
+  (if return-value
+    (fn [& _] (go return-value))
+    read-file))

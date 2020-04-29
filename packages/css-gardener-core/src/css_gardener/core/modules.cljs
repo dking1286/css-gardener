@@ -1,8 +1,9 @@
 (ns css-gardener.core.modules
   (:require [integrant.core :as ig]))
 
-(defmethod ig/init-key :load-module
-  [_ _]
+(defmethod ig/init-key ::load
+  [_ {:keys [return-value]}]
   (fn [module]
-    (when (:node-module module)
+    (if return-value
+      return-value
       (js/require (:node-module module)))))
