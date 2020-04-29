@@ -1,0 +1,2 @@
+{:linters {:unsorted-require-namespaces {:level :warning}}
+ :lint-as {css-gardener.core.utils.testing/with-system clojure.core/let}}
