@@ -1,7 +1,11 @@
 (ns css-gardener.core.utils.async
-  (:refer-clojure :exclude [map])
+  (:refer-clojure :exclude [constantly map])
   (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout]]
             [css-gardener.core.utils.errors :as errors]))
+
+(defn constantly
+  [val]
+  (fn [& _] (go val)))
 
 (defn callback->channel
   [f & args]

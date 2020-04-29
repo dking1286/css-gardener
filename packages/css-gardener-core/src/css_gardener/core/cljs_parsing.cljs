@@ -163,6 +163,6 @@
         ns-decl (parse/read-ns-decl (string-push-back-reader content))]
     (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?)))
 
-(defmethod ig/init-key :cljs-deps
-  [_ {{:keys [exists?]} :fs}]
+(defmethod ig/init-key ::deps
+  [_ {:keys [exists?]}]
   (partial cljs-deps exists?))

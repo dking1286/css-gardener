@@ -1,10 +1,20 @@
 (ns css-gardener.core.utils.errors
   (:require [clojure.string :as string]))
 
+(defn error?
+  "Determines if a value is an error."
+  [val]
+  (ex-data val))
+
 (defn invalid-config
   "Creates an error indicating that the configuration was invalid."
-  [message]
-  (ex-info message {:type :invalid-config}))
+  ([message] (ex-info message {:type :invalid-config}))
+  ([message cause] (ex-info message {:type :invalid-config} cause)))
+
+(defn invalid-config?
+  "Determines if an error is of type :invalid-config."
+  [err]
+  (= :invalid-config (-> err ex-data :type)))
 
 (defn not-found
   "Creates an error indicating that a requested resource was not found."
