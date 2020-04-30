@@ -9,12 +9,13 @@
             [integrant.core :as ig]))
 
 (s/fdef get-resolver
-  :args (s/cat :rule ::config/rule))
+  :args (s/cat :load-module fn?
+               :rule ::config/rule))
 
 (defn- get-resolver
   [load-module {:keys [dependency-resolver]}]
   (when dependency-resolver
-    (load-module (:node-module dependency-resolver))))
+    (load-module dependency-resolver)))
 
 (defn- resolve-deps
   [resolver file]
@@ -23,7 +24,9 @@
     (a/node-callback->channel resolver file (fn [err deps] (or err deps)))))
 
 (s/fdef deps
-  :args (s/cat :file ::file/file
+  :args (s/cat :load-module fn?
+               :cljs-deps fn?
+               :file ::file/file
                :config ::config/config))
 
 (defn- deps
@@ -31,12 +34,23 @@
   (if (cljs/cljs-file? file)
     (cljs-deps file (:source-paths config))
     (let [rule (config/matching-rule config file)]
-      (if-not rule
-        (go (errors/invalid-config (str "No rule found matching file "
-                                      (:absolute-path file))))
+      (cond
+        (errors/not-found? rule)
+        (go (errors/invalid-config (str "Problem finding rule for file "
+                                        (:absolute-path file))
+                                   rule))
+        
+        (errors/conflict? rule)
+        (go (errors/invalid-config (str "Problem finding rule for file "
+                                        (:absolute-path file))
+                                   rule))
+        
+        :else
         (let [resolver (get-resolver load-module rule)]
-          (resolve-deps resolver file))))))
+          (if-not resolver
+            (go #{})
+            (resolve-deps resolver file)))))))
 
-(defmethod ig/init-key :deps
+(defmethod ig/init-key ::deps
   [_ {:keys [load-module cljs-deps]}]
   (partial deps load-module cljs-deps))

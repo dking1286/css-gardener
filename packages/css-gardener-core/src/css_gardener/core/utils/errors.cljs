@@ -57,6 +57,10 @@
            {:type :unexpected}
            cause))
 
+(defn unexpected-error?
+  [err]
+  (= :unexpected (-> err ex-data :type)))
+
 (defn- error-message-includes?
   [err substring]
   (string/includes? (.-message err) substring))
