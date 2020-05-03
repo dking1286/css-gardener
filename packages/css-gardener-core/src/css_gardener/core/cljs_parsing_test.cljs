@@ -1,7 +1,7 @@
 (ns css-gardener.core.cljs-parsing-test
   (:require ["path" :as path]
             [clojure.core.async :refer [go <!]]
-            [clojure.test :refer [deftest testing is use-fixtures async]]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
                                                     ns-name->relative-path
                                                     ns-name->possible-absolute-paths
@@ -9,7 +9,8 @@
                                                     stylesheet-deps-from-ns-decl
                                                     cljs-deps]]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+            [css-gardener.core.utils.testing :refer [instrument-specs
+                                                     deftest-async]]))
 
 (use-fixtures :once instrument-specs)
 
@@ -48,27 +49,24 @@
              (str cwd "/test/hello/world.cljc")}
            (ns-name->possible-absolute-paths 'hello.world ["src" "test"])))))
 
-(deftest t-ns-name->absolute-path
-  (async done
-    (go
-      (testing "returns a channel with nil when no file matches the ns-name"
-        (let [ns-name 'hello.world
-              source-paths ["src" "test"]
-              exists? (fn [_] (go false))]
-          (is (errors/not-found? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
-      (testing "returns the absolute path when one file matches the ns-name"
-        (let [ns-name 'hello.world
-              file-name (str cwd "/src/hello/world.cljs")
-              source-paths ["src" "test"]
-              exists? (fn [name] (go (= name file-name)))]
-          (is (= file-name
-                 (<! (ns-name->absolute-path ns-name source-paths exists?))))))
-      (testing "returns a conflict error when more than one file matches the ns-name"
-        (let [ns-name 'hello.world
-              source-paths ["src" "test"]
-              exists? (fn [_] (go true))]
-          (is (errors/conflict? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
-      (done))))
+(deftest-async t-ns-name->absolute-path
+  (testing "returns a channel with nil when no file matches the ns-name"
+    (let [ns-name 'hello.world
+          source-paths ["src" "test"]
+          exists? (fn [_] (go false))]
+      (is (errors/not-found? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+  (testing "returns the absolute path when one file matches the ns-name"
+    (let [ns-name 'hello.world
+          file-name (str cwd "/src/hello/world.cljs")
+          source-paths ["src" "test"]
+          exists? (fn [name] (go (= name file-name)))]
+      (is (= file-name
+             (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+  (testing "returns a conflict error when more than one file matches the ns-name"
+    (let [ns-name 'hello.world
+          source-paths ["src" "test"]
+          exists? (fn [_] (go true))]
+      (is (errors/conflict? (<! (ns-name->absolute-path ns-name source-paths exists?)))))))
 
 (deftest t-stylesheet-deps-from-ns-decl
   (testing "returns an empty set when there is no css-gardener/require metadata on the namespace name"
@@ -79,20 +77,17 @@
       (is #{"/path/to/current/styles.scss"}
           (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
 
-(deftest t-cljs-deps
-  (async done
-    (go
-      (testing "returns the set of all dependencies"
-        (let [absolute-path (str cwd "/src/hello/world.cljs")
-              content (binding [*print-meta* true] 
-                        (pr-str '(ns
-                                   ^{:css-gardener/require ["./styles.scss"]}
-                                   hello.world
-                                   (:require [some.other.namespace])))) 
-              file {:absolute-path absolute-path :content content}
-              source-paths ["src" "test"]
-              exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
-          (is (= #{(str cwd "/src/some/other/namespace.cljs")
-                   (str cwd "/src/hello/styles.scss")} 
-                 (<! (cljs-deps exists? file source-paths))))))
-      (done))))
+(deftest-async t-cljs-deps
+  (testing "returns the set of all dependencies"
+    (let [absolute-path (str cwd "/src/hello/world.cljs")
+          content (binding [*print-meta* true]
+                    (pr-str '(ns
+                               ^{:css-gardener/require ["./styles.scss"]}
+                               hello.world
+                               (:require [some.other.namespace]))))
+          file {:absolute-path absolute-path :content content}
+          source-paths ["src" "test"]
+          exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
+      (is (= #{(str cwd "/src/some/other/namespace.cljs")
+               (str cwd "/src/hello/styles.scss")}
+             (<! (cljs-deps exists? file source-paths)))))))

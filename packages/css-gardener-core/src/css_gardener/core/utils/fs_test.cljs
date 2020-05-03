@@ -1,41 +1,27 @@
 (ns css-gardener.core.utils.fs-test
-  (:require [clojure.core.async :refer [go <!]]
-            [clojure.test :refer [deftest testing is use-fixtures async]]
+  (:require [clojure.core.async :refer [<!]]
+            [clojure.test :refer [testing is use-fixtures]]
             [clojure.string :as string]
             [css-gardener.core.utils.fs :as sut]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+            [css-gardener.core.utils.testing :refer [instrument-specs
+                                                     deftest-async]]))
 
 (use-fixtures :once instrument-specs)
 
-(deftest exists-no-file-test
+(deftest-async exists-no-file-test
   (testing "returns a channel that yields false when the file does not exist"
-    (async done
-      (go
-        (is (= false (<! (sut/exists? "./blah/blah"))))
-        (done)))))
+    (is (= false (<! (sut/exists? "./blah/blah"))))))
 
-(deftest exists-yes-file-test
+(deftest-async exists-yes-file-test
   (testing "returns a channel that yields true when the file exists"
-    (async done
-      (go
-        (is (= true (<! (sut/exists? "./package.json"))))
-        (done)))))
+    (is (= true (<! (sut/exists? "./package.json"))))))
 
-(deftest read-file-does-not-exist
+(deftest-async read-file-does-not-exist
   (testing "returns a channel that yields a not-found error when the file does not exist"
-    (async done
-      (go
-        (is (errors/not-found? (<! (sut/read-file "./blah/blah"))))
-        (done)))))
+    (is (errors/not-found? (<! (sut/read-file "./blah/blah"))))))
 
-(deftest read-file-throws-other-error
-  (testing "returns a channel that yields an error when an unknown error happens while reading the file"))
-
-(deftest read-file-exists
+(deftest-async read-file-exists
   (testing "returns a channel that yields the file contents as a string when reading is successful"
-    (async done
-      (go
-        (is (string/includes? (<! (sut/read-file "./package.json"))
-                              "\"name\": \"@css-gardener/core\""))
-        (done)))))
+    (is (string/includes? (<! (sut/read-file "./package.json"))
+                          "\"name\": \"@css-gardener/core\""))))
