@@ -9,6 +9,7 @@
     "@css-gardener/core": "file:packages/css-gardener-core"
   },
   "scripts": {
+    "lint": "lerna run --parallel lint",
     "release": "lerna run --parallel release",
     "test": "lerna run --parallel test"
   }
