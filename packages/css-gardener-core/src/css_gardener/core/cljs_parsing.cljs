@@ -157,7 +157,7 @@
   (->> (cljs-deps-from-ns-decl ns-decl source-paths exists?)
        (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
 
-(defn- cljs-deps
+(defn cljs-deps
   [exists? file source-paths]
   (let [{:keys [absolute-path content]} file
         ns-decl (parse/read-ns-decl (string-push-back-reader content))]

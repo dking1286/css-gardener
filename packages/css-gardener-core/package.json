@@ -5,6 +5,7 @@
   "main": "index.js",
   "bin": "index.js",
   "scripts": {
+    "lint": "shadow-cljs clj-run clj-kondo.main/-main -- --lint src --cache false",
     "repl": "node target/main-dev/main.js",
     "release": "shadow-cljs release main",
     "test-watch": "shadow-cljs watch main-test",
