@@ -19,28 +19,32 @@
    :warning Level/WARNING
    :error Level/SEVERE})
 
+(s/def ::log-fn-args
+  (s/cat :logger ::logger
+         :msg string?))
+
 (defn log-fn
   [f]
   (fn [logger msg]
     (f (:goog-logger logger) msg)))
 
 (s/fdef debug
-  :args (s/cat :logger ::logger))
+  :args ::log-fn-args)
 
 (def debug (log-fn log/fine))
 
 (s/fdef info
-  :args (s/cat :logger ::logger))
+  :args ::log-fn-args)
 
 (def info (log-fn log/info))
 
 (s/fdef warning
-  :args (s/cat :logger ::logger))
+  :args ::log-fn-args)
 
 (def warning (log-fn log/warning))
 
 (s/fdef error
-  :args (s/cat :logger ::logger))
+  :args ::log-fn-args)
 
 (def error (log-fn log/error))
 

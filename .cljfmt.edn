@@ -1,14 +1,20 @@
 {:align-associative? false
- 
+
  :indents {clojure.test/async [[:inner 0]]
            async [[:inner 0]]
            ns [[:inner 0]]
-           defrecord [[:inner 0] [:inner 1]]}
+           defrecord [[:inner 0] [:inner 1]]
+           s/fdef [[:inner 0]]}
 
  :clojure.test/async-example
  (clojure.test/async done
    (something-else))
- 
+
  :async-example
  (async done
-   (something-else))}
+   (something-else))
+
+ :s/fdef-example
+ (s/fdef some-function
+   :args (s/cat :arg1 :ns/arg1
+                :arg2 :ns/arg2))}
