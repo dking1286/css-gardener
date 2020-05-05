@@ -1,6 +1,6 @@
 (ns css-gardener.core.utils.async
-  (:refer-clojure :exclude [constantly map])
-  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout]]
+  (:refer-clojure :exclude [constantly map merge])
+  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout merge]]
             [css-gardener.core.utils.errors :as errors]))
 
 (defn constantly
@@ -55,12 +55,16 @@
               ch)))
 
 (defn take-all
-  [timeout-millis ch]
+  [timeout-millis ch & {:keys [bailout-on-error?]}]
   (let [timeout-ch (timeout timeout-millis)]
     (go-loop [results []]
       (let [[result port] (alts! [ch timeout-ch])]
-        (if (identical? port timeout-ch)
-          (errors/deadline-exceeded)
-          (if (nil? result)
-            results
-            (recur (conj results result))))))))
+        (cond
+          (identical? port timeout-ch) (errors/deadline-exceeded)
+          (nil? result) results
+          (and bailout-on-error? (instance? js/Error result)) result
+          :else (recur (conj results result)))))))
+
+(defn await-all
+  [timeout-millis chs]
+  (take-all timeout-millis (merge chs) :bailout-on-error? true))
