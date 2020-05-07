@@ -10,7 +10,7 @@
 
 (s/fdef get-resolver
   :args (s/cat :load-module fn?
-               :rule ::config/rule))
+               :dependency-resolver ::config/dependency-resolver))
 
 (defn- get-resolver
   [load-module dependency-resolver]
