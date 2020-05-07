@@ -13,15 +13,27 @@
                :rule ::config/rule))
 
 (defn- get-resolver
-  [load-module {:keys [dependency-resolver]}]
-  (when dependency-resolver
-    (load-module dependency-resolver)))
+  [load-module dependency-resolver]
+  (go
+    (try
+      (assoc dependency-resolver :resolver (load-module dependency-resolver))
+      (catch js/Error err
+        (errors/invalid-dependency-resolver "Failed to load module" err)))))
 
 (defn- resolve-deps
-  [resolver file]
-  (if-not resolver
-    #{}
-    (a/node-callback->channel resolver file (fn [err deps] (or err deps)))))
+  [resolver resolver-name file]
+  (a/node-callback->channel
+   resolver file (fn [err deps]
+                   (cond
+                     err err
+
+                     (js/Array.isArray deps) deps
+
+                     :else
+                     (errors/invalid-dependency-resolver
+                      (str "Expected dependency resolver " resolver-name
+                           " to yield an array of strings, got "
+                           deps))))))
 
 (s/fdef deps
   :args (s/cat :load-module fn?
@@ -31,25 +43,28 @@
 
 (defn- deps
   [load-module cljs-deps file config]
-  (if (cljs/cljs-file? file)
-    (cljs-deps file (:source-paths config))
-    (let [rule (config/matching-rule config file)]
-      (cond
-        (errors/not-found? rule)
-        (go (errors/invalid-config (str "Problem finding rule for file "
-                                        (:absolute-path file))
-                                   rule))
-        
-        (errors/conflict? rule)
-        (go (errors/invalid-config (str "Problem finding rule for file "
-                                        (:absolute-path file))
-                                   rule))
-        
-        :else
-        (let [resolver (get-resolver load-module rule)]
-          (if-not resolver
-            (go #{})
-            (resolve-deps resolver file)))))))
+  (let [rule-or-error (config/matching-rule config file)]
+    (cond
+      (cljs/cljs-file? file)
+      (cljs-deps file (:source-paths config))
+
+      (errors/not-found? rule-or-error)
+      (go (errors/invalid-config (str "Problem finding rule for file "
+                                      (:absolute-path file))
+                                 rule-or-error))
+
+      (errors/conflict? rule-or-error)
+      (go (errors/invalid-config (str "Problem finding rule for file "
+                                      (:absolute-path file))
+                                 rule-or-error))
+
+      (not (:dependency-resolver rule-or-error))
+      (go #{})
+
+      :else
+      (->> (get-resolver load-module (:dependency-resolver rule-or-error))
+           (a/flat-map #(resolve-deps (:resolver %) (:node-module %) file))
+           (a/map set)))))
 
 (defmethod ig/init-key ::deps
   [_ {:keys [load-module cljs-deps]}]

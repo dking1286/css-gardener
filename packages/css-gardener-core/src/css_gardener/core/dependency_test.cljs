@@ -1,6 +1,7 @@
 (ns css-gardener.core.dependency-test
   (:require ["path" :as path]
             [clojure.core.async :refer [<!]]
+            [clojure.string :as string]
             [clojure.test :refer [testing is use-fixtures]]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
@@ -77,11 +78,48 @@
             config (-> config
                        (assoc-in [:rules #"blah$"] {:transformers []}))]
         (is (= #{} (<! (deps file config)))))))
-  (testing "returns the value returned by the dependency resolver if one exists"
+  (testing "returns invalid-dependency-resolver if load-module cannot find the dependency resolver"
+    (let [file
+          {:absolute-path (str cwd "/src/hello/world.blah")
+           :content "blah"}
+
+          config
+          (-> config
+              (assoc-in [:rules #"blah$"]
+                        {;; Does not exist, will throw an error when trying to load the module
+                         :dependency-resolver {:node-module "@css-gardener/blah-resolver"}
+                         :transformers []}))]
+
+      (with-system [system sys-config]
+        (let [deps (::dependency/deps system)
+              result  (<! (deps file config))]
+          (is (errors/invalid-dependency-resolver? result))
+          (is (string/includes? (.-message (ex-cause result))
+                                "Cannot find module '@css-gardener/blah-resolver'"))))))
+  (testing "returns invalid-dependency-resolver if the dependency resolver yields a value that is not a javascript array"
     (let [sys-config
           (-> sys-config
               (assoc-in [::modules/load :return-value]
                         (fn [_ cb] (cb nil #{"/some/other/namespace.cljs"}))))
+
+          file
+          {:absolute-path (str cwd "/src/hello/world.blah")
+           :content "blah"}
+
+          config
+          (-> config
+              (assoc-in [:rules #"blah$"]
+                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
+                         :transformers []}))]
+
+      (with-system [system sys-config]
+        (let [deps (::dependency/deps system)]
+          (is (errors/invalid-dependency-resolver? (<! (deps file config))))))))
+  (testing "returns the value returned by the dependency resolver if one exists, coerced to a set"
+    (let [sys-config
+          (-> sys-config
+              (assoc-in [::modules/load :return-value]
+                        (fn [_ cb] (cb nil #js ["/some/other/namespace.cljs"]))))
 
           file
           {:absolute-path (str cwd "/src/hello/world.blah")

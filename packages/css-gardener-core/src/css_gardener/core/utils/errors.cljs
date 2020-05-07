@@ -4,7 +4,7 @@
 (defn error?
   "Determines if a value is an error."
   [val]
-  (ex-data val))
+  (instance? js/Error val))
 
 (defn invalid-config
   "Creates an error indicating that the configuration was invalid."
@@ -15,6 +15,16 @@
   "Determines if an error is of type :invalid-config."
   [err]
   (= :invalid-config (-> err ex-data :type)))
+
+(defn invalid-dependency-resolver
+  "Creates an error indicating that a dependency resolver was invalid"
+  ([message] (ex-info message {:type :invalid-dependency-resolver}))
+  ([message cause] (ex-info message {:type :invalid-dependency-resolver} cause)))
+
+(defn invalid-dependency-resolver?
+  "Determines if an error is of type :invalid-dependency-resolver"
+  [err]
+  (= :invalid-dependency-resolver (-> err ex-data :type)))
 
 (defn not-found
   "Creates an error indicating that a requested resource was not found."

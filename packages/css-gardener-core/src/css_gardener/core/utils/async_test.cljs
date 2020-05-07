@@ -1,7 +1,7 @@
 (ns css-gardener.core.utils.async-test
   (:require [clojure.core.async :refer [go <! >! chan close!]]
             [clojure.test :refer [testing is]]
-            [css-gardener.core.utils.async :refer [take-all await-all]]
+            [css-gardener.core.utils.async :refer [take-all await-all flat-map]]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.testing :refer [deftest-async]]))
 
@@ -48,3 +48,19 @@
   (testing "Yields a sequence of results if all of the source channels yield non-error results within the timeout"
     (let [sources [(go 1) (go 2) (go 3)]]
       (is (= [1 2 3] (sort (<! (await-all 1000 sources))))))))
+
+(deftest-async t-flat-map
+  (testing "Yields the error if the function throws an error"
+    (let [f #(throw (js/Error. "Boom"))
+          ch (go 1)]
+      (is (= "Boom"
+             (.-message (<! (flat-map f ch)))))))
+  (testing "Propagates the error if the input channel contains an error"
+    (let [f #(go 3)
+          ch (go (js/Error. "Boom"))]
+      (is (= "Boom"
+             (.-message (<! (flat-map f ch)))))))
+  (testing "Yields the value of the inner channel"
+    (let [f #(go 2)
+          ch (go 1)]
+      (is (= 2 (<! (flat-map f ch)))))))
