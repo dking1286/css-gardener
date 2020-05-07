@@ -1,9 +1,11 @@
 (ns css-gardener.core.utils.async
   (:refer-clojure :exclude [constantly map merge])
-  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout merge]]
+  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout merge <! >!]]
             [css-gardener.core.utils.errors :as errors]))
 
 (defn constantly
+  "Returns a function that always returns a channel containing the specified 
+  value."
   [val]
   (fn [& _] (go val)))
 
@@ -39,10 +41,30 @@
 (defn map
   [f ch]
   (transform (cljs.core/map (fn [x]
-                              (if (ex-data x)
+                              (if (errors/error? x)
                                 x
-                                (f x))))
+                                (try
+                                  (f x)
+                                  (catch js/Error err
+                                    err)))))
              ch))
+
+(defn flat-map
+  [f ch]
+  (let [out-chan (chan)]
+    (go-loop []
+      (let [in-value (<! ch)]
+        (cond
+          (nil? in-value) (close! out-chan)
+          (errors/error? in-value) (>! out-chan in-value)
+          :else
+          (let [out-value (try
+                            (<! (f in-value))
+                            (catch js/Error err
+                              err))]
+            (>! out-chan out-value)
+            (recur)))))
+    out-chan))
 
 (defn trace
   ([ch] (trace nil ch))
