@@ -14,11 +14,10 @@
 
 (defn- get-resolver
   [load-module dependency-resolver]
-  (go
-    (try
-      (assoc dependency-resolver :resolver (load-module dependency-resolver))
-      (catch js/Error err
-        (errors/invalid-dependency-resolver "Failed to load module" err)))))
+  (try
+    (assoc dependency-resolver :resolver (load-module dependency-resolver))
+    (catch js/Error err
+      (errors/invalid-dependency-resolver "Failed to load module" err))))
 
 (defn- resolve-deps
   [resolver resolver-name file]
@@ -62,7 +61,7 @@
       (go #{})
 
       :else
-      (->> (get-resolver load-module (:dependency-resolver rule-or-error))
+      (->> (go (get-resolver load-module (:dependency-resolver rule-or-error)))
            (a/flat-map #(resolve-deps (:resolver %) (:node-module %) file))
            (a/map set)))))
 
