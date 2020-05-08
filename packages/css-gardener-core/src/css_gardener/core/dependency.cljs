@@ -1,12 +1,18 @@
 (ns css-gardener.core.dependency
-  (:require [clojure.core.async :refer [go]]
+  (:require [clojure.core.async :refer [go <! merge chan close!]]
+            [clojure.tools.namespace.dependency :as dependency]
             [clojure.spec.alpha :as s]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
+            [css-gardener.core.logging :as logging]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.spec :as su]
             [integrant.core :as ig]))
+
+(s/def ::dependency-graph #(and (satisfies? dependency/DependencyGraph %)
+                                (satisfies? dependency/DependencyGraphUpdate %)))
 
 (s/fdef get-resolver
   :args (s/cat :load-module fn?
@@ -35,13 +41,19 @@
                            deps))))))
 
 (s/fdef deps
-  :args (s/cat :load-module fn?
+  :args (s/cat :logger ::logging/logger
+               :load-module fn?
                :cljs-deps fn?
                :file ::file/file
                :config ::config/config))
 
 (defn- deps
-  [load-module cljs-deps file config]
+  [;; Injected dependencies
+   logger load-module cljs-deps
+   ;; Arguments
+   file config]
+  (logging/debug logger (str "Getting dependencies of "
+                             (:absolute-path file)))
   (let [rule-or-error (config/matching-rule config file)]
     (cond
       (cljs/cljs-file? file)
@@ -66,5 +78,65 @@
            (a/map set)))))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [load-module cljs-deps]}]
-  (partial deps load-module cljs-deps))
+  [_ {:keys [logger load-module cljs-deps fake-dependencies]}]
+  (if fake-dependencies
+    (fn [file _]
+      (go (or (get fake-dependencies (:absolute-path file)) #{})))
+    (partial deps logger load-module cljs-deps)))
+
+(s/fdef get-entries
+  :args (s/cat :config ::config/config
+               :build-id keyword?))
+
+(defn get-entries
+  "Gets all entry namespaces from a config map."
+  [config build-id]
+  (->> (get-in config [:builds build-id :modules])
+       vals
+       (mapcat :entries)
+       set))
+
+(s/fdef add-deps-for-path
+  :args (s/cat :deps fn?
+               :graph (su/deref-of ::dependency-graph)
+               :path string?))
+
+(defn- add-deps-for-path
+  "Starting from an absolute path, traverse dependency relationships, updating
+   the dependency graph. Returns a channel that closes when the process is
+   done, or yields an error and then closes if the process fails."
+  [deps read-file graph config path]
+  (let [out (chan)]
+    (go
+      (let [content (<! (read-file path))
+            file {:absolute-path path :content content}
+            dependencies (<! (deps file config))]
+        (doseq [dependency dependencies]
+          (swap! graph dependency/depend path dependency))
+        (close! out)))
+    out))
+
+(defn- deps-graph
+  "Gets a dependency graph of absolute paths based on the configuration map."
+  [;; Injected dependencies
+   logger exists? read-file deps
+   ;; Arguments
+   config build-id]
+  (logging/info logger "Building dependency graph...")
+  (go
+    (let [graph (atom (dependency/graph))
+          err (->> (get-entries config build-id)
+                   (map #(cljs/ns-name->absolute-path %)) ;; Fixme, has additional arguments
+                   (a/await-all 5000)
+                   <!
+                   (map #(add-deps-for-path deps read-file graph config %))
+                   (a/await-all 5000)
+                   <!)]
+      (or err @graph))))
+
+;; Next: Create dependency graph
+
+
+(defmethod ig/init-key ::deps-graph
+  [_ {:keys [logger exists? read-file deps]}]
+  (partial deps-graph logger exists? read-file deps))

@@ -2,7 +2,7 @@
   (:require ["path" :as path]
             [clojure.core.async :refer [<!]]
             [clojure.string :as string]
-            [clojure.test :refer [testing is use-fixtures]]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
@@ -155,21 +155,44 @@
           (is (errors/unexpected-error? (<! (deps file config))))
           (is (= "Boom" (.-message (ex-cause (<! (deps file config)))))))))))
 
-;; (deftest t-get-entries
-;;   (testing "Returns a set of all of the entry namespaces from the config"
-;;     (is (= '#{some.namespace some.other.namespace some.third.namespace}
-;;            (dependency/get-entries config :app)))))
+(deftest t-get-entries
+  (testing "Returns a set of all of the entry namespaces from the config"
+    (is (= '#{some.namespace some.other.namespace some.third.namespace}
+           (dependency/get-entries config :app)))))
 
-;; (deftest-async t-deps-graph
-;;   (testing "Logs a message at the info level"
-;;     (with-system [system sys-config]
-;;       (let [logger (::logging/logger system)
-;;             deps-graph (::dependency/deps-graph system)]
-;;         (deps-graph {} :app)
-;;         (is (seq (->> @(:cache logger)
-;;                       (filter #(= "Building dependency graph..."
-;;                                   (.getMessage %)))))))))
-;;   (testing "Returns an error if there is a circular dependency")
-;;   (testing "Returns an error if a cljs file refers to a dependency that does not exist")
-;;   (testing "Returns an error if a style file refers to a dependency that does not exist")
-;;   (testing "Returns the dependency graph"))
+(def fake-dependencies
+  {(str cwd "/src/foo/foo.cljs") #{(str cwd "/src/foo/bar.cljs")
+                                   (str cwd "/src/foo/baz.cljs")}
+   (str cwd "/src/foo/bar.cljs") #{(str cwd "/src/foo/baz.cljs")
+                                   (str cwd "/src/foo/bar.scss")}
+   (str cwd "/src/foo/baz.cljs") #{}
+   (str cwd "/src/foo/bar.scss") #{(str cwd "/src/foo/bang.scss")}
+   (str cwd "/src/foo/bang.scss") #{}})
+
+(def fake-circular-dependencies
+  (update fake-dependencies (str cwd "/src/foo/bar.cljs")
+          conj (str cwd "/src/foo/foo.cljs")))
+
+(deftest-async t-deps-graph
+  (testing "Logs a message at the info level"
+    (with-system [system sys-config]
+      (let [logger (::logging/logger system)
+            deps-graph (::dependency/deps-graph system)]
+        (deps-graph {} :app)
+        (is (seq (->> @(:cache logger)
+                      (filter #(= "Building dependency graph..."
+                                  (.getMessage %)))))))))
+  (testing "Returns an error if there is a circular dependency"
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::dependency/deps :fake-dependencies]
+                                fake-circular-dependencies))]
+      (let [deps-graph (::dependency/deps-graph system)
+            result (-> (deps-graph config :app)
+                       <!
+                       (.-message))]
+        ;;(is (string/includes? result "Circular dependency"))
+        )))
+  (testing "Returns an error if a cljs file refers to a dependency that does not exist")
+  (testing "Returns an error if a style file refers to a dependency that does not exist")
+  (testing "Returns the dependency graph"))
