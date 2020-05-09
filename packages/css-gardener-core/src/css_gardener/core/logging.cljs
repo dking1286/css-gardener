@@ -65,7 +65,7 @@
      :handlers [console-handler cache-handler]}))
 
 (defmethod ig/halt-key! ::logger
-  [_ {:keys [logger cache handlers]}]
+  [_ {:keys [goog-logger cache handlers]}]
   (reset! cache [])
   (doseq [handler handlers]
-    (log/removeHandler logger handler)))
+    (log/removeHandler goog-logger handler)))
