@@ -89,10 +89,6 @@
     ;; Real deps implementation
     :else (partial deps logger load-module cljs-deps)))
 
-(s/fdef get-entries
-  :args (s/cat :config ::config/config
-               :build-id keyword?))
-
 (defn get-entries
   "Gets all entry namespaces from a config map."
   [config build-id]
