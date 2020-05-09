@@ -18,4 +18,8 @@
                       :autorun false
                       :closure-defines {"goog.debug.LOGGING_ENABLED" true}
                       :dev {:output-to "target/main-test-dev/main.js"
-                            :autorun true}}}}
+                            :autorun true}
+                      :release {:compiler-options {;; Use pseudo-names so that
+                                                   ;; test failures are easier
+                                                   ;; to debug
+                                                   :pseudo-names true}}}}}
