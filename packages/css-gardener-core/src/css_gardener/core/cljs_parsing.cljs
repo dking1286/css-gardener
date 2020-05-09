@@ -1,12 +1,12 @@
 (ns css-gardener.core.cljs-parsing
-  (:require ["path" :as path]
-            [clojure.core.async :refer [go merge <!]]
+  (:require [clojure.core.async :refer [go merge <!]]
             [clojure.string :as string]
             [clojure.tools.namespace.parse :as parse]
             [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
-            [integrant.core :as ig]))
+            [integrant.core :as ig]
+            ["path" :as path]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
 ;; namespace. Instead of copying this, fork the repo and publish my own

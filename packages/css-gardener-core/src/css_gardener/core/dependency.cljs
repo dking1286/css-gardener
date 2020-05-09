@@ -1,7 +1,7 @@
 (ns css-gardener.core.dependency
   (:require [clojure.core.async :refer [go]]
-            [clojure.tools.namespace.dependency :as dependency]
             [clojure.spec.alpha :as s]
+            [clojure.tools.namespace.dependency :as dependency]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
