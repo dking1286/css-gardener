@@ -1,13 +1,9 @@
 (ns css-gardener.core.utils.async
   (:refer-clojure :exclude [constantly map merge])
-  (:require [clojure.core.async :refer [go go-loop chan put! close! pipe alts! timeout merge <! >!]]
+  (:require [clojure.core.async
+             :refer [go go-loop chan put! close! pipe alts! timeout merge
+                     <! >!]]
             [css-gardener.core.utils.errors :as errors]))
-
-(defn constantly
-  "Returns a function that always returns a channel containing the specified 
-  value."
-  [val]
-  (fn [& _] (go val)))
 
 (defn callback->channel
   "Takes a function that takes a callback, and returns a channel that yields
@@ -88,6 +84,17 @@
             (>! out-chan out-value)
             (recur)))))
     out-chan))
+
+(defn then
+  "Calls f with each value from ch, returns a channel that yields nothing
+   unless an error occurs, in which case the error is yielded.
+   
+   f should be a function with side effects, otherwise there is not much point
+   to using this function."
+  [f ch]
+  (->> ch
+       (flat-map f)
+       (transform (filter errors/error?))))
 
 (defn trace
   "Returns a channel that prints and then yields each value from the input

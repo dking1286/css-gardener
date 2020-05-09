@@ -6,6 +6,7 @@
                                                    node-callback->channel
                                                    map
                                                    flat-map
+                                                   then
                                                    take-all
                                                    await-all]]
             [css-gardener.core.utils.errors :as errors]
@@ -80,6 +81,35 @@
     (let [f #(go (inc %))
           ch (go 1)]
       (is (= 2 (<! (flat-map f ch)))))))
+
+(deftest-async t-then
+  (testing "Yields the error if the function throws an error"
+    (let [f #(throw (js/Error. "Boom"))
+          ch (go 1)]
+      (is (= "Boom"
+             (.-message (<! (then f ch)))))))
+  (testing "Yields the error if the function returns a channel that yields
+            an error"
+    (let [f #(go (js/Error. "Boom"))
+          ch (go 1)]
+      (is (= "Boom"
+             (.-message (<! (then f ch)))))))
+  (testing "Propagates the error if the input channel contains an error"
+    (let [f #(go 3)
+          ch (go (js/Error. "Boom"))]
+      (is (= "Boom"
+             (.-message (<! (then f ch)))))))
+  (testing "Executes the function with the value from the input channel,
+            yields nothing, and closes when the input channel closes."
+    (let [side-effect (atom nil)
+          f #(go
+               (let [num (<! (go (inc %)))]
+                 (reset! side-effect num)
+                 num))
+          ch (go 1)
+          result (<! (then f ch))]
+      (is (nil? result))
+      (is (= 2 @side-effect)))))
 
 (deftest-async t-take-all
   (testing "Yields deadline-exceeded if the source channel does not close within the timeout"
