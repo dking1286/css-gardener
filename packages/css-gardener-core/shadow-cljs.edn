@@ -8,11 +8,13 @@
  :builds {:main {:target :node-script
                  :output-to "dist/main.js"
                  :main css-gardener.core.main/main
+                 :closure-defines {"goog.debug.LOGGING_ENABLED" true}
                  :dev {:output-to "target/main-dev/main.js"
                        :main css-gardener.core.main-dev/main}}
 
           :main-test {:target :node-test
-                      :output-to "target/main-test-dev/main.js"
-                      :autorun true
-                      :release {:output-to "target/main-test/main.js"
-                                :autorun false}}}}
+                      :output-to "target/main-test/main.js"
+                      :autorun false
+                      :closure-defines {"goog.debug.LOGGING_ENABLED" true}
+                      :dev {:output-to "target/main-test-dev/main.js"
+                            :autorun true}}}}
