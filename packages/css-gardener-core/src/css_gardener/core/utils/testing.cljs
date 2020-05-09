@@ -2,5 +2,7 @@
   (:require-macros [css-gardener.core.utils.testing])
   (:require [clojure.spec.test.alpha :as stest]))
 
-(def instrument-specs {:before #(stest/instrument)
-                       :after #(stest/unstrument)})
+(def instrument-specs {:before #(when (identical? true js/goog.DEBUG)
+                                  (stest/instrument))
+                       :after #(when (identical? false js/goog.DEBUG)
+                                 (stest/unstrument))})
