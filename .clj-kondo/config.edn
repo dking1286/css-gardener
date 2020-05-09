@@ -1,3 +1,3 @@
-{:linters {:unsorted-require-namespaces {:level :warning}}
+{:linters {:unsorted-required-namespaces {:level :warning}}
  :lint-as {css-gardener.core.utils.testing/with-system clojure.core/let
            css-gardener.core.utils.testing/deftest-async clojure.test/deftest}}

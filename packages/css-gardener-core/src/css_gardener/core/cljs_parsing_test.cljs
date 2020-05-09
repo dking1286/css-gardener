@@ -1,6 +1,5 @@
 (ns css-gardener.core.cljs-parsing-test
-  (:require ["path" :as path]
-            [clojure.core.async :refer [go <!]]
+  (:require [clojure.core.async :refer [go <!]]
             [clojure.test :refer [deftest testing is use-fixtures]]
             [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
                                                     ns-name->relative-path
@@ -10,7 +9,8 @@
                                                     cljs-deps]]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.testing :refer [instrument-specs
-                                                     deftest-async]]))
+                                                     deftest-async]]
+            ["path" :as path]))
 
 (use-fixtures :once instrument-specs)
 

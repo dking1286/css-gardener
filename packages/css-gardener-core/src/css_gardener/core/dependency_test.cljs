@@ -1,6 +1,5 @@
 (ns css-gardener.core.dependency-test
-  (:require ["path" :as path]
-            [clojure.core.async :refer [<!]]
+  (:require [clojure.core.async :refer [<!]]
             [clojure.string :as string]
             [clojure.test :refer [deftest testing is are use-fixtures]]
             [clojure.tools.namespace.dependency :as ctnd]
@@ -12,7 +11,8 @@
             [css-gardener.core.utils.fs :as fs]
             [css-gardener.core.utils.testing :refer [instrument-specs
                                                      with-system
-                                                     deftest-async]]))
+                                                     deftest-async]]
+            ["path" :as path]))
 
 (use-fixtures :once instrument-specs)
 

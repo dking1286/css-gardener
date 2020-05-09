@@ -1,7 +1,7 @@
 (ns css-gardener.core.file
-  (:require ["path" :as path]
-            [clojure.spec.alpha :as s]
-            [css-gardener.core.utils.async :as a]))
+  (:require [clojure.spec.alpha :as s]
+            [css-gardener.core.utils.async :as a]
+            ["path" :as path]))
 
 ;; TODO: Make a more robust absolute path spec
 (s/def ::absolute-path string?)

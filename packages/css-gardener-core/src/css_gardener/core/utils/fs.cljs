@@ -1,9 +1,9 @@
 (ns css-gardener.core.utils.fs
   (:refer-clojure :exclude [exists?])
-  (:require ["fs" :as fs]
-            [clojure.core.async :refer [go]]
+  (:require [clojure.core.async :refer [go]]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
+            ["fs" :as fs]
             [integrant.core :as ig]))
 
 (defn exists?
