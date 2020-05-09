@@ -5,6 +5,7 @@
             [clojure.test :refer [deftest testing is use-fixtures async]]
             [css-gardener.core.file :as sut]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs :as fs]
             [css-gardener.core.utils.testing :refer [instrument-specs]]))
 
 (use-fixtures :once instrument-specs)
@@ -15,9 +16,9 @@
   (async done
     (go
       (testing "returns an error when the file does not exist"
-        (is (errors/not-found? (<! (sut/from-path "blah.js")))))
+        (is (errors/not-found? (<! (sut/from-path fs/read-file "blah.js")))))
       (testing "returns the file map when the file does exist"
-        (let [result (<! (sut/from-path "index.js"))]
+        (let [result (<! (sut/from-path fs/read-file "index.js"))]
           (is (= (str cwd "/index.js")
                  (:absolute-path result)))
           (is (s/includes? (:content result) "require('./dist/main')"))))

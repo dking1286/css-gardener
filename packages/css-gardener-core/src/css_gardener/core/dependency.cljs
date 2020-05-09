@@ -1,5 +1,5 @@
 (ns css-gardener.core.dependency
-  (:require [clojure.core.async :refer [go <! merge chan close!]]
+  (:require [clojure.core.async :refer [go]]
             [clojure.tools.namespace.dependency :as dependency]
             [clojure.spec.alpha :as s]
             [css-gardener.core.cljs-parsing :as cljs]
@@ -78,11 +78,16 @@
            (a/map set)))))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [logger load-module cljs-deps fake-dependencies]}]
-  (if fake-dependencies
-    (fn [file _]
-      (go (or (get fake-dependencies (:absolute-path file)) #{})))
-    (partial deps logger load-module cljs-deps)))
+  [_ {:keys [logger load-module cljs-deps fake-dependencies error]}]
+  (cond
+    ;; Mock deps with hard-coded map of dependencies
+    fake-dependencies (fn [file _]
+                        (go (or (get fake-dependencies (:absolute-path file))
+                                #{})))
+    ;; Mock deps that yields an error
+    error (fn [_ _] (go error))
+    ;; Real deps implementation
+    :else (partial deps logger load-module cljs-deps)))
 
 (s/fdef get-entries
   :args (s/cat :config ::config/config
@@ -98,23 +103,28 @@
 
 (s/fdef add-deps-for-path
   :args (s/cat :deps fn?
+               :read-file fn?
                :graph (su/deref-of ::dependency-graph)
+               :config ::config/config
                :path string?))
 
 (defn- add-deps-for-path
   "Starting from an absolute path, traverse dependency relationships, updating
    the dependency graph. Returns a channel that closes when the process is
    done, or yields an error and then closes if the process fails."
-  [deps read-file graph config path]
-  (let [out (chan)]
-    (go
-      (let [content (<! (read-file path))
-            file {:absolute-path path :content content}
-            dependencies (<! (deps file config))]
-        (doseq [dependency dependencies]
-          (swap! graph dependency/depend path dependency))
-        (close! out)))
-    out))
+  [;; Injected dependencies
+   deps read-file
+   ;; Arguments
+   graph config path]
+  (->> (file/from-path read-file path)
+       (a/flat-map #(deps % config))
+       (a/then
+        (fn [dependencies]
+          (doseq [dependency dependencies]
+            (swap! graph dependency/depend path dependency))
+          (->> dependencies
+               (map #(add-deps-for-path deps read-file graph config %))
+               (a/await-all 5000))))))
 
 (defn- deps-graph
   "Gets a dependency graph of absolute paths based on the configuration map."
@@ -122,17 +132,22 @@
    logger exists? read-file deps
    ;; Arguments
    config build-id]
-  (logging/info logger "Building dependency graph...")
-  (go
-    (let [graph (atom (dependency/graph))
-          err (->> (get-entries config build-id)
-                   (map #(cljs/ns-name->absolute-path %)) ;; Fixme, has additional arguments
-                   (a/await-all 5000)
-                   <!
-                   (map #(add-deps-for-path deps read-file graph config %))
-                   (a/await-all 5000)
-                   <!)]
-      (or err @graph))))
+  (logging/info logger "Building dependency graph")
+  (let [graph
+        (atom (dependency/graph))
+
+        ns-name->absolute-path
+        (partial cljs/ns-name->absolute-path exists? (:source-paths config))
+
+        add-deps
+        (partial add-deps-for-path deps read-file graph config)]
+    (->> (get-entries config build-id)
+         (map ns-name->absolute-path)
+         (a/await-all 5000)
+         (a/flat-map #(->> %
+                           (map add-deps)
+                           (a/await-all 5000)))
+         (a/map (fn [_] @graph)))))
 
 ;; Next: Create dependency graph
 
