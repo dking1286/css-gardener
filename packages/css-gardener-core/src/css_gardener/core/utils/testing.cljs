@@ -4,5 +4,5 @@
 
 (def instrument-specs {:before #(when (identical? true js/goog.DEBUG)
                                   (stest/instrument))
-                       :after #(when (identical? false js/goog.DEBUG)
+                       :after #(when (identical? true js/goog.DEBUG)
                                  (stest/unstrument))})
