@@ -5,19 +5,19 @@
             [integrant.core :as ig])
   (:import [goog.log Level Logger]))
 
-(s/def ::sink #{:console :cache})
-(s/def ::level #{:debug :info :warning :error})
-(s/def ::goog-logger #(instance? Logger %))
-(s/def ::cache #(satisfies? IDeref %))
-(s/def ::handler fn?)
-(s/def ::handlers (s/coll-of ::handler))
-(s/def ::logger (s/keys :req-un [::goog-logger ::cache ::handlers]))
-
 (def goog-level
   {:debug Level/FINE
    :info Level/INFO
    :warning Level/WARNING
    :error Level/SEVERE})
+
+(s/def ::sink #{:console :cache})
+(s/def ::level (set (keys goog-level)))
+(s/def ::goog-logger #(instance? Logger %))
+(s/def ::cache #(satisfies? IDeref %))
+(s/def ::handler fn?)
+(s/def ::handlers (s/coll-of ::handler))
+(s/def ::logger (s/keys :req-un [::goog-logger ::cache ::handlers]))
 
 (s/def ::log-fn-args
   (s/cat :logger ::logger
