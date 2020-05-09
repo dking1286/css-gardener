@@ -54,19 +54,19 @@
     (let [ns-name 'hello.world
           source-paths ["src" "test"]
           exists? (fn [_] (go false))]
-      (is (errors/not-found? (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+      (is (errors/not-found? (<! (ns-name->absolute-path exists? source-paths ns-name))))))
   (testing "returns the absolute path when one file matches the ns-name"
     (let [ns-name 'hello.world
           file-name (str cwd "/src/hello/world.cljs")
           source-paths ["src" "test"]
           exists? (fn [name] (go (= name file-name)))]
       (is (= file-name
-             (<! (ns-name->absolute-path ns-name source-paths exists?))))))
+             (<! (ns-name->absolute-path exists? source-paths ns-name))))))
   (testing "returns a conflict error when more than one file matches the ns-name"
     (let [ns-name 'hello.world
           source-paths ["src" "test"]
           exists? (fn [_] (go true))]
-      (is (errors/conflict? (<! (ns-name->absolute-path ns-name source-paths exists?)))))))
+      (is (errors/conflict? (<! (ns-name->absolute-path exists? source-paths ns-name)))))))
 
 (deftest t-stylesheet-deps-from-ns-decl
   (testing "returns an empty set when there is no css-gardener/require metadata on the namespace name"

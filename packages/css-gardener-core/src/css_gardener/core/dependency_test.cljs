@@ -2,7 +2,8 @@
   (:require ["path" :as path]
             [clojure.core.async :refer [<!]]
             [clojure.string :as string]
-            [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.test :refer [deftest testing is are use-fixtures]]
+            [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
@@ -16,6 +17,43 @@
 (use-fixtures :once instrument-specs)
 
 (def cwd (path/resolve "."))
+
+(defn src-file
+  [relative-path]
+  (str cwd "/src/" relative-path))
+
+(def files
+  {(src-file "hello/world.cljs") "Hello world"
+   (src-file "some/namespace.cljs") "Some namespace"
+   (src-file "some/other/namespace.cljs") "Some other namespace"
+   (src-file "some/third/namespace.cljs") "Some third namespace"
+   (src-file "foo/foo.cljs") "Foo"
+   (src-file "foo/bar.cljs") "Bar"
+   (src-file "foo/bar.scss") "Bar styles"
+   (src-file "foo/baz.cljs") "Baz"
+   (src-file "foo/bang.scss") "Bang styles"})
+
+(def dependencies
+  {(src-file "some/namespace.cljs") #{(src-file "foo/foo.cljs")}
+   (src-file "foo/foo.cljs") #{(src-file "foo/bar.cljs")
+                               (src-file "foo/baz.cljs")}
+   (src-file "foo/bar.cljs") #{(src-file "foo/baz.cljs")
+                               (src-file "foo/bar.scss")}
+   (src-file "foo/baz.cljs") #{}
+   (src-file "foo/bar.scss") #{(src-file "foo/bang.scss")}
+   (src-file "foo/bang.scss") #{}})
+
+(def circular-dependencies
+  (update dependencies (src-file "foo/bar.cljs")
+          conj (src-file "foo/foo.cljs")))
+
+(def nonexistent-cljs-dependencies
+  (update dependencies (src-file "foo/bar.cljs")
+          conj (src-file "foo/does_not_exist.cljs")))
+
+(def nonexistent-style-dependencies
+  (update dependencies (src-file "foo/bar.scss")
+          conj (src-file "foo/does_not_exist.scss")))
 
 (def config
   {:source-paths ["src"]
@@ -33,10 +71,8 @@
 
 (def sys-config
   (-> system/config
-      (assoc-in [::fs/exists? :existing-files]
-                #{(str cwd "/src/hello/world.cljs")
-                  (str cwd "/src/some/other/namespace.cljs")
-                  (str cwd "/src/some/third/namespace.cljs")})
+      (assoc-in [::fs/exists? :files] files)
+      (assoc-in [::fs/read-file :files] files)
       (assoc-in [::modules/load :return-value] nil)
       (assoc-in [::logging/logger :level] :debug)
       (assoc-in [::logging/logger :sinks] #{:cache})))
@@ -50,21 +86,21 @@
   (testing "returns the cljs deps if the file is a cljs file"
     (with-system [system sys-config]
       (let [deps (::dependency/deps system)
-            file {:absolute-path (str cwd "/src/hello/world.cljs")
+            file {:absolute-path (src-file "hello/world.cljs")
                   :content (pr-str ns-decl)}]
-        (is (= #{(str cwd "/src/some/other/namespace.cljs")
-                 (str cwd "/src/some/third/namespace.cljs")}
+        (is (= #{(src-file "some/other/namespace.cljs")
+                 (src-file "some/third/namespace.cljs")}
                (<! (deps file config)))))))
   (testing "returns invalid-config if no rule matches the file"
     (with-system [system sys-config]
       (let [deps (::dependency/deps system)
-            file {:absolute-path (str cwd "/src/hello/world.blah")
+            file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
         (is (errors/invalid-config? (<! (deps file config)))))))
   (testing "returns invalid-config if multiple rules match the file"
     (with-system [system sys-config]
       (let [deps (::dependency/deps system)
-            file {:absolute-path (str cwd "/src/hello/world.blah")
+            file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}
             config (-> config
                        (assoc-in [:rules #"blah$"] {:transformers []})
@@ -73,14 +109,14 @@
   (testing "returns an empty set if the matching rule has no dependency resolver"
     (with-system [system sys-config]
       (let [deps (::dependency/deps system)
-            file {:absolute-path (str cwd "/src/hello/world.blah")
+            file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}
             config (-> config
                        (assoc-in [:rules #"blah$"] {:transformers []}))]
         (is (= #{} (<! (deps file config)))))))
   (testing "returns invalid-dependency-resolver if load-module cannot find the dependency resolver"
     (let [file
-          {:absolute-path (str cwd "/src/hello/world.blah")
+          {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
 
           config
@@ -103,7 +139,7 @@
                         (fn [_ cb] (cb nil #{"/some/other/namespace.cljs"}))))
 
           file
-          {:absolute-path (str cwd "/src/hello/world.blah")
+          {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
 
           config
@@ -122,7 +158,7 @@
                         (fn [_ cb] (cb nil #js ["/some/other/namespace.cljs"]))))
 
           file
-          {:absolute-path (str cwd "/src/hello/world.blah")
+          {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
 
           config
@@ -142,7 +178,7 @@
                         (fn [_ cb] (cb (js/Error. "Boom") nil))))
 
           file
-          {:absolute-path (str cwd "/src/hello/world.blah")
+          {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
 
           config
@@ -160,19 +196,6 @@
     (is (= '#{some.namespace some.other.namespace some.third.namespace}
            (dependency/get-entries config :app)))))
 
-(def fake-dependencies
-  {(str cwd "/src/foo/foo.cljs") #{(str cwd "/src/foo/bar.cljs")
-                                   (str cwd "/src/foo/baz.cljs")}
-   (str cwd "/src/foo/bar.cljs") #{(str cwd "/src/foo/baz.cljs")
-                                   (str cwd "/src/foo/bar.scss")}
-   (str cwd "/src/foo/baz.cljs") #{}
-   (str cwd "/src/foo/bar.scss") #{(str cwd "/src/foo/bang.scss")}
-   (str cwd "/src/foo/bang.scss") #{}})
-
-(def fake-circular-dependencies
-  (update fake-dependencies (str cwd "/src/foo/bar.cljs")
-          conj (str cwd "/src/foo/foo.cljs")))
-
 (deftest-async t-deps-graph
   (testing "Logs a message at the info level"
     (with-system [system sys-config]
@@ -180,19 +203,51 @@
             deps-graph (::dependency/deps-graph system)]
         (deps-graph {} :app)
         (is (seq (->> @(:cache logger)
-                      (filter #(= "Building dependency graph..."
+                      (filter #(= "Building dependency graph"
                                   (.getMessage %)))))))))
   (testing "Returns an error if there is a circular dependency"
     (with-system [system
                   (-> sys-config
                       (assoc-in [::dependency/deps :fake-dependencies]
-                                fake-circular-dependencies))]
+                                circular-dependencies))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (-> (deps-graph config :app)
-                       <!
-                       (.-message))]
-        ;;(is (string/includes? result "Circular dependency"))
-        )))
-  (testing "Returns an error if a cljs file refers to a dependency that does not exist")
-  (testing "Returns an error if a style file refers to a dependency that does not exist")
-  (testing "Returns the dependency graph"))
+            result (<! (deps-graph config :app))]
+        (is (string/includes? (.-message result) "Circular dependency")))))
+  (testing "Returns an error if a cljs file refers to a dependency that does not exist"
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::dependency/deps :fake-dependencies]
+                                nonexistent-cljs-dependencies))]
+      (let [deps-graph (::dependency/deps-graph system)
+            result (<! (deps-graph config :app))]
+        (is (errors/not-found? result)))))
+  (testing "Returns an error if a style file refers to a dependency that does not exist"
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::dependency/deps :fake-dependencies]
+                                nonexistent-style-dependencies))]
+      (let [deps-graph (::dependency/deps-graph system)
+            result (<! (deps-graph config :app))]
+        (is (errors/not-found? result)))))
+  (testing "Returns an error if the 'deps' function returns an error"
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::dependency/deps :error]
+                                (errors/invalid-config "Boom")))]
+      (let [deps-graph (::dependency/deps-graph system)
+            result (<! (deps-graph config :app))]
+        (is (errors/invalid-config? result)))))
+  (testing "Returns the dependency graph"
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::dependency/deps :fake-dependencies]
+                                dependencies))]
+      (let [deps-graph (::dependency/deps-graph system)
+            result (<! (deps-graph config :app))]
+        (are [x y] (ctnd/depends? result x y)
+          (src-file "some/namespace.cljs") (src-file "foo/foo.cljs")
+          (src-file "some/namespace.cljs") (src-file "foo/baz.cljs")
+          (src-file "some/namespace.cljs") (src-file "foo/bar.scss")
+          (src-file "some/namespace.cljs") (src-file "foo/bang.scss"))
+        (are [x y] (not (ctnd/depends? result x y))
+          (src-file "foo/bang.scss") (src-file "some/namespace.cljs"))))))

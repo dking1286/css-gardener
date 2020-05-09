@@ -113,7 +113,7 @@
     source-paths: paths relative to the project root to search for the file
     exists?: Function that returns a core async channel with a boolean
       indicating whether or not a file exists."
-  [ns-name source-paths exists?]
+  [exists? source-paths ns-name]
   (go
     (let [existing-files (->> (ns-name->possible-absolute-paths
                                ns-name source-paths)
@@ -135,7 +135,7 @@
 (defn cljs-deps-from-ns-decl
   [ns-decl source-paths exists?]
   (->> (deps-from-ns-decl ns-decl)
-       (map #(ns-name->absolute-path % source-paths exists?))
+       (map #(ns-name->absolute-path exists? source-paths %))
        merge
        (a/take-all 5000)))
 
