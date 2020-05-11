@@ -10,7 +10,7 @@
 
 (use-fixtures :once instrument-specs)
 
-(def cwd (path/resolve "."))
+(def ^:private cwd (path/resolve "."))
 
 (deftest t-from-path
   (async done

@@ -6,7 +6,8 @@
             [css-gardener.core.utils.fs :as fs]
             [integrant.core :as ig]))
 
-(def config
+(def ^{:doc "Default Integrant system configuration."}
+  config
   {::logging/logger {:level :info
                      :sinks #{:console}}
 
