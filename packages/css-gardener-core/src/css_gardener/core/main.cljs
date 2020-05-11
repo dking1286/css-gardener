@@ -6,6 +6,7 @@
             [css-gardener.core.system]))
 
 (defn main
+  "Entry point for the css-gardener process."
   []
   (let [args (.slice js/process.argv 2)
         {:keys [errors options summary]} (arguments/parse args)]

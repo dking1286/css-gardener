@@ -16,13 +16,13 @@
 
 (use-fixtures :once instrument-specs)
 
-(def cwd (path/resolve "."))
+(def ^:private cwd (path/resolve "."))
 
-(defn src-file
+(defn- src-file
   [relative-path]
   (str cwd "/src/" relative-path))
 
-(def files
+(def ^:private files
   {(src-file "hello/world.cljs") "Hello world"
    (src-file "some/namespace.cljs") "Some namespace"
    (src-file "some/other/namespace.cljs") "Some other namespace"
@@ -33,7 +33,7 @@
    (src-file "foo/baz.cljs") "Baz"
    (src-file "foo/bang.scss") "Bang styles"})
 
-(def dependencies
+(def ^:private dependencies
   {(src-file "some/namespace.cljs") #{(src-file "foo/foo.cljs")}
    (src-file "foo/foo.cljs") #{(src-file "foo/bar.cljs")
                                (src-file "foo/baz.cljs")}
@@ -43,19 +43,19 @@
    (src-file "foo/bar.scss") #{(src-file "foo/bang.scss")}
    (src-file "foo/bang.scss") #{}})
 
-(def circular-dependencies
+(def ^:private circular-dependencies
   (update dependencies (src-file "foo/bar.cljs")
           conj (src-file "foo/foo.cljs")))
 
-(def nonexistent-cljs-dependencies
+(def ^:private nonexistent-cljs-dependencies
   (update dependencies (src-file "foo/bar.cljs")
           conj (src-file "foo/does_not_exist.cljs")))
 
-(def nonexistent-style-dependencies
+(def ^:private nonexistent-style-dependencies
   (update dependencies (src-file "foo/bar.scss")
           conj (src-file "foo/does_not_exist.scss")))
 
-(def config
+(def ^:private config
   {:source-paths ["src"]
    :builds {:app {:target :browser
                   :output-dir "public/js"
@@ -69,7 +69,7 @@
     #"\.scss$" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
                 :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
 
-(def sys-config
+(def ^:private sys-config
   (-> system/config
       (assoc-in [::fs/exists? :files] files)
       (assoc-in [::fs/read-file :files] files)
@@ -77,7 +77,7 @@
       (assoc-in [::logging/logger :level] :debug)
       (assoc-in [::logging/logger :sinks] #{:cache})))
 
-(def ns-decl
+(def ^:private ns-decl
   '(ns hello.world
      (:require [some.other.namespace]
                [some.third.namespace])))

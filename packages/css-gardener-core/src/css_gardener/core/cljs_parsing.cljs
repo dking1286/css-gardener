@@ -84,6 +84,8 @@
 ;; End forked code from clojure.tools.namespace.parse
 
 (defn ns-name->relative-path
+  "Converts a namespace name to the file's relative path from the project
+   source directory."
   [ns-name]
   (if (string? ns-name)
     ns-name
@@ -94,10 +96,13 @@
 (def ^:private cljs-file-extensions #{".cljs" ".cljc"})
 
 (defn cljs-file?
+  "Determines if a file is a cljs file."
   [file]
   (contains? cljs-file-extensions (path/extname (:absolute-path file))))
 
 (defn ns-name->possible-absolute-paths
+  "Returns a set of the possible absolute paths corresponding to a namespace
+   symbol."
   [ns-name source-paths]
   (set (for [source-path source-paths
              extension cljs-file-extensions]
@@ -132,7 +137,7 @@
                               ": "
                               existing-files))))))
 
-(defn cljs-deps-from-ns-decl
+(defn- cljs-deps-from-ns-decl
   [ns-decl source-paths exists?]
   (->> (deps-from-ns-decl ns-decl)
        (map #(ns-name->absolute-path exists? source-paths %))
@@ -147,6 +152,8 @@
       set))
 
 (defn stylesheet-deps-from-ns-decl
+  "Gets a set of stylesheet dependencies from an unevaluated cljs namespace
+   form."
   [ns-decl current-file]
   (->> (stylesheet-deps-relative-paths ns-decl)
        (map #(path/resolve (path/dirname current-file) %))
@@ -158,6 +165,7 @@
        (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
 
 (defn cljs-deps
+  "Gets a set of absolute paths of dependencies of a cljs file."
   [exists? file source-paths]
   (let [{:keys [absolute-path content]} file
         ns-decl (parse/read-ns-decl (string-push-back-reader content))]

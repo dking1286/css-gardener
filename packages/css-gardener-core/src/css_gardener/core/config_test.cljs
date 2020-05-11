@@ -6,7 +6,7 @@
 
 (use-fixtures :once instrument-specs)
 
-(def config
+(def ^:private config
   {:source-paths ["src"]
    :builds {}
    :rules

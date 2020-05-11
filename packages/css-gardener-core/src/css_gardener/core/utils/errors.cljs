@@ -62,12 +62,14 @@
   (= :deadline-exceeded (-> err ex-data :type)))
 
 (defn unexpected-error
+  "Creates an error indicating that something unknown went wrong."
   [cause]
   (ex-info "An unexpected error occurred"
            {:type :unexpected}
            cause))
 
 (defn unexpected-error?
+  "Determines if an error is an unexpected-error."
   [err]
   (= :unexpected (-> err ex-data :type)))
 

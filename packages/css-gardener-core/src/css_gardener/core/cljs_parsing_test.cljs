@@ -14,7 +14,7 @@
 
 (use-fixtures :once instrument-specs)
 
-(def cwd (path/resolve "."))
+(def ^:private cwd (path/resolve "."))
 
 (deftest t-deps-from-ns-decl
   (testing "parses namespace dependencies"

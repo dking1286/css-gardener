@@ -6,11 +6,11 @@
             [css-gardener.core.config :as config]
             [css-gardener.core.logging :as logging]))
 
-(def commands #{:watch :release})
+(def ^:private commands #{:watch :release})
 
 (s/def ::command commands)
 
-(def cli-options
+(def ^:private cli-options
   [["-h" "--help"]
    ["-l" "--log-level LEVEL" "Log level, defaults to 'info' if not provided"
     :default "info"
@@ -46,6 +46,12 @@
     :else parsed))
 
 (defn parse
+  "Parses the command line arguments. Returns a map of the form:
+   
+   :arguments [...keywords of positional arguments]
+   :options {...map of flags}
+   :errors [...string error messages]
+   :summary string describing command line options"
   [args]
   (-> (parse-opts args cli-options)
       (update :arguments #(map keyword %))

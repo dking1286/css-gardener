@@ -5,7 +5,9 @@
             [integrant.core :as ig])
   (:import [goog.log Level Logger]))
 
-(def goog-level
+(def ^{:doc "Map of log level keywords to the corresponding constants in the
+             Closure library logging framework."}
+  goog-level
   {:debug Level/FINE
    :info Level/INFO
    :warning Level/WARNING
@@ -23,7 +25,7 @@
   (s/cat :logger ::logger
          :msg string?))
 
-(defn log-fn
+(defn- log-fn
   [f]
   (fn [logger msg]
     (f (:goog-logger logger) msg)))
@@ -31,22 +33,30 @@
 (s/fdef debug
   :args ::log-fn-args)
 
-(def debug (log-fn log/fine))
+(def ^{:doc "Log at the :debug level"}
+  debug
+  (log-fn log/fine))
 
 (s/fdef info
   :args ::log-fn-args)
 
-(def info (log-fn log/info))
+(def ^{:doc "Log at the :info level"}
+  info
+  (log-fn log/info))
 
 (s/fdef warning
   :args ::log-fn-args)
 
-(def warning (log-fn log/warning))
+(def ^{:doc "Log at the :warning level"}
+  warning
+  (log-fn log/warning))
 
 (s/fdef error
   :args ::log-fn-args)
 
-(def error (log-fn log/error))
+(def ^{:doc "Log at the :error level"}
+  error
+  (log-fn log/error))
 
 (defmethod ig/init-key ::logger
   [_ {:keys [sinks level]
