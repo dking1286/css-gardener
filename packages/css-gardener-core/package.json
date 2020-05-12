@@ -25,6 +25,8 @@
   ],
   "author": "Daniel King",
   "license": "EPL-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "chokidar": "^3.4.0"
+  },
   "devDependencies": {}
 }
