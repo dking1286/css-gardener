@@ -1,5 +1,6 @@
 (ns css-gardener.core.system
-  (:require [css-gardener.core.cljs-parsing :as cljs]
+  (:require [css-gardener.core.change-detection :as changes]
+            [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
@@ -23,4 +24,8 @@
    ::dependency/deps-graph {:logger (ig/ref ::logging/logger)
                             :exists? (ig/ref ::fs/exists?)
                             :read-file (ig/ref ::fs/read-file)
-                            :deps (ig/ref ::dependency/deps)}})
+                            :deps (ig/ref ::dependency/deps)}
+
+   ::changes/input-channel {}
+   ::changes/watcher {:source-paths []
+                      :input-channel (ig/ref ::changes/input-channel)}})
