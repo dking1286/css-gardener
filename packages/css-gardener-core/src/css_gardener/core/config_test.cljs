@@ -10,9 +10,9 @@
   {:source-paths ["src"]
    :builds {}
    :rules
-   {#"\.css$" {:transformers []}
-    #"\.scss$" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
-                :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
+   {".css" {:transformers []}
+    ".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+             :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
 
 (deftest t-matching-rule
   (testing "Returns the rule in the configuration file matching the file"
@@ -26,7 +26,7 @@
                 :content ""}]
       (is (errors/not-found? (sut/matching-rule config file)))))
   (testing "Returns conflict when more than one rule matches the file"
-    (let [config (assoc-in config [:rules #"css$"] {:transformers []})
+    (let [config (assoc-in config [:rules "css"] {:transformers []})
           file {:absolute-path "/blah/blah.scss"
                 :content ""}]
       (is (errors/conflict? (sut/matching-rule config file))))))

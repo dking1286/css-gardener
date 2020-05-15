@@ -23,7 +23,7 @@
 (s/def ::transformer (s/keys :req-un [::node-module] :opt-un [::options]))
 (s/def ::transformers (s/coll-of ::transformer :kind vector?))
 (s/def ::rule (s/keys :req-un [::transformers]))
-(s/def ::rules (s/map-of regexp? ::rule))
+(s/def ::rules (s/map-of string? ::rule))
 
 (s/def ::config
   (s/and
@@ -39,8 +39,9 @@
   "Gets the rule in the configuration map matching a file."
   [config file]
   (let [matching-rules (->> (:rules config)
-                            (filter (fn [[re _]]
-                                      (re-find re (:absolute-path file))))
+                            (filter (fn [[ending _]]
+                                      (string/ends-with? (:absolute-path file)
+                                                         ending)))
                             vec)]
     (case (count matching-rules)
       0 (errors/not-found (js/Error. (str "No rule found in configuration "
