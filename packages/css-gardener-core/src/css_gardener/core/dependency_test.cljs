@@ -65,9 +65,9 @@
                                                'some.third.namespace]
                                      :depends-on #{:main}}}}}
    :rules
-   {#"\.css$" {:transformers []}
-    #"\.scss$" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
-                :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
+   {".css" {:transformers []}
+    ".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+             :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
 
 (def ^:private sys-config
   (-> system/config
@@ -103,8 +103,8 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}
             config (-> config
-                       (assoc-in [:rules #"blah$"] {:transformers []})
-                       (assoc-in [:rules #"lah$"] {:transformers []}))]
+                       (assoc-in [:rules "blah"] {:transformers []})
+                       (assoc-in [:rules "lah"] {:transformers []}))]
         (is (errors/invalid-config? (<! (deps file config)))))))
   (testing "returns an empty set if the matching rule has no dependency resolver"
     (with-system [system sys-config]
@@ -112,7 +112,7 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}
             config (-> config
-                       (assoc-in [:rules #"blah$"] {:transformers []}))]
+                       (assoc-in [:rules "blah"] {:transformers []}))]
         (is (= #{} (<! (deps file config)))))))
   (testing "returns invalid-dependency-resolver if load-module cannot find the dependency resolver"
     (let [file
@@ -121,7 +121,7 @@
 
           config
           (-> config
-              (assoc-in [:rules #"blah$"]
+              (assoc-in [:rules "blah"]
                         {;; Does not exist, will throw an error when trying to load the module
                          :dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))]
@@ -144,7 +144,7 @@
 
           config
           (-> config
-              (assoc-in [:rules #"blah$"]
+              (assoc-in [:rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))]
 
@@ -163,7 +163,7 @@
 
           config
           (-> config
-              (assoc-in [:rules #"blah$"]
+              (assoc-in [:rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))]
 
@@ -183,7 +183,7 @@
 
           config
           (-> config
-              (assoc-in [:rules #"blah$"]
+              (assoc-in [:rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))]
       (with-system [system sys-config]
