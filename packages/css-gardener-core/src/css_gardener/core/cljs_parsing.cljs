@@ -3,10 +3,11 @@
             [clojure.string :as string]
             [clojure.tools.namespace.parse :as parse]
             [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
+            [css-gardener.core.logging :as logging]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
             [integrant.core :as ig]
-            ["path" :as path]))
+            [path]))
 
 ;; This is a copy of part of the clojure.tools.namespace.parse
 ;; namespace. Instead of copying this, fork the repo and publish my own
@@ -137,10 +138,19 @@
                               existing-files))))))
 
 (defn- cljs-deps-from-ns-decl
-  [ns-decl source-paths exists?]
+  [exists? logger ns-decl source-paths]
   (->> (deps-from-ns-decl ns-decl)
        (map #(ns-name->absolute-path exists? source-paths %))
-       (a/await-all 5000)))
+       merge
+       (a/take-all 5000)
+       (a/map (fn [dependencies-or-errors]
+                (let [dependencies (->> dependencies-or-errors
+                                        (filter (complement errors/error?)))
+                      errors (->> dependencies-or-errors
+                                  (filter errors/error?))]
+                  (doseq [error errors]
+                    (logging/warning logger (errors/message error)))
+                  dependencies)))))
 
 (defn- stylesheet-deps-relative-paths
   [ns-decl]
@@ -158,17 +168,20 @@
        set))
 
 (defn- all-deps-from-ns-decl
-  [ns-decl current-file source-paths exists?]
-  (->> (cljs-deps-from-ns-decl ns-decl source-paths exists?)
+  [exists? logger ns-decl current-file source-paths]
+  (->> (cljs-deps-from-ns-decl exists? logger ns-decl source-paths)
        (a/map #(into (stylesheet-deps-from-ns-decl ns-decl current-file) %))))
 
 (defn cljs-deps
   "Gets a set of absolute paths of dependencies of a cljs file."
-  [exists? file source-paths]
+  [;; Injected dependencies
+   exists? logger
+   ;; Arguments
+   file source-paths]
   (let [{:keys [absolute-path content]} file
         ns-decl (parse/read-ns-decl (string-push-back-reader content))]
-    (all-deps-from-ns-decl ns-decl absolute-path source-paths exists?)))
+    (all-deps-from-ns-decl exists? logger ns-decl absolute-path source-paths)))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [exists?]}]
-  (partial cljs-deps exists?))
+  [_ {:keys [exists? logger]}]
+  (partial cljs-deps exists? logger))

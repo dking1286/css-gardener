@@ -145,9 +145,6 @@
                            (a/await-all 5000)))
          (a/map (fn [_] @graph)))))
 
-;; Next: Create dependency graph
-
-
 (defmethod ig/init-key ::deps-graph
   [_ {:keys [logger exists? read-file deps]}]
   (partial deps-graph logger exists? read-file deps))

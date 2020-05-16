@@ -12,7 +12,7 @@
             [css-gardener.core.utils.testing :refer [instrument-specs
                                                      with-system
                                                      deftest-async]]
-            ["path" :as path]))
+            [path]))
 
 (use-fixtures :once instrument-specs)
 
@@ -91,6 +91,23 @@
         (is (= #{(src-file "some/other/namespace.cljs")
                  (src-file "some/third/namespace.cljs")}
                (<! (deps file config)))))))
+  (testing "skips a namespace dependency if no corresponding file is found,
+            and logs a warning."
+    (with-system [system
+                  (-> sys-config
+                      (update-in [::fs/exists? :files]
+                                 dissoc
+                                 (src-file "some/other/namespace.cljs")))]
+      (let [deps (::dependency/deps system)
+            logger (::logging/logger system)
+            file {:absolute-path (src-file "hello/world.cljs")
+                  :content (pr-str ns-decl)}]
+        (is (= #{(src-file "some/third/namespace.cljs")}
+               (<! (deps file config))))
+        (is (logging/has-message?
+             logger
+             #(string/includes? (.getMessage %)
+                                "No file matching namespace some.other.namespace"))))))
   (testing "returns invalid-config if no rule matches the file"
     (with-system [system sys-config]
       (let [deps (::dependency/deps system)

@@ -1,6 +1,7 @@
 (ns css-gardener.core.change-detection
   (:require ["chokidar" :as chokidar]
-            [clojure.core.async :refer [chan close! put!]]
+            [clojure.core.async :refer [chan close! go-loop <! put!]]
+            [css-gardener.core.logging :as logging]
             [integrant.core :as ig]))
 
 (defmethod ig/init-key ::input-channel
@@ -25,3 +26,16 @@
   [_ watcher]
   (when watcher
     (.close watcher)))
+
+(defmethod ig/init-key ::consumer
+  [_ {:keys [logger input-channel]}]
+  (fn []
+    (logging/debug logger "Starting consumer")
+    (go-loop []
+      (let [value (<! input-channel)]
+        (if value
+          (do
+            (logging/info logger (str "Detected changes to " value))
+            (recur))
+          (logging/debug logger
+                         "Input channel closed, stopping consumer"))))))
