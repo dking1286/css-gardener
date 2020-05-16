@@ -129,8 +129,7 @@
                               (filter :exists?)
                               (map :path))]
       (case (count existing-files)
-        0 (errors/not-found (js/Error. (str "No file matching namespace "
-                                            ns-name)))
+        0 (errors/not-found (str "No file matching namespace " ns-name))
         1 (first existing-files)
         (errors/conflict (str "More than 1 file found matching namespace "
                               ns-name
@@ -141,8 +140,7 @@
   [ns-decl source-paths exists?]
   (->> (deps-from-ns-decl ns-decl)
        (map #(ns-name->absolute-path exists? source-paths %))
-       merge
-       (a/take-all 5000)))
+       (a/await-all 5000)))
 
 (defn- stylesheet-deps-relative-paths
   [ns-decl]

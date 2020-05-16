@@ -38,6 +38,6 @@
     files (fn [filename]
             (go
               (or (get files filename)
-                  (errors/not-found (js/Error. (str filename " not found"))))))
+                  (errors/not-found (str filename " not found")))))
     ;; Real read-file implementation
     :else read-file))
