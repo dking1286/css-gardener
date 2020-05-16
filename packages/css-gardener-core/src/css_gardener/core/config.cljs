@@ -44,9 +44,9 @@
                                                          ending)))
                             vec)]
     (case (count matching-rules)
-      0 (errors/not-found (js/Error. (str "No rule found in configuration "
-                                          "matching file "
-                                          (:absolute-path file))))
+      0 (errors/not-found (str "No rule found in configuration "
+                               "matching file "
+                               (:absolute-path file)))
       1 (second (first matching-rules))
       (errors/conflict (str "More than 1 rule fould matching file "
                             (:absolute-path file)

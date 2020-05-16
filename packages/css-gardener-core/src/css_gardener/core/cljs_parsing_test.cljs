@@ -1,16 +1,22 @@
 (ns css-gardener.core.cljs-parsing-test
   (:require [clojure.core.async :refer [go <!]]
+            [clojure.string :as string]
             [clojure.test :refer [deftest testing is use-fixtures]]
-            [css-gardener.core.cljs-parsing :refer [deps-from-ns-decl
-                                                    ns-name->relative-path
-                                                    ns-name->possible-absolute-paths
-                                                    ns-name->absolute-path
-                                                    stylesheet-deps-from-ns-decl
-                                                    cljs-deps]]
+            [css-gardener.core.cljs-parsing
+             :as cljs
+             :refer [deps-from-ns-decl
+                     ns-name->relative-path
+                     ns-name->possible-absolute-paths
+                     ns-name->absolute-path
+                     stylesheet-deps-from-ns-decl]]
+            [css-gardener.core.logging :as logging]
+            [css-gardener.core.system :as system]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs :as fs]
             [css-gardener.core.utils.testing :refer [instrument-specs
-                                                     deftest-async]]
-            ["path" :as path]))
+                                                     deftest-async
+                                                     with-system]]
+            [path]))
 
 (use-fixtures :once instrument-specs)
 
@@ -77,17 +83,52 @@
       (is #{"/path/to/current/styles.scss"}
           (stylesheet-deps-from-ns-decl ns-decl "/path/to/current/file")))))
 
+(defn- src-file
+  [relative-path]
+  (str cwd "/src/" relative-path))
+
+(def ^:private files
+  {(src-file "some/other/namespace.cljs") ""})
+
+(def ^:private sys-config
+  (-> system/config
+      (assoc-in [::fs/exists? :files] files)
+      (assoc-in [::logging/logger :level] :debug)
+      (assoc-in [::logging/logger :sinks] #{:cache})))
+
 (deftest-async t-cljs-deps
   (testing "returns the set of all dependencies"
-    (let [absolute-path (str cwd "/src/hello/world.cljs")
-          content (binding [*print-meta* true]
-                    (pr-str '(ns
-                               ^{:css-gardener/require ["./styles.scss"]}
-                               hello.world
-                               (:require [some.other.namespace]))))
-          file {:absolute-path absolute-path :content content}
-          source-paths ["src" "test"]
-          exists? #(go (= % (str cwd "/src/some/other/namespace.cljs")))]
-      (is (= #{(str cwd "/src/some/other/namespace.cljs")
-               (str cwd "/src/hello/styles.scss")}
-             (<! (cljs-deps exists? file source-paths)))))))
+    (with-system [system sys-config]
+      (let [absolute-path (str cwd "/src/hello/world.cljs")
+            content (binding [*print-meta* true]
+                      (pr-str '(ns
+                                 ^{:css-gardener/require ["./styles.scss"]}
+                                 hello.world
+                                 (:require [some.other.namespace]))))
+            file {:absolute-path absolute-path :content content}
+            source-paths ["src" "test"]
+            cljs-deps (::cljs/deps system)]
+        (is (= #{(str cwd "/src/some/other/namespace.cljs")
+                 (str cwd "/src/hello/styles.scss")}
+               (<! (cljs-deps file source-paths)))))))
+  (testing "logs a warning and skips namespace dependencies where no matching
+            file can be found"
+    (with-system [system sys-config]
+      (let [absolute-path (str cwd "/src/hello/world.cljs")
+            content (binding [*print-meta* true]
+                      (pr-str '(ns
+                                 ^{:css-gardener/require ["./styles.scss"]}
+                                 hello.world
+                                 (:require [some.other.namespace]
+                                           [does.not.exist]))))
+            file {:absolute-path absolute-path :content content}
+            source-paths ["src" "test"]
+            logger (::logging/logger system)
+            cljs-deps (::cljs/deps system)]
+        (is (= #{(str cwd "/src/some/other/namespace.cljs")
+                 (str cwd "/src/hello/styles.scss")}
+               (<! (cljs-deps file source-paths))))
+        (is (logging/has-message?
+             logger
+             #(string/includes? (.getMessage %)
+                                "No file matching namespace does.not.exist")))))))

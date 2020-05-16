@@ -17,7 +17,8 @@
    ::fs/exists? {}
    ::fs/read-file {}
 
-   ::cljs/deps {:exists? (ig/ref ::fs/exists?)}
+   ::cljs/deps {:exists? (ig/ref ::fs/exists?)
+                :logger (ig/ref ::logging/logger)}
    ::dependency/deps {:logger (ig/ref ::logging/logger)
                       :load-module (ig/ref ::modules/load)
                       :cljs-deps (ig/ref ::cljs/deps)}
@@ -28,4 +29,6 @@
 
    ::changes/input-channel {}
    ::changes/watcher {:source-paths []
-                      :input-channel (ig/ref ::changes/input-channel)}})
+                      :input-channel (ig/ref ::changes/input-channel)}
+   ::changes/consumer {:logger (ig/ref ::logging/logger)
+                       :input-channel (ig/ref ::changes/input-channel)}})

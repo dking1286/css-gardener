@@ -1,9 +1,16 @@
 (ns css-gardener.core.logging
-  (:require [clojure.pprint :refer [pprint]]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [goog.log :as log]
             [integrant.core :as ig])
   (:import [goog.log Level Logger]))
+
+(def ^:private root-logger-name "css-gardener.core.logging")
+
+(defn- logger-name
+  []
+  (if (identical? js/goog.DEBUG true)
+    (str root-logger-name "-" (.toString (random-uuid)))
+    root-logger-name))
 
 (def ^{:doc "Map of log level keywords to the corresponding constants in the
              Closure library logging framework."}
@@ -58,13 +65,20 @@
   error
   (log-fn log/error))
 
+(defn has-message?
+  "Determines if a message has been logged matching a predicate."
+  [logger pred]
+  (seq (->> (:cache logger)
+            deref
+            (filter pred))))
+
 (defmethod ig/init-key ::logger
   [_ {:keys [sinks level]
       :or {sinks #{} level :info}}]
   (let [level (goog-level level)
-        goog-logger (log/getLogger "css-gardener.core.logging" level)
+        goog-logger (log/getLogger (logger-name) level)
         cache (atom [])
-        console-handler #(pprint (.getMessage %))
+        console-handler #(println (.getMessage %))
         cache-handler #(swap! cache conj %)]
     (when (contains? sinks :console)
       (log/addHandler goog-logger console-handler))
