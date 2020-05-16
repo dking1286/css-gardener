@@ -6,6 +6,16 @@
   [val]
   (instance? js/Error val))
 
+(defn message
+  "Gets the message from an error as a string."
+  [err]
+  (.-message err))
+
+(defn stack
+  "Gets the stack trace from an error as a string."
+  [err]
+  (.-stack err))
+
 (defn invalid-config
   "Creates an error indicating that the configuration was invalid."
   ([message] (ex-info message {:type :invalid-config}))
@@ -28,10 +38,8 @@
 
 (defn not-found
   "Creates an error indicating that a requested resource was not found."
-  [cause]
-  (ex-info "The requested resource was not found"
-           {:type :not-found}
-           cause))
+  ([message] (ex-info message {:type :not-found}))
+  ([message cause] (ex-info message {:type :not-found} cause)))
 
 (defn not-found?
   "Determines if an error is of type :not-found"
@@ -83,5 +91,8 @@
   [err]
   (cond
     (nil? err) nil
-    (error-message-includes? err "no such file or directory") (not-found err)
+
+    (error-message-includes? err "no such file or directory")
+    (not-found (message err) err)
+
     :else (unexpected-error err)))
