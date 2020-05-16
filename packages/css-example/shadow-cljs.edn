@@ -1,0 +1,12 @@
+{:source-paths ["src"]
+
+ :dependencies [[clj-kondo "2020.04.05"]
+                [reagent "1.0.0-alpha1"]]
+
+ :builds {:app {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:entries [css-gardener.css-example.main]
+                                 :init-fn css-gardener.css-example.main/main}}
+                :devtools {:http-port 5432
+                           :http-root "public"}}}}

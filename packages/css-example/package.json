@@ -1,0 +1,23 @@
+{
+  "name": "@css-gardener/css-example",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo \"No lint command yet\"",
+    "test": "echo \"No tests yet\"",
+    "release": "shadow-cljs release app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@css-gardener/core": "file:../css-gardener-core",
+    "react": "16.13.0",
+    "react-dom": "16.13.0"
+  },
+  "devDependencies": {
+    "shadow-cljs": "^2.9.2"
+  }
+}
