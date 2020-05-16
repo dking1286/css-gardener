@@ -1,16 +1,101 @@
 (ns css-gardener.core.main
-  (:require [css-gardener.core.arguments :as arguments]
-            [css-gardener.core.cljs-parsing]
-            [css-gardener.core.config]
-            [css-gardener.core.dependency]
-            [css-gardener.core.system]))
+  (:require [clojure.core.async :refer [go <!]]
+            [clojure.edn :as edn]
+            [clojure.spec.alpha :as s]
+            [css-gardener.core.arguments :as arguments]
+            [css-gardener.core.change-detection :as changes]
+            [css-gardener.core.config :as config]
+            [css-gardener.core.dependency :as dependency]
+            [css-gardener.core.logging :as logging]
+            [css-gardener.core.system :as system]
+            [css-gardener.core.utils.errors :as errors]
+            [fs]
+            [integrant.core :as ig]))
 
-(defn main
+(defn- read-file-sync
+  [path]
+  (fs/readFileSync path "utf8"))
+
+(defn- get-config
+  [options]
+  (or (:config options)
+      (-> (:config-file options)
+          read-file-sync
+          edn/read-string)))
+
+(defn- normalize-config
+  [config]
+  (if (:infer-source-paths-and-builds config)
+    (let [other-config (-> (:infer-source-paths-and-builds config)
+                           read-file-sync
+                           edn/read-string)]
+      ;; TODO: Make this support config types other than shadow-cljs
+      (assoc config
+             :source-paths (:source-paths other-config)
+             :builds (:builds other-config)))
+    config))
+
+(defn- validate-config
+  [config]
+  (when-not (s/valid? ::config/config config)
+    (throw (errors/invalid-config
+            (str "Invalid configuration: "
+                 (s/explain-data ::config/config config)))))
+  config)
+
+(defn- watch
+  [config build-id log-level]
+  (let [source-paths (:source-paths config)
+        sys-config (-> system/config
+                       (assoc-in [::changes/watcher :source-paths] source-paths)
+                       (assoc-in [::logging/logger :level] log-level))
+        system (ig/init sys-config)
+        logger (::logging/logger system)
+        deps-graph (::dependency/deps-graph system)
+        consume-changes (::changes/consumer system)]
+    (go
+      (let [graph-or-error (<! (deps-graph config build-id))]
+        (if (errors/error? graph-or-error)
+          (do
+            (logging/error logger (errors/message graph-or-error))
+            (logging/error logger (errors/stack graph-or-error)))
+          (do
+            (println graph-or-error)
+            (consume-changes)))))))
+
+(defn- release
+  "TODO: Implement me"
+  [_ _ _])
+
+(defn- main
+  "Main function for the css-gardener process."
+  [& args]
+  (let [{[command build-id] :arguments
+         {:keys [help log-level] :as options} :options
+         summary :summary
+         errors :errors} (arguments/parse args)]
+    (cond
+      ;; Print the summary if the user asked for help
+      help (println summary)
+      ;; Show an error if the args were invalid
+      errors (println (first errors))
+      ;; Otherwise proceed
+      :else
+      (let [config (-> (get-config options)
+                       normalize-config
+                       validate-config)]
+        (case command
+          :watch (watch config build-id log-level)
+          :release (release config build-id log-level)
+          (throw (js/Error. (str "Invalid command " command))))))))
+
+(comment
+  (js/process.chdir "../css-example")
+  (js/process.cwd)
+  (main "watch" "app" "--log-level" "debug")
+  js/goog.DEBUG)
+
+(defn entry
   "Entry point for the css-gardener process."
   []
-  (let [args (.slice js/process.argv 2)
-        {:keys [errors options summary]} (arguments/parse args)]
-    (cond
-      (:help options) (println summary)
-      errors (println (first errors))
-      :else (println "hello world"))))
+  (apply main (.slice js/process.argv 2)))

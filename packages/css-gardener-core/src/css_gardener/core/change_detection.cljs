@@ -1,5 +1,5 @@
 (ns css-gardener.core.change-detection
-  (:require ["chokidar" :as chokidar]
+  (:require [chokidar]
             [clojure.core.async :refer [chan close! go-loop <! put!]]
             [css-gardener.core.logging :as logging]
             [integrant.core :as ig]))
@@ -15,27 +15,34 @@
 (def ^:private dotfiles-regexp #"(^|[\/\\])\..")
 
 (defmethod ig/init-key ::watcher
-  [_ {:keys [source-paths input-channel]}]
+  [_ {:keys [logger source-paths input-channel]}]
   (when (seq source-paths)
-    (-> (chokidar/watch (clj->js source-paths) #js {:ignored dotfiles-regexp})
-        (.on "add" #(put! input-channel {:type :add :path %}))
-        (.on "change" #(put! input-channel {:type :change :path %}))
-        (.on "unlink" #(put! input-channel {:type :unlink :path %})))))
+    (logging/debug logger "Starting file watcher")
+    (let [watcher (-> (chokidar/watch (clj->js source-paths)
+                                      #js {:ignored dotfiles-regexp})
+                      (.on "add"
+                           #(put! input-channel {:type :add :path %}))
+                      (.on "change"
+                           #(put! input-channel {:type :change :path %}))
+                      (.on "unlink"
+                           #(put! input-channel {:type :unlink :path %})))]
+      {:watcher watcher :logger logger})))
 
 (defmethod ig/halt-key! ::watcher
-  [_ watcher]
+  [_ {:keys [watcher logger]}]
   (when watcher
+    (logging/debug logger "Stopping file watcher")
     (.close watcher)))
 
 (defmethod ig/init-key ::consumer
   [_ {:keys [logger input-channel]}]
   (fn []
-    (logging/debug logger "Starting consumer")
+    (logging/debug logger "Starting change consumer")
     (go-loop []
       (let [value (<! input-channel)]
         (if value
           (do
-            (logging/info logger (str "Detected changes to " value))
+            (logging/debug logger (str "Detected changes: " value))
             (recur))
           (logging/debug logger
-                         "Input channel closed, stopping consumer"))))))
+                         "Input channel closed, stopping change consumer"))))))
