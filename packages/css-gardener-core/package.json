@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "The core functionality of the css-gardener tool",
   "main": "index.js",
-  "bin": "index.js",
+  "bin": {
+    "css-gardener": "index.js"
+  },
   "scripts": {
     "lint": "shadow-cljs clj-run clj-kondo.main/-main -- --lint src --cache false",
     "repl": "node target/main-dev/main.js",
@@ -28,5 +30,7 @@
   "dependencies": {
     "chokidar": "^3.4.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "shadow-cljs": "^2.9.3"
+  }
 }

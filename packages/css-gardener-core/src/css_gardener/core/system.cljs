@@ -28,7 +28,8 @@
                             :deps (ig/ref ::dependency/deps)}
 
    ::changes/input-channel {}
-   ::changes/watcher {:source-paths []
+   ::changes/watcher {:logger (ig/ref ::logging/logger)
+                      :source-paths []
                       :input-channel (ig/ref ::changes/input-channel)}
    ::changes/consumer {:logger (ig/ref ::logging/logger)
                        :input-channel (ig/ref ::changes/input-channel)}})

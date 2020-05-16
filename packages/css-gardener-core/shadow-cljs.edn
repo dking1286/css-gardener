@@ -8,7 +8,7 @@
 
  :builds {:main {:target :node-script
                  :output-to "dist/main.js"
-                 :main css-gardener.core.main/main
+                 :main css-gardener.core.main/entry
                  :closure-defines {"goog.debug.LOGGING_ENABLED" true}
                  :dev {:output-to "target/main-dev/main.js"
                        :main css-gardener.core.main-dev/main}}
