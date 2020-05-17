@@ -1,0 +1,11 @@
+{:cljs {clj-kondo "2020.04.05"
+        integrant "0.8.0"
+        org.clojure/core.async "1.2.603"
+        org.clojure/tools.cli "1.0.194"
+        org.clojure/tools.namespace "1.0.0"
+        reagent "1.0.0-alpha1"}
+
+ :npm {"chokidar" "3.4.0"
+       "react" "16.13.0"
+       "react-dom" "16.13.0"
+       "shadow-cljs" "2.9.3"}}
