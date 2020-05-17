@@ -144,12 +144,15 @@
        merge
        (a/take-all 5000)
        (a/map (fn [dependencies-or-errors]
-                (let [dependencies (->> dependencies-or-errors
-                                        (filter (complement errors/error?)))
-                      errors (->> dependencies-or-errors
-                                  (filter errors/error?))]
+                (let [dependencies
+                      (->> dependencies-or-errors
+                           (filter (complement errors/error?)))
+                      errors
+                      (->> dependencies-or-errors
+                           (filter errors/error?))]
                   (doseq [error errors]
-                    (logging/warning logger (errors/message error)))
+                    (logging/warning logger (str "Warning: "
+                                                 (errors/message error))))
                   dependencies)))))
 
 (defn- stylesheet-deps-relative-paths
