@@ -19,7 +19,8 @@
   (when (seq source-paths)
     (logging/debug logger "Starting file watcher")
     (let [watcher (-> (chokidar/watch (clj->js source-paths)
-                                      #js {:ignored dotfiles-regexp})
+                                      #js {:ignored dotfiles-regexp
+                                           :ignoreInitial true})
                       (.on "add"
                            #(put! input-channel {:type :add :path %}))
                       (.on "change"
