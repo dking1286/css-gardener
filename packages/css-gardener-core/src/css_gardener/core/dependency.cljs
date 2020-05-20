@@ -41,17 +41,17 @@
                            deps))))))
 
 (s/fdef deps
-  :args (s/cat :logger ::logging/logger
+  :args (s/cat :config ::config/config
+               :logger ::logging/logger
                :load-module fn?
                :cljs-deps fn?
-               :file ::file/file
-               :config ::config/config))
+               :file ::file/file))
 
 (defn- deps
   [;; Injected dependencies
-   logger load-module cljs-deps
+   config logger load-module cljs-deps
    ;; Arguments
-   file config]
+   file]
   (logging/debug logger (str "Getting dependencies of "
                              (:absolute-path file)))
   (let [rule-or-error (config/matching-rule config file)]
@@ -78,7 +78,7 @@
            (a/map set)))))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [logger load-module cljs-deps fake-dependencies error]}]
+  [_ {:keys [config logger load-module cljs-deps fake-dependencies error]}]
   (cond
     ;; Mock deps with hard-coded map of dependencies
     fake-dependencies (fn [file _]
@@ -87,7 +87,7 @@
     ;; Mock deps that yields an error
     error (fn [_ _] (go error))
     ;; Real deps implementation
-    :else (partial deps logger load-module cljs-deps)))
+    :else (partial deps config logger load-module cljs-deps)))
 
 (defn get-entries
   "Gets all entry namespaces from a config map."
@@ -125,9 +125,9 @@
 (defn- deps-graph
   "Gets a dependency graph of absolute paths based on the configuration map."
   [;; Injected dependencies
-   logger exists? read-file deps
+   config logger exists? read-file deps
    ;; Arguments
-   config build-id]
+   build-id]
   (logging/info logger "Building dependency graph")
   (let [graph
         (atom (dependency/graph))
@@ -146,5 +146,5 @@
          (a/map (fn [_] @graph)))))
 
 (defmethod ig/init-key ::deps-graph
-  [_ {:keys [logger exists? read-file deps]}]
-  (partial deps-graph logger exists? read-file deps))
+  [_ {:keys [config logger exists? read-file deps]}]
+  (partial deps-graph config logger exists? read-file deps))

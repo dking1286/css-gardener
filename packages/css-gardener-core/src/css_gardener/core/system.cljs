@@ -24,10 +24,12 @@
 
    ::cljs/deps {:exists? (ig/ref ::fs/exists?)
                 :logger (ig/ref ::logging/logger)}
-   ::dependency/deps {:logger (ig/ref ::logging/logger)
+   ::dependency/deps {:config (ig/ref ::config/config)
+                      :logger (ig/ref ::logging/logger)
                       :load-module (ig/ref ::modules/load)
                       :cljs-deps (ig/ref ::cljs/deps)}
-   ::dependency/deps-graph {:logger (ig/ref ::logging/logger)
+   ::dependency/deps-graph {:config (ig/ref ::config/config)
+                            :logger (ig/ref ::logging/logger)
                             :exists? (ig/ref ::fs/exists?)
                             :read-file (ig/ref ::fs/read-file)
                             :deps (ig/ref ::dependency/deps)}
