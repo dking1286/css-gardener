@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [clojure.test :refer [deftest testing is are use-fixtures]]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
@@ -71,6 +72,7 @@
 
 (def ^:private sys-config
   (-> system/config
+      (assoc ::config/config config)
       (assoc-in [::fs/exists? :files] files)
       (assoc-in [::fs/read-file :files] files)
       (assoc-in [::modules/load :return-value] nil)
@@ -90,7 +92,7 @@
                   :content (pr-str ns-decl)}]
         (is (= #{(src-file "some/other/namespace.cljs")
                  (src-file "some/third/namespace.cljs")}
-               (<! (deps file config)))))))
+               (<! (deps file)))))))
   (testing "skips a namespace dependency if no corresponding file is found,
             and logs a warning."
     (with-system [system
@@ -103,7 +105,7 @@
             file {:absolute-path (src-file "hello/world.cljs")
                   :content (pr-str ns-decl)}]
         (is (= #{(src-file "some/third/namespace.cljs")}
-               (<! (deps file config))))
+               (<! (deps file))))
         (is (logging/has-message?
              logger
              #(string/includes? (.getMessage %)
@@ -113,39 +115,42 @@
       (let [deps (::dependency/deps system)
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
-        (is (errors/invalid-config? (<! (deps file config)))))))
+        (is (errors/invalid-config? (<! (deps file)))))))
   (testing "returns invalid-config if multiple rules match the file"
-    (with-system [system sys-config]
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::config/config :rules "blah"]
+                                {:transformers []})
+                      (assoc-in [::config/config :rules "lah"]
+                                {:transformers []}))]
       (let [deps (::dependency/deps system)
             file {:absolute-path (src-file "hello/world.blah")
-                  :content "blah"}
-            config (-> config
-                       (assoc-in [:rules "blah"] {:transformers []})
-                       (assoc-in [:rules "lah"] {:transformers []}))]
-        (is (errors/invalid-config? (<! (deps file config)))))))
+                  :content "blah"}]
+        (is (errors/invalid-config? (<! (deps file)))))))
   (testing "returns an empty set if the matching rule has no dependency resolver"
-    (with-system [system sys-config]
+    (with-system [system
+                  (-> sys-config
+                      (assoc-in [::config/config :rules "blah"]
+                                {:transformers []}))]
       (let [deps (::dependency/deps system)
             file {:absolute-path (src-file "hello/world.blah")
-                  :content "blah"}
-            config (-> config
-                       (assoc-in [:rules "blah"] {:transformers []}))]
-        (is (= #{} (<! (deps file config)))))))
+                  :content "blah"}]
+        (is (= #{} (<! (deps file)))))))
   (testing "returns invalid-dependency-resolver if load-module cannot find the dependency resolver"
     (let [file
           {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
 
-          config
-          (-> config
-              (assoc-in [:rules "blah"]
+          sys-config
+          (-> sys-config
+              (assoc-in [::config/config :rules "blah"]
                         {;; Does not exist, will throw an error when trying to load the module
                          :dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))]
 
       (with-system [system sys-config]
         (let [deps (::dependency/deps system)
-              result  (<! (deps file config))]
+              result  (<! (deps file))]
           (is (errors/invalid-dependency-resolver? result))
           (is (string/includes? (.-message (ex-cause result))
                                 "Cannot find module '@css-gardener/blah-resolver'"))))))
@@ -153,60 +158,51 @@
     (let [sys-config
           (-> sys-config
               (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb nil #{"/some/other/namespace.cljs"}))))
+                        (fn [_ cb] (cb nil #{"/some/other/namespace.cljs"})))
+              (assoc-in [::config/config :rules "blah"]
+                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
+                         :transformers []}))
 
           file
           {:absolute-path (src-file "hello/world.blah")
-           :content "blah"}
-
-          config
-          (-> config
-              (assoc-in [:rules "blah"]
-                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
-                         :transformers []}))]
+           :content "blah"}]
 
       (with-system [system sys-config]
         (let [deps (::dependency/deps system)]
-          (is (errors/invalid-dependency-resolver? (<! (deps file config))))))))
+          (is (errors/invalid-dependency-resolver? (<! (deps file))))))))
   (testing "returns the value returned by the dependency resolver if one exists, coerced to a set"
     (let [sys-config
           (-> sys-config
               (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb nil #js ["/some/other/namespace.cljs"]))))
+                        (fn [_ cb] (cb nil #js ["/some/other/namespace.cljs"])))
+              (assoc-in [::config/config :rules "blah"]
+                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
+                         :transformers []}))
 
           file
           {:absolute-path (src-file "hello/world.blah")
-           :content "blah"}
-
-          config
-          (-> config
-              (assoc-in [:rules "blah"]
-                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
-                         :transformers []}))]
+           :content "blah"}]
 
       (with-system [system sys-config]
         (let [deps (::dependency/deps system)]
           (is (= #{"/some/other/namespace.cljs"}
-                 (<! (deps file config))))))))
+                 (<! (deps file))))))))
   (testing "returns an unexpected-error if the dependency resolver gives an error"
     (let [sys-config
           (-> sys-config
               (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb (js/Error. "Boom") nil))))
+                        (fn [_ cb] (cb (js/Error. "Boom") nil)))
+              (assoc-in [::config/config :rules "blah"]
+                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
+                         :transformers []}))
 
           file
           {:absolute-path (src-file "hello/world.blah")
-           :content "blah"}
-
-          config
-          (-> config
-              (assoc-in [:rules "blah"]
-                        {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
-                         :transformers []}))]
+           :content "blah"}]
       (with-system [system sys-config]
         (let [deps (::dependency/deps system)]
-          (is (errors/unexpected-error? (<! (deps file config))))
-          (is (= "Boom" (.-message (ex-cause (<! (deps file config)))))))))))
+          (is (errors/unexpected-error? (<! (deps file))))
+          (is (= "Boom" (.-message (ex-cause (<! (deps file)))))))))))
 
 (deftest t-get-entries
   (testing "Returns a set of all of the entry namespaces from the config"
@@ -218,7 +214,7 @@
     (with-system [system sys-config]
       (let [logger (::logging/logger system)
             deps-graph (::dependency/deps-graph system)]
-        (deps-graph {} :app)
+        (deps-graph :app)
         (is (seq (->> @(:cache logger)
                       (filter #(= "Building dependency graph"
                                   (.getMessage %)))))))))
@@ -228,7 +224,7 @@
                       (assoc-in [::dependency/deps :fake-dependencies]
                                 circular-dependencies))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (<! (deps-graph config :app))]
+            result (<! (deps-graph :app))]
         (is (string/includes? (.-message result) "Circular dependency")))))
   (testing "Returns an error if a cljs file refers to a dependency that does not exist"
     (with-system [system
@@ -236,7 +232,7 @@
                       (assoc-in [::dependency/deps :fake-dependencies]
                                 nonexistent-cljs-dependencies))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (<! (deps-graph config :app))]
+            result (<! (deps-graph :app))]
         (is (errors/not-found? result)))))
   (testing "Returns an error if a style file refers to a dependency that does not exist"
     (with-system [system
@@ -244,7 +240,7 @@
                       (assoc-in [::dependency/deps :fake-dependencies]
                                 nonexistent-style-dependencies))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (<! (deps-graph config :app))]
+            result (<! (deps-graph :app))]
         (is (errors/not-found? result)))))
   (testing "Returns an error if the 'deps' function returns an error"
     (with-system [system
@@ -252,7 +248,7 @@
                       (assoc-in [::dependency/deps :error]
                                 (errors/invalid-config "Boom")))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (<! (deps-graph config :app))]
+            result (<! (deps-graph :app))]
         (is (errors/invalid-config? result)))))
   (testing "Returns the dependency graph"
     (with-system [system
@@ -260,7 +256,7 @@
                       (assoc-in [::dependency/deps :fake-dependencies]
                                 dependencies))]
       (let [deps-graph (::dependency/deps-graph system)
-            result (<! (deps-graph config :app))]
+            result (<! (deps-graph :app))]
         (are [x y] (ctnd/depends? result x y)
           (src-file "some/namespace.cljs") (src-file "foo/foo.cljs")
           (src-file "some/namespace.cljs") (src-file "foo/baz.cljs")
