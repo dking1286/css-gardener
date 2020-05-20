@@ -4,7 +4,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [css-gardener.core.file :as file]
-            [css-gardener.core.utils.errors :as errors]))
+            [css-gardener.core.utils.errors :as errors]
+            [integrant.core :as ig]))
 
 (s/def ::infer-source-paths-and-builds string?)
 
@@ -52,3 +53,24 @@
                             (:absolute-path file)
                             " : "
                             (string/join "," (map first matching-rules)))))))
+
+(defmethod ig/init-key ::config
+  [_ config]
+  (let [conformed (s/conform ::config config)]
+    (when (= ::s/invalid conformed)
+      (throw (errors/invalid-config (str "System configuration key "
+                                         ::config
+                                         " was not a valid configuration map. "
+                                         (s/explain-data ::config config)))))
+    (when (= :inferred (first conformed))
+      (throw (errors/invalid-config (str "System configuration key "
+                                         ::config
+                                         " must have explicit source-paths "
+                                         "and builds."))))
+    (second conformed)))
+
+(comment
+  (s/conform ::config {:source-paths []
+                       :builds {}
+                       :rules {}})
+  (s/conform ::config {:blah :blah}))

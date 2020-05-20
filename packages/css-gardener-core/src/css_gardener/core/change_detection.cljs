@@ -15,10 +15,10 @@
 (def ^:private dotfiles-regexp #"(^|[\/\\])\..")
 
 (defmethod ig/init-key ::watcher
-  [_ {:keys [logger source-paths input-channel]}]
-  (when (seq source-paths)
+  [_ {:keys [watch? logger config input-channel]}]
+  (when (and watch? (seq (:source-paths config)))
     (logging/debug logger "Starting file watcher")
-    (let [watcher (-> (chokidar/watch (clj->js source-paths)
+    (let [watcher (-> (chokidar/watch (clj->js (:source-paths config))
                                       #js {:ignored dotfiles-regexp
                                            :ignoreInitial true})
                       (.on "add"

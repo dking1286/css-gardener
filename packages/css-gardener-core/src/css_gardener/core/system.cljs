@@ -1,6 +1,7 @@
 (ns css-gardener.core.system
   (:require [css-gardener.core.change-detection :as changes]
             [css-gardener.core.cljs-parsing :as cljs]
+            [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
@@ -9,7 +10,11 @@
 
 (def ^{:doc "Default Integrant system configuration."}
   config
-  {::logging/logger {:level :info
+  {::config/config {:source-paths []
+                    :builds {}
+                    :rules {}}
+
+   ::logging/logger {:level :info
                      :sinks #{:console}}
 
    ::modules/load {}
@@ -28,8 +33,9 @@
                             :deps (ig/ref ::dependency/deps)}
 
    ::changes/input-channel {}
-   ::changes/watcher {:logger (ig/ref ::logging/logger)
-                      :source-paths []
+   ::changes/watcher {:watch? false
+                      :logger (ig/ref ::logging/logger)
+                      :config (ig/ref ::config/config)
                       :input-channel (ig/ref ::changes/input-channel)}
    ::changes/consumer {:logger (ig/ref ::logging/logger)
                        :input-channel (ig/ref ::changes/input-channel)}})
