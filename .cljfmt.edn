@@ -5,6 +5,7 @@
            async [[:inner 0]]
            ns [[:inner 0]]
            defrecord [[:inner 0] [:inner 1]]
+           s/def [[:inner 0]]
            s/fdef [[:inner 0]]}
 
  :clojure.test/async-example
