@@ -5,6 +5,7 @@
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
+            [css-gardener.core.transformation :as transformation]
             [css-gardener.core.utils.fs :as fs]
             [integrant.core :as ig]))
 
@@ -37,6 +38,10 @@
                             :exists? (ig/ref ::fs/exists?)
                             :read-file (ig/ref ::fs/read-file)
                             :deps (ig/ref ::dependency/deps)}
+
+   ::transformation/transformers {:config (ig/ref ::config/config)
+                                  :logger (ig/ref ::logging/logger)
+                                  :load-module (ig/ref ::modules/load)}
 
    ::changes/input-channel {}
    ::changes/watcher {:watch? false
