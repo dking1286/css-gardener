@@ -6,6 +6,19 @@
 (s/def ::node-module string?)
 (s/def ::module (s/or :node (s/keys :req-un [::node-module])))
 
+(s/fdef extract-module
+  :args (s/cat :module ::module)
+  :ret ::module)
+
+(defn extract-module
+  "Takes a module configuration map, and strips off the :options key.
+   
+   This is necessary because the same module may appear more than once in the
+   config, with different options. When constructing a map of dependency
+   resolvers or transformers, these should be treated as the same key."
+  [module]
+  (dissoc module :options))
+
 (defmethod ig/init-key ::load
   [_ {:keys [modules]}]
   (fn [module]
