@@ -14,6 +14,7 @@
                                                      instrument-specs
                                                      with-system
                                                      deftest-async]]
+            [integrant.core :as ig]
             [path]))
 
 (use-fixtures :once instrument-specs)
@@ -92,6 +93,25 @@
      (:require [some.other.namespace]
                [some.third.namespace])))
 
+(deftest t-resolvers
+  (testing "throws an error at system initialization if one of the resolvers
+            specified in the config is not found"
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules]
+                         dissoc {:node-module "@css-gardener/sass-resolver"}))]
+      (try
+        (ig/init sys-config)
+        (throw (js/Error. "fail"))
+        (catch js/Error err
+          (is (string/includes? (errors/message err)
+                                "Error on key :css-gardener.core.dependency/resolvers"))))))
+  (testing "yields a map of dependency resolver names to loaded functions"
+    (with-system [system sys-config]
+      (let [resolvers (::dependency/resolvers system)]
+        (is (= (get modules {:node-module "@css-gardener/sass-resolver"})
+               (get resolvers {:node-module "@css-gardener/sass-resolver"})))))))
+
 (deftest-async t-deps
   (testing "returns the cljs deps if the file is a cljs file"
     (with-system [system sys-config]
@@ -145,25 +165,6 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
         (is (= #{} (<! (deps file)))))))
-  (testing "returns invalid-dependency-resolver if load-module cannot find the
-            dependency resolver"
-    (let [file
-          {:absolute-path (src-file "hello/world.blah")
-           :content "blah"}
-
-          sys-config
-          (-> sys-config
-              (assoc-in [::config/config :rules "blah"]
-                        {;; Does not exist, will throw an error when trying to load the module
-                         :dependency-resolver {:node-module "@css-gardener/blah-resolver"}
-                         :transformers []}))]
-
-      (with-system [system sys-config]
-        (let [deps (::dependency/deps system)
-              result  (<! (deps file))]
-          (is (errors/invalid-dependency-resolver? result))
-          (is (string/includes? (.-message (ex-cause result))
-                                "Cannot find module '@css-gardener/blah-resolver'"))))))
   (testing "returns invalid-dependency-resolver if the dependency resolver
             yields a value that is not a javascript array"
     (let [sys-config
@@ -187,8 +188,8 @@
           (is (errors/invalid-dependency-resolver? result))
           (is (string/includes? (errors/message result)
                                 (str "Expected dependency resolver "
-                                     "@css-gardener/blah-resolver "
-                                     "to yield an array of strings")))))))
+                                     {:node-module "@css-gardener/blah-resolver"}
+                                     " to yield an array of strings")))))))
   (testing "returns the value returned by the dependency resolver if one exists, coerced to a set"
     (let [sys-config
           (-> sys-config
