@@ -11,6 +11,14 @@
             [css-gardener.core.utils.spec :as su]
             [integrant.core :as ig]))
 
+(defn resolver-stub
+  "Creates a stub dependency resolver for use in tests."
+  [err result]
+  (fn [_ callback]
+    ;; Call the callback asynchronously, just so that there's no hidden
+    ;; assumption about it being synchronous in a test.
+    (go (callback err result))))
+
 (s/def ::dependency-graph #(and (satisfies? dependency/DependencyGraph %)
                                 (satisfies? dependency/DependencyGraphUpdate %)))
 

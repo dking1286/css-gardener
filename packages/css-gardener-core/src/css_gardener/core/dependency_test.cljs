@@ -71,12 +71,19 @@
     ".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
              :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
 
+(def ^:private modules
+  {{:node-module "@css-gardener/sass-resolver"}
+   (dependency/resolver-stub nil #js [])
+
+   {:node-module "@css-gardener/sass-transformer"}
+   (fn [file cb] (cb nil file))})
+
 (def ^:private sys-config
   (-> system/config
       (assoc ::config/config config)
       (assoc-in [::fs/exists? :files] files)
       (assoc-in [::fs/read-file :files] files)
-      (assoc-in [::modules/load :return-value] nil)
+      (assoc-in [::modules/load :modules] modules)
       (assoc-in [::logging/logger :level] :debug)
       (assoc-in [::logging/logger :sinks] #{:cache})))
 
@@ -128,7 +135,8 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
         (is (errors/invalid-config? (<! (deps file)))))))
-  (testing "returns an empty set if the matching rule has no dependency resolver"
+  (testing "returns an empty set if the matching rule has no dependency
+            resolver"
     (with-system [system
                   (-> sys-config
                       (assoc-in [::config/config :rules "blah"]
@@ -137,7 +145,8 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
         (is (= #{} (<! (deps file)))))))
-  (testing "returns invalid-dependency-resolver if load-module cannot find the dependency resolver"
+  (testing "returns invalid-dependency-resolver if load-module cannot find the
+            dependency resolver"
     (let [file
           {:absolute-path (src-file "hello/world.blah")
            :content "blah"}
@@ -155,11 +164,15 @@
           (is (errors/invalid-dependency-resolver? result))
           (is (string/includes? (.-message (ex-cause result))
                                 "Cannot find module '@css-gardener/blah-resolver'"))))))
-  (testing "returns invalid-dependency-resolver if the dependency resolver yields a value that is not a javascript array"
+  (testing "returns invalid-dependency-resolver if the dependency resolver
+            yields a value that is not a javascript array"
     (let [sys-config
           (-> sys-config
-              (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb nil #{"/some/other/namespace.cljs"})))
+              (assoc-in [::modules/load
+                         :modules
+                         {:node-module "@css-gardener/blah-resolver"}]
+                        (dependency/resolver-stub
+                         nil #{"/some/other/namespace.cljs"}))
               (assoc-in [::config/config :rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))
@@ -169,13 +182,21 @@
            :content "blah"}]
 
       (with-system [system sys-config]
-        (let [deps (::dependency/deps system)]
-          (is (errors/invalid-dependency-resolver? (<! (deps file))))))))
+        (let [deps (::dependency/deps system)
+              result (<! (deps file))]
+          (is (errors/invalid-dependency-resolver? result))
+          (is (string/includes? (errors/message result)
+                                (str "Expected dependency resolver "
+                                     "@css-gardener/blah-resolver "
+                                     "to yield an array of strings")))))))
   (testing "returns the value returned by the dependency resolver if one exists, coerced to a set"
     (let [sys-config
           (-> sys-config
-              (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb nil #js ["/some/other/namespace.cljs"])))
+              (assoc-in [::modules/load
+                         :modules
+                         {:node-module "@css-gardener/blah-resolver"}]
+                        (dependency/resolver-stub
+                         nil #js ["/some/other/namespace.cljs"]))
               (assoc-in [::config/config :rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))
@@ -191,8 +212,11 @@
   (testing "returns an unexpected-error if the dependency resolver gives an error"
     (let [sys-config
           (-> sys-config
-              (assoc-in [::modules/load :return-value]
-                        (fn [_ cb] (cb (js/Error. "Boom") nil)))
+              (assoc-in [::modules/load
+                         :modules
+                         {:node-module "@css-gardener/blah-resolver"}]
+                        (dependency/resolver-stub
+                         (js/Error. "Boom") nil))
               (assoc-in [::config/config :rules "blah"]
                         {:dependency-resolver {:node-module "@css-gardener/blah-resolver"}
                          :transformers []}))

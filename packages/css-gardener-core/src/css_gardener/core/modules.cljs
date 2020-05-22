@@ -2,8 +2,10 @@
   (:require [integrant.core :as ig]))
 
 (defmethod ig/init-key ::load
-  [_ {:keys [return-value]}]
+  [_ {:keys [modules]}]
   (fn [module]
-    (if return-value
-      return-value
-      (js/require (:node-module module)))))
+    (cond
+      ;; Map of mock return values
+      (contains? modules module) (get modules module)
+      ;; Real implementation
+      :else (js/require (:node-module module)))))
