@@ -1,7 +1,7 @@
 (ns css-gardener.core.cljs-parsing-test
   (:require [clojure.core.async :refer [go <!]]
             [clojure.string :as string]
-            [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.test :refer [deftest is use-fixtures]]
             [css-gardener.core.cljs-parsing
              :as cljs
              :refer [deps-from-ns-decl
@@ -15,6 +15,7 @@
             [css-gardener.core.utils.fs :as fs]
             [css-gardener.core.utils.testing :refer [instrument-specs
                                                      deftest-async
+                                                     testing
                                                      with-system]]
             [path]))
 

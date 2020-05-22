@@ -1,8 +1,9 @@
 (ns css-gardener.core.arguments-test
   (:require [clojure.string :as string]
-            [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.test :refer [deftest is use-fixtures]]
             [css-gardener.core.arguments :as arguments]
-            [css-gardener.core.utils.testing :refer [instrument-specs]]))
+            [css-gardener.core.utils.testing :refer [testing
+                                                     instrument-specs]]))
 
 (use-fixtures :once instrument-specs)
 

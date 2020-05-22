@@ -1,12 +1,13 @@
 (ns css-gardener.core.file-test
   (:require [clojure.core.async :refer [go <!]]
             [clojure.string :as s]
-            [clojure.test :refer [deftest testing is use-fixtures async]]
+            [clojure.test :refer [deftest is use-fixtures async]]
             [css-gardener.core.file :as sut]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.fs :as fs]
-            [css-gardener.core.utils.testing :refer [instrument-specs]]
-            ["path" :as path]))
+            [css-gardener.core.utils.testing :refer [testing
+                                                     instrument-specs]]
+            [path]))
 
 (use-fixtures :once instrument-specs)
 

@@ -1,11 +1,12 @@
 (ns css-gardener.core.utils.fs-test
   (:require [clojure.core.async :refer [<!]]
             [clojure.string :as string]
-            [clojure.test :refer [testing is use-fixtures]]
+            [clojure.test :refer [is use-fixtures]]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.fs :as sut]
             [css-gardener.core.utils.testing :refer [instrument-specs
-                                                     deftest-async]]))
+                                                     deftest-async
+                                                     testing]]))
 
 (use-fixtures :once instrument-specs)
 
