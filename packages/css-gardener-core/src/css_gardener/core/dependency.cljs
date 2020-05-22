@@ -6,10 +6,13 @@
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
             [css-gardener.core.logging :as logging]
+            [css-gardener.core.modules :as modules]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.spec :as su]
             [integrant.core :as ig]))
+
+;; ::resolvers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn resolver-stub
   "Creates a stub dependency resolver for use in tests."
@@ -19,19 +22,17 @@
     ;; assumption about it being synchronous in a test.
     (go (callback err result))))
 
-(s/def ::dependency-graph #(and (satisfies? dependency/DependencyGraph %)
-                                (satisfies? dependency/DependencyGraphUpdate %)))
+(defmethod ig/init-key ::resolvers
+  [_ {:keys [logger load-module config]}]
+  (logging/debug logger "Loading dependency resolvers")
+  (->> (:rules config)
+       vals
+       (map :dependency-resolver)
+       (filter (complement nil?))
+       (map #(vector % (load-module %)))
+       (into {})))
 
-(s/fdef get-resolver
-  :args (s/cat :load-module fn?
-               :dependency-resolver ::config/dependency-resolver))
-
-(defn- get-resolver
-  [load-module dependency-resolver]
-  (try
-    (assoc dependency-resolver :resolver (load-module dependency-resolver))
-    (catch js/Error err
-      (errors/invalid-dependency-resolver "Failed to load module" err))))
+;; ::deps ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- resolve-deps
   [resolver resolver-name file]
@@ -51,13 +52,13 @@
 (s/fdef deps
   :args (s/cat :config ::config/config
                :logger ::logging/logger
-               :load-module fn?
+               :resolvers (s/map-of ::modules/module fn?)
                :cljs-deps fn?
                :file ::file/file))
 
 (defn- deps
   [;; Injected dependencies
-   config logger load-module cljs-deps
+   config logger resolvers cljs-deps
    ;; Arguments
    file]
   (logging/debug logger (str "Getting dependencies of "
@@ -81,12 +82,13 @@
       (go #{})
 
       :else
-      (->> (go (get-resolver load-module (:dependency-resolver rule-or-error)))
-           (a/flat-map #(resolve-deps (:resolver %) (:node-module %) file))
-           (a/map set)))))
+      (let [resolver-module (:dependency-resolver rule-or-error)
+            resolver (get resolvers resolver-module)]
+        (->> (resolve-deps resolver resolver-module file)
+             (a/map set))))))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [config logger load-module cljs-deps fake-dependencies error]}]
+  [_ {:keys [config logger resolvers cljs-deps fake-dependencies error]}]
   (cond
     ;; Mock deps with hard-coded map of dependencies
     fake-dependencies (fn [file _]
@@ -95,7 +97,12 @@
     ;; Mock deps that yields an error
     error (fn [_ _] (go error))
     ;; Real deps implementation
-    :else (partial deps config logger load-module cljs-deps)))
+    :else (partial deps config logger resolvers cljs-deps)))
+
+;; ::deps-graph ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/def ::dependency-graph #(and (satisfies? dependency/DependencyGraph %)
+                                (satisfies? dependency/DependencyGraphUpdate %)))
 
 (defn get-entries
   "Gets all entry namespaces from a config map."

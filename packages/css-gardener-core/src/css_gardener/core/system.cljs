@@ -24,9 +24,13 @@
 
    ::cljs/deps {:exists? (ig/ref ::fs/exists?)
                 :logger (ig/ref ::logging/logger)}
+
+   ::dependency/resolvers {:config (ig/ref ::config/config)
+                           :logger (ig/ref ::logging/logger)
+                           :load-module (ig/ref ::modules/load)}
    ::dependency/deps {:config (ig/ref ::config/config)
                       :logger (ig/ref ::logging/logger)
-                      :load-module (ig/ref ::modules/load)
+                      :resolvers (ig/ref ::dependency/resolvers)
                       :cljs-deps (ig/ref ::cljs/deps)}
    ::dependency/deps-graph {:config (ig/ref ::config/config)
                             :logger (ig/ref ::logging/logger)
