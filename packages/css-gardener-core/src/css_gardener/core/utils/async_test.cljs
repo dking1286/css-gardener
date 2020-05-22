@@ -1,7 +1,7 @@
 (ns css-gardener.core.utils.async-test
   (:refer-clojure :exclude [map])
   (:require [clojure.core.async :refer [go <! >! chan close!]]
-            [clojure.test :refer [testing is]]
+            [clojure.test :refer [is]]
             [css-gardener.core.utils.async :refer [callback->channel
                                                    node-callback->channel
                                                    map
@@ -10,7 +10,7 @@
                                                    take-all
                                                    await-all]]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.testing :refer [deftest-async]]))
+            [css-gardener.core.utils.testing :refer [deftest-async testing]]))
 
 (deftest-async t-callback->channel
   (testing "Yields the value returned by the callback"
