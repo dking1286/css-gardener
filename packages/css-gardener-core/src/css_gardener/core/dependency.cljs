@@ -9,15 +9,21 @@
             [css-gardener.core.modules :as modules]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.js :refer [to-js]]
             [css-gardener.core.utils.spec :as su]
             [integrant.core :as ig]))
 
 ;; ::resolvers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/def ::options map?)
+(s/def ::function fn?)
+(s/def ::resolver
+  (s/keys :req-un [::modules/module ::options ::function]))
+
 (defn resolver-stub
-  "Creates a stub dependency resolver for use in tests."
+  "Creates a stub dependency resolver function for use in tests."
   [err result]
-  (fn [_ callback]
+  (fn [_ _ callback]
     ;; Call the callback asynchronously, just so that there's no hidden
     ;; assumption about it being synchronous in a test.
     (go (callback err result))))
@@ -29,30 +35,37 @@
        vals
        (map :dependency-resolver)
        (filter (complement nil?))
-       (map #(vector % (load-module %)))
+       (map (fn [config]
+              {:module (modules/extract-module config)
+               :options (or (:options config) {})
+               :function (load-module (modules/extract-module config))}))
+       (map #(vector (:module %) %))
        (into {})))
 
 ;; ::deps ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- resolve-deps
-  [resolver resolver-name file]
+  [{:keys [module options function]} file]
   (a/node-callback->channel
-   resolver file (fn [err deps]
-                   (cond
-                     err err
+   function
+   (to-js file)
+   (to-js options)
+   (fn [err deps]
+     (cond
+       err err
 
-                     (js/Array.isArray deps) deps
+       (js/Array.isArray deps) deps
 
-                     :else
-                     (errors/invalid-dependency-resolver
-                      (str "Expected dependency resolver " resolver-name
-                           " to yield an array of strings, got "
-                           deps))))))
+       :else
+       (errors/invalid-dependency-resolver
+        (str "Expected dependency resolver " module
+             " to yield an array of strings, got "
+             deps))))))
 
 (s/fdef deps
   :args (s/cat :config ::config/config
                :logger ::logging/logger
-               :resolvers (s/map-of ::modules/module fn?)
+               :resolvers (s/map-of ::modules/module ::resolver)
                :cljs-deps fn?
                :file ::file/file))
 
@@ -82,9 +95,11 @@
       (go #{})
 
       :else
-      (let [resolver-module (:dependency-resolver rule-or-error)
+      (let [resolver-module (some-> rule-or-error
+                                    :dependency-resolver
+                                    modules/extract-module)
             resolver (get resolvers resolver-module)]
-        (->> (resolve-deps resolver resolver-module file)
+        (->> (resolve-deps resolver file)
              (a/map set))))))
 
 (defmethod ig/init-key ::deps

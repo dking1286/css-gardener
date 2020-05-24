@@ -14,6 +14,7 @@
                                                      instrument-specs
                                                      with-system
                                                      deftest-async]]
+            [goog.object :as gobj]
             [integrant.core :as ig]
             [path]))
 
@@ -69,7 +70,8 @@
                                      :depends-on #{:main}}}}}
    :rules
    {".css" {:transformers []}
-    ".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+    ".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"
+                                   :options {:use-indented-syntax true}}
              :transformers [{:node-module "@css-gardener/sass-transformer"}]}}})
 
 (def ^:private modules
@@ -110,7 +112,8 @@
     (with-system [system sys-config]
       (let [resolvers (::dependency/resolvers system)]
         (is (= (get modules {:node-module "@css-gardener/sass-resolver"})
-               (get resolvers {:node-module "@css-gardener/sass-resolver"})))))))
+               (get-in resolvers [{:node-module "@css-gardener/sass-resolver"}
+                                  :function])))))))
 
 (deftest-async t-deps
   (testing "returns the cljs deps if the file is a cljs file"
@@ -165,6 +168,27 @@
             file {:absolute-path (src-file "hello/world.blah")
                   :content "blah"}]
         (is (= #{} (<! (deps file)))))))
+  (testing "passes the file and options to the dependency resolver, as plain
+            javascript objects with camelCase keys"
+    (let [args (atom [])
+          sys-config
+          (-> sys-config
+              (assoc-in [::modules/load
+                         :modules
+                         {:node-module "@css-gardener/sass-resolver"}]
+                        (fn [file config callback]
+                          (reset! args [file config])
+                          (callback #js []))))]
+      (with-system [system sys-config]
+        (let [deps (::dependency/deps system)
+              file {:absolute-path (src-file "hello/world.scss")
+                    :content ""}]
+          (<! (deps file))
+          (is (gobj/equals #js {"absolutePath" (src-file "hello/world.scss")
+                                "content" ""}
+                           (first @args)))
+          (is (gobj/equals #js {"useIndentedSyntax" true}
+                           (second @args)))))))
   (testing "returns invalid-dependency-resolver if the dependency resolver
             yields a value that is not a javascript array"
     (let [sys-config
