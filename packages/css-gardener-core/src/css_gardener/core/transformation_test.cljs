@@ -1,5 +1,6 @@
 (ns css-gardener.core.transformation-test
-  (:require [clojure.string :as string]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as string]
             [clojure.test :refer [deftest is use-fixtures]]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
@@ -59,6 +60,17 @@
       (assoc-in [::logging/logger :level] :debug)
       (assoc-in [::logging/logger :sinks] #{:cache})))
 
+(deftest t-transformer
+  (testing "returns false if the input is nil"
+    (is (false? (transformation/transformer? nil))))
+  (testing "returns false if a value does not have a 'enter' property"
+    (is (false? (transformation/transformer? #js {:exit identity}))))
+  (testing "returns false if a value does not have an 'exit' property"
+    (is (false? (transformation/transformer? #js {:enter identity}))))
+  (testing "returns true if a value has 'enter' and 'exit' properties"
+    (is (true? (transformation/transformer? #js {:enter identity
+                                                 :exit identity})))))
+
 (deftest t-transformers
   (testing "throws an error at system initialization if one of the transformers
             specified in the config is not found"
@@ -72,7 +84,10 @@
         (catch js/Error err
           (is (string/includes? (errors/message err)
                                 "Error on key :css-gardener.core.transformation/transformers"))))))
-  (testing "Is a map from module names to the loaded functions"
+  (testing "Is a map from module names to the loaded transformers"
     (with-system [system sys-config]
       (let [transformers (::transformation/transformers system)]
-        (is (= 2 (count transformers)))))))
+        (is (= 2 (count transformers)))
+        (is (s/valid? ::transformation/transformer-config
+                      (get transformers
+                           {:node-module "@css-gardener/sass-transformer"})))))))
