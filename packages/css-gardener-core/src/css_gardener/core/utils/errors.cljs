@@ -71,10 +71,8 @@
 
 (defn unexpected-error
   "Creates an error indicating that something unknown went wrong."
-  [cause]
-  (ex-info "An unexpected error occurred"
-           {:type :unexpected}
-           cause))
+  ([cause] (unexpected-error "An unexpected error occurred" cause))
+  ([message cause] (ex-info message {:type :unexpected} cause)))
 
 (defn unexpected-error?
   "Determines if an error is an unexpected-error."
