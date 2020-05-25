@@ -1,16 +1,33 @@
-(ns css-gardener.core.main-dev
+(ns
+  ^{:clj-kondo/config {:linters {:unused-namespace {:level :off}}}}
+  css-gardener.core.main-dev
   (:require [clojure.core.async :refer [go <!]]
             [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
             [clojure.spec.test.alpha :as stest]
+            [clojure.test :refer [run-all-tests]]
+            [css-gardener.core.arguments-test :as arguments-test]
             [css-gardener.core.change-detection :as changes]
+            [css-gardener.core.cljs-parsing-test :as cljs-parsing-test]
+            [css-gardener.core.config-test :as config-test]
             [css-gardener.core.dependency :as dependency]
+            [css-gardener.core.dependency-test :as dependency-test]
+            [css-gardener.core.file-test :as file-test]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.main]
             [css-gardener.core.system :as system]
+            [css-gardener.core.transformation-test :as transformation-test]
+            [css-gardener.core.utils.async-test :as async-test]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs-test :as fs-test]
+            [css-gardener.core.utils.js-test :as js-test]
             [fs]
             [integrant.core :as ig]))
+
+(comment
+  "Evaluate this form to run all tests in all namespaces transitively
+   required by this one."
+  (run-all-tests))
 
 (defonce ^:private system (atom nil))
 
