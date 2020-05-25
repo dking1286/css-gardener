@@ -77,6 +77,22 @@
             (pprint graph-or-error)
             (consume-changes)))))))
 
+(defn- add-global-error-handling
+  "Adds global error handlers to the nodejs process. This is necessary
+   becase tests can sometimes throw errors in async processes, so they cannot
+   be caught with a normal try-catch block, in which case the repl process
+   will shut down when running such a test from the dev build."
+  []
+  (println "Adding global error handling")
+  (.on js/process "uncaughtException"
+       (fn [err]
+         (println "An uncaught error occurred:")
+         (pprint err)))
+  (.on js/process "unhandledRejection"
+       (fn [err]
+         (println "An undandled rejection occurred:")
+         (pprint err))))
+
 (defn ^:dev/before-load before-load
   "Lifecycle function that is called before new code is loaded in development."
   []
@@ -92,4 +108,5 @@
 (defn main
   "Entry point for the css-gardener process in development."
   [& _]
+  (add-global-error-handling)
   (after-load))
