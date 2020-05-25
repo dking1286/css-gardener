@@ -1,7 +1,8 @@
 (ns css-gardener.core.transformation-test
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.core.async :refer [<!]]
+            [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.test :refer [deftest is use-fixtures]]
+            [clojure.test :refer [deftest is use-fixtures run-tests]]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
@@ -9,9 +10,11 @@
             [css-gardener.core.system :as system]
             [css-gardener.core.transformation :as transformation]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.testing :refer [testing
+            [css-gardener.core.utils.testing :refer [deftest-async
+                                                     testing
                                                      with-system
                                                      instrument-specs]]
+            [goog.object :as gobj]
             [integrant.core :as ig]))
 
 (use-fixtures :each instrument-specs)
@@ -91,3 +94,72 @@
         (is (s/valid? ::transformation/transformer-config
                       (get transformers
                            {:node-module "@css-gardener/sass-transformer"})))))))
+
+(def ^:private fake-scope-transformer
+  #js {:enter (fn [file _ callback]
+                (let [result (gobj/clone file)]
+                  (gobj/set result "scopeEnter" "blah")
+                  (callback nil result)))
+
+       :exit (fn [file _ callback]
+               (let [result (gobj/clone file)]
+                 (gobj/set result "scopeExit" "blah")
+                 (callback nil result)))})
+
+(def ^:private fake-sass-transformer
+  #js {:enter (fn [file _ callback]
+                (let [result (gobj/clone file)]
+                  (gobj/set result
+                            "content" (str "Transformed by sass-transformer: "
+                                           (gobj/get file "content")))
+                  (callback nil result)))
+
+       :exit (fn [file _ callback]
+               (callback nil file))})
+
+(def ^:private fake-erroring-sass-transformer
+  #js {:enter (fn [_ _ callback]
+                (callback (js/Error. "boom") nil))
+
+       :exit (fn [file _ callback]
+               (callback nil file))})
+
+(deftest-async t-transform
+  (testing "yields invalid-config when there is no matching rule for the file"
+    (with-system [system sys-config]
+      (let [transform (::transformation/transform system)
+            file {:absolute-path "/path/to/file.blah"
+                  :content ""}]
+        (is (errors/invalid-config? (<! (transform file)))))))
+  (testing "yields unexpected-error if one of the transformers yields an error"
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-erroring-sass-transformer))]
+      (with-system [system sys-config]
+        (let [transform (::transformation/transform system)
+              file {:absolute-path "/path/to/file.scss"
+                    :content "hello world"}]
+          (is (errors/unexpected-error? (<! (transform file))))))))
+  (testing "yields the transformed file if none of the transformers yields an
+            error"
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-sass-transformer
+                         {:node-module "@css-gardener/scope-transformer"}
+                         fake-scope-transformer))]
+      (with-system [system sys-config]
+        (let [transform (::transformation/transform system)
+              file {:absolute-path "/path/to/file.scss"
+                    :content "hello world"}]
+          (is (= {:absolute-path "/path/to/file.scss"
+                  :content "Transformed by sass-transformer: hello world"
+                  :scope-enter "blah"
+                  :scope-exit "blah"}
+                 (<! (transform file)))))))))
+
+(comment
+  (run-tests))

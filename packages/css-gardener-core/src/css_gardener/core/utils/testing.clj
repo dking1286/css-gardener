@@ -60,7 +60,12 @@
 (defmacro deftest-async
   "Macro to define an asynchronous test. Automatically wraps the body forms in
    (async ...) and (go ...) so that <! and >! can be used in the test without
-   needing to write this boilerplate for every test case."
+   needing to write this boilerplate for every test case.
+   
+   Note: clojure.core.async must be required into your test namespace for this
+   to work. Otherwise, you will get confusing errors, because the macro expander
+   will try to expand it as the *clojure* version of the macro, not the
+   *clojurescript* version."
   [name & body]
   `(clojure.test/deftest ~name
      (clojure.test/async done#

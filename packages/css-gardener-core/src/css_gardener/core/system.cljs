@@ -11,42 +11,64 @@
 
 (def ^{:doc "Default Integrant system configuration."}
   config
-  {::config/config {:source-paths []
-                    :builds {}
-                    :rules {}}
+  {::config/config
+   {:source-paths []
+    :builds {}
+    :rules {}}
 
-   ::logging/logger {:level :info
-                     :sinks #{:console}}
+   ::logging/logger
+   {:level :info
+    :sinks #{:console}}
 
-   ::modules/load {}
+   ::modules/load
+   {}
 
-   ::fs/exists? {}
-   ::fs/read-file {}
+   ::fs/exists?
+   {}
 
-   ::cljs/deps {:exists? (ig/ref ::fs/exists?)
-                :logger (ig/ref ::logging/logger)}
+   ::fs/read-file
+   {}
 
-   ::dependency/resolvers {:config (ig/ref ::config/config)
-                           :logger (ig/ref ::logging/logger)
-                           :load-module (ig/ref ::modules/load)}
-   ::dependency/deps {:config (ig/ref ::config/config)
-                      :logger (ig/ref ::logging/logger)
-                      :resolvers (ig/ref ::dependency/resolvers)
-                      :cljs-deps (ig/ref ::cljs/deps)}
-   ::dependency/deps-graph {:config (ig/ref ::config/config)
-                            :logger (ig/ref ::logging/logger)
-                            :exists? (ig/ref ::fs/exists?)
-                            :read-file (ig/ref ::fs/read-file)
-                            :deps (ig/ref ::dependency/deps)}
+   ::cljs/deps
+   {:exists? (ig/ref ::fs/exists?)
+    :logger (ig/ref ::logging/logger)}
 
-   ::transformation/transformers {:config (ig/ref ::config/config)
-                                  :logger (ig/ref ::logging/logger)
-                                  :load-module (ig/ref ::modules/load)}
+   ::dependency/resolvers
+   {:config (ig/ref ::config/config)
+    :logger (ig/ref ::logging/logger)
+    :load-module (ig/ref ::modules/load)}
 
-   ::changes/input-channel {}
-   ::changes/watcher {:watch? false
-                      :logger (ig/ref ::logging/logger)
-                      :config (ig/ref ::config/config)
-                      :input-channel (ig/ref ::changes/input-channel)}
-   ::changes/consumer {:logger (ig/ref ::logging/logger)
-                       :input-channel (ig/ref ::changes/input-channel)}})
+   ::dependency/deps
+   {:config (ig/ref ::config/config)
+    :logger (ig/ref ::logging/logger)
+    :resolvers (ig/ref ::dependency/resolvers)
+    :cljs-deps (ig/ref ::cljs/deps)}
+
+   ::dependency/deps-graph
+   {:config (ig/ref ::config/config)
+    :logger (ig/ref ::logging/logger)
+    :exists? (ig/ref ::fs/exists?)
+    :read-file (ig/ref ::fs/read-file)
+    :deps (ig/ref ::dependency/deps)}
+
+   ::transformation/transformers
+   {:config (ig/ref ::config/config)
+    :logger (ig/ref ::logging/logger)
+    :load-module (ig/ref ::modules/load)}
+
+   ::transformation/transform
+   {:config (ig/ref ::config/config)
+    :transformers (ig/ref ::transformation/transformers)}
+
+   ::changes/input-channel
+   {}
+
+   ::changes/watcher
+   {:watch? false
+    :logger (ig/ref ::logging/logger)
+    :config (ig/ref ::config/config)
+    :input-channel (ig/ref ::changes/input-channel)}
+
+   ::changes/consumer
+   {:logger (ig/ref ::logging/logger)
+    :input-channel (ig/ref ::changes/input-channel)}})
