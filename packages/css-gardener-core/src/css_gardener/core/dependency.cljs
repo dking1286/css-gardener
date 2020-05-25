@@ -18,7 +18,7 @@
 (s/def ::options map?)
 (s/def ::function fn?)
 (s/def ::resolver
-  (s/keys :req-un [::modules/module ::options ::function]))
+  (s/keys :req-un [::modules/module ::function]))
 
 (defn resolver-stub
   "Creates a stub dependency resolver function for use in tests."
@@ -37,15 +37,19 @@
        (filter (complement nil?))
        (map (fn [config]
               {:module (modules/extract-module config)
-               :options (or (:options config) {})
                :function (load-module (modules/extract-module config))}))
        (map #(vector (:module %) %))
        (into {})))
 
 ;; ::deps ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/fdef resolve-deps
+  :args (s/cat :resolver ::resolver
+               :options ::options
+               :file ::file/file))
+
 (defn- resolve-deps
-  [{:keys [module options function]} file]
+  [{:keys [module function]} options file]
   (a/node-callback->channel
    function
    (to-js file)
@@ -98,8 +102,10 @@
       (let [resolver-module (some-> rule-or-error
                                     :dependency-resolver
                                     modules/extract-module)
-            resolver (get resolvers resolver-module)]
-        (->> (resolve-deps resolver file)
+            resolver (get resolvers resolver-module)
+            options (or (get-in rule-or-error [:dependency-resolver :options])
+                        {})]
+        (->> (resolve-deps resolver options file)
              (a/map set))))))
 
 (defmethod ig/init-key ::deps
