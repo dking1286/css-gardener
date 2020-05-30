@@ -5,14 +5,12 @@
  :builds {:main {:target :node-library
                  :output-to "dist/main.js"
                  :exports-var css-gardener.sass-resolver.core/main
-                 :closure-defines {"goog.debug.LOGGING_ENABLED" true}
                  :dev {:output-to "target/main-dev/main.js"
                        :exports-var css-gardener.sass-resolver.core-dev/main}}
 
           :main-test {:target :node-test
                       :output-to "target/main-test/main.js"
                       :autorun false
-                      :closure-defines {"goog.debug.LOGGING_ENABLED" true}
                       :dev {:output-to "target/main-test-dev/main.js"
                             :autorun true}
                       :release {:compiler-options {;; Use pseudo-names so that
