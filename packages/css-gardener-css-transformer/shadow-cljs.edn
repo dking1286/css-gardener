@@ -1,7 +1,0 @@
-{:source-paths ["src"]
- 
- :builds {:main {:target :node-library
-                 :output-to "target/main-dev/main.js"
-                 :exports {:enter css-gardener.css-transformer.main/enter
-                           :exit css-gardener.css-transformer.main/exit}
-                 :release {:output-to "dist/main.js"}}}}
