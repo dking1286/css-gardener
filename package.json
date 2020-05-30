@@ -7,8 +7,8 @@
   },
   "scripts": {
     "check_common_dependencies": "lumo scripts/check_common_dependencies.cljs",
-    "lint": "lerna run --parallel lint",
-    "release": "lerna run --parallel release",
-    "test": "lerna run --parallel test"
+    "lint": "lerna run lint",
+    "release": "lerna run release",
+    "test": "lerna run test"
   }
 }
