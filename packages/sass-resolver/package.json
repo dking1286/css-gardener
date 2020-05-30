@@ -1,0 +1,28 @@
+{
+  "name": "@css-gardener/sass-resolver",
+  "version": "0.0.0",
+  "description": "Dependency resolver for scss and sass stylesheets",
+  "main": "index.js",
+  "scripts": {
+    "lint": "shadow-cljs clj-run clj-kondo.main/-main -- --lint src --cache false",
+    "repl": "node target/main-dev/main.js",
+    "release": "shadow-cljs release main",
+    "test": "shadow-cljs release main-test && node target/main-test/main.js"
+  },
+  "keywords": [
+    "css",
+    "cljs",
+    "clojure",
+    "clojurescript",
+    "stylesheet",
+    "style"
+  ],
+  "author": "Daniel King",
+  "license": "EPL-2.0",
+  "dependencies": {
+    "sass": "1.26.7"
+  },
+  "devDependencies": {
+    "shadow-cljs": "2.9.3"
+  }
+}
