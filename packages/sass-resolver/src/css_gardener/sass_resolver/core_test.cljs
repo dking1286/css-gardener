@@ -3,6 +3,7 @@
             [css-gardener.sass-resolver.core :refer [main]]
             [fs]
             [goog.array :as array]
+            [goog.object :as gobj]
             [path]))
 
 (defn- test-stylesheet-path
@@ -38,19 +39,6 @@
               (is (nil? result))
               (is (= "'content' key is missing on the input file"
                      (.-message err)))
-              (done))))))
-
-(deftest t-main-sass-syntax-error
-  (testing "Yields an error if the input file has a syntax error"
-    (async done
-      (main #js {:absolutePath "/some/style/file.scss"
-                 :content "@import \"blah\";
-                           
-                           .hello {"}
-            #js {}
-            (fn [err result]
-              (is (nil? result))
-              (is (instance? js/Error err))
               (done))))))
 
 (deftest t-main-no-deps
@@ -96,3 +84,37 @@
                                      (test-stylesheet-path "dependency_2.scss")]
                                 (.sort result)))
               (done))))))
+
+(deftest t-main-absolute-path-dependencies
+  (testing "Handles absolute path dependencies in stylesheets"
+    (async done
+      (main (test-stylesheet "absolute_path.scss")
+            #js {}
+            (fn [error result]
+              (is (nil? error))
+              (is (array/equals #js ["/some/dependency.scss"]
+                                result))
+              (done))))))
+
+(deftest t-main-indented-syntax
+  (testing "appends a .sass extension if the 'indentedSyntax' option is true"
+    (async done
+      (main (test-stylesheet "use.scss")
+            #js {:indentedSyntax true}
+            (fn [error result]
+              (is (nil? error))
+              (is (array/equals #js [(test-stylesheet-path "dependency.sass")]
+                                result))
+              (done))))))
+
+(deftest t-main-error
+  (testing "yields an error if an error is thrown"
+    (async done
+      (with-redefs [gobj/get #(throw (js/Error. "Boom"))]
+        (main (test-stylesheet "use.scss")
+              #js {}
+              (fn [error result]
+                (is (nil? result))
+                (is (instance? js/Error error))
+                (is (= "Boom" (.-message error)))
+                (done)))))))
