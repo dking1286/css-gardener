@@ -19,9 +19,7 @@
   ],
   "author": "Daniel King",
   "license": "EPL-2.0",
-  "dependencies": {
-    "sass": "1.26.7"
-  },
+  "dependencies": {},
   "devDependencies": {
     "shadow-cljs": "2.9.3"
   }
