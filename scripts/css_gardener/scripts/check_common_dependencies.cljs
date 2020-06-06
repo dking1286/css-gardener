@@ -1,23 +1,9 @@
 (ns css-gardener.scripts.check-common-dependencies
   (:refer-clojure :exclude [exists?])
-  (:require [cljs.reader :as reader]
-            [fs]))
-
-(defn- exists?
-  [filename]
-  (fs/existsSync filename))
-
-(defn- slurp
-  [filename]
-  (fs/readFileSync filename "utf8"))
-
-(defn- json-parse
-  [json]
-  (js->clj (js/JSON.parse json)))
-
-(defn- edn-parse
-  [edn]
-  (reader/read-string edn))
+  (:require [css-gardener.scripts.utils :refer [edn-parse
+                                                exists?
+                                                json-parse
+                                                slurp]]))
 
 (defn- mismatch?
   [expected-version version]

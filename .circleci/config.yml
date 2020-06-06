@@ -12,6 +12,7 @@ jobs:
       # TODO: Cache the downloaded dependencies
       - run: npm install
       - run: npx lerna bootstrap
+      - run: npm run remove_build_caches
       - run: npm run check_common_dependencies
       - run: npm run lint
       - run: npm test
