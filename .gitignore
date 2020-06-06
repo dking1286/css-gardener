@@ -1,4 +1,5 @@
 .clj-kondo/.cache
+.lumo_cache
 .shadow-cljs
 dist
 node_modules
