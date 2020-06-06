@@ -5,6 +5,7 @@
         reagent "1.0.0-alpha1"}
 
  :npm {"chokidar" "3.4.0"
+       "fs-extra" "9.0.1"
        "react" "16.13.0"
        "react-dom" "16.13.0"
        "sass" "1.26.8"

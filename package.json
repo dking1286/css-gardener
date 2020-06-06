@@ -1,14 +1,18 @@
 {
   "name": "root",
   "private": true,
-  "devDependencies": {
-    "lerna": "3.20.2",
-    "lumo-cljs": "1.10.1"
-  },
   "scripts": {
-    "check_common_dependencies": "lumo scripts/check_common_dependencies.cljs",
+    "check_common_dependencies": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/check_common_dependencies.cljs",
+    "remove_build_caches": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
     "lint": "lerna run lint",
     "release": "lerna run release",
     "test": "lerna run test"
+  },
+  "dependencies": {
+    "fs-extra": "9.0.1"
+  },
+  "devDependencies": {
+    "lerna": "3.20.2",
+    "lumo-cljs": "1.10.1"
   }
 }
