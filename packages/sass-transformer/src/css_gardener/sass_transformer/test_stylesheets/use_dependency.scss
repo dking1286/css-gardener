@@ -1,0 +1,5 @@
+@use './colors.scss';
+
+body {
+  color: colors.$red;
+}
