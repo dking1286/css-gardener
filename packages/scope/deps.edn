@@ -1,0 +1,8 @@
+{:paths ["src"]
+
+ :aliases
+ {:lint {:extra-deps {clj-kondo {:mvn/version "2020.04.05"}}}
+
+  :test {:extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                                 :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
+                      com.bhauman/figwheel-main {:mvn/version "0.2.8"}}}}}

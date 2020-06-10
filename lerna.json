@@ -3,7 +3,8 @@
     "packages/core",
     "packages/css-example",
     "packages/sass-resolver",
-    "packages/sass-transformer"
+    "packages/sass-transformer",
+    "packages/scope"
   ],
   "version": "0.0.0"
 }
