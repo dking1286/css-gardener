@@ -1,0 +1,2 @@
+{:main css-gardener.scope.core-dev
+ :target :nodejs}

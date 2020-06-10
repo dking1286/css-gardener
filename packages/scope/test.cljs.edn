@@ -1,0 +1,2 @@
+{:main css-gardener.scope.test-runner
+ :target :nodejs}
