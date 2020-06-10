@@ -1,7 +1,7 @@
 {
   "packages": [
+    "packages/core",
     "packages/css-example",
-    "packages/css-gardener-core",
     "packages/sass-resolver",
     "packages/sass-transformer"
   ],
