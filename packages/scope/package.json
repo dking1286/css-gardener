@@ -7,9 +7,11 @@
   "scripts": {
     "repl": "node target/node/dev/dev-main.js",
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
+    "compile-tests": "clojure -A:test -m figwheel.main --build-once test",
     "clj-tests": "clojure -A:test -m cognitect.test-runner -d src",
-    "cljs-tests": "clojure -A:test -m figwheel.main --build-once test && node target/node/test/test-main.js",
-    "test": "npm run clj-tests && npm run cljs-tests"
+    "cljs-tests": "node target/node/test/test-main.js",
+    "run-tests": "npm run clj-tests && npm run cljs-tests",
+    "test": "npm run compile-tests && npm run run-tests"
   },
   "keywords": [],
   "author": "",
