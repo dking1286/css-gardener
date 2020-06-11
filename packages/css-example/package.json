@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@css-gardener/core": "file:../css-gardener-core",
+    "@css-gardener/core": "file:../core",
     "react": "16.13.0",
     "react-dom": "16.13.0"
   },
