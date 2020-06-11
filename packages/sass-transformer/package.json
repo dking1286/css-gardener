@@ -7,7 +7,9 @@
     "lint": "shadow-cljs clj-run clj-kondo.main/-main -- --lint src --cache false",
     "repl": "node target/main-dev/main.js",
     "release": "shadow-cljs release main",
-    "test": "shadow-cljs release main-test && node target/main-test/main.js"
+    "compile-tests": "shadow-cljs release main-test",
+    "run-tests": "node target/main-test/main.js",
+    "test": "npm run compile-tests && npm run run-tests"
   },
   "keywords": [
     "css",

@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "lint": "echo \"No lint command yet\"",
-    "test": "echo \"No tests yet\"",
+    "compile-tests": "echo \"No tests yet\"",
+    "run-tests": "echo \"No tests yet\"",
+    "test": "npm run compile-tests && npm run run-tests",
     "release": "shadow-cljs release app"
   },
   "keywords": [],

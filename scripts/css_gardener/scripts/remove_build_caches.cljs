@@ -5,7 +5,8 @@
                                                 remove-dir
                                                 slurp]]))
 
-(def ^:private build-caches #{".shadow-cljs"
+(def ^:private build-caches #{".cpcache"
+                              ".shadow-cljs"
                               "dist"
                               "target"})
 

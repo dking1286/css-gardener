@@ -18,8 +18,19 @@ jobs:
             ./linux-install-1.10.1.536.sh
 
       - run: npm install
-      - run: npx lerna bootstrap
-      - run: npm run remove_build_caches
       - run: npm run check_common_dependencies
-      - run: npm run lint
-      - run: npm test
+
+      - run: npx lerna bootstrap
+
+      - run:
+          name: Lint
+          command: |
+            npm run remove_build_caches
+            npm run lint
+
+      - run:
+          name: Tests
+          command: |
+            npm run remove_build_caches
+            npm run compile-tests
+            npm run run-tests

@@ -6,6 +6,8 @@
     "remove_build_caches": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
     "lint": "lerna run lint",
     "release": "lerna run release",
+    "compile-tests": "lerna run compile-tests",
+    "run-tests": "lerna run run-tests",
     "test": "lerna run test"
   },
   "dependencies": {
