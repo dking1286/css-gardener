@@ -1,6 +1,7 @@
 .clj-kondo/.cache
 .cpcache
 .lumo_cache
+.nrepl-port
 .shadow-cljs
 dist
 node_modules
