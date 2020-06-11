@@ -4,6 +4,7 @@
   "scripts": {
     "check_common_dependencies": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/check_common_dependencies.cljs",
     "remove_build_caches": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
+    "get_packages": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/get_packages.cljs",
     "lint": "lerna run lint",
     "release": "lerna run release",
     "compile-tests": "lerna run compile-tests",
