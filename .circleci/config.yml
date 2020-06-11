@@ -32,5 +32,10 @@ jobs:
           name: Tests
           command: |
             npm run remove_build_caches
-            npm run compile-tests
-            npm run run-tests
+            for package in $(npm run --silent get_packages)
+            do
+              cd $package
+              npm run compile-tests
+              npm run run-tests
+              cd ../..
+            done
