@@ -1,8 +1,8 @@
-{:cljs {clj-kondo "2020.04.05"
-        integrant "0.8.0"
-        org.clojure/tools.cli "1.0.194"
-        org.clojure/tools.namespace "1.0.0"
-        reagent "1.0.0-alpha1"}
+{:cljs {clj-kondo {:mvn/version "2020.04.05"}
+        integrant {:mvn/version "0.8.0"}
+        org.clojure/tools.cli {:mvn/version "1.0.194"}
+        org.clojure/tools.namespace {:mvn/version "1.0.0"}
+        reagent {:mvn/version "1.0.0-alpha1"}}
 
  :npm {"chokidar" "3.4.0"
        "fs-extra" "9.0.1"
