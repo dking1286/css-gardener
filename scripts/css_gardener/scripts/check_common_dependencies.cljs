@@ -20,7 +20,12 @@
    :shadow-cljs
    (let [shadow-cljs-name (str package "/shadow-cljs.edn")]
      (when (exists? shadow-cljs-name)
-       (edn-parse (slurp shadow-cljs-name))))})
+       (edn-parse (slurp shadow-cljs-name))))
+
+   :deps-edn
+   (let [deps-edn-name (str package "/deps.edn")]
+     (when (exists? deps-edn-name)
+       (edn-parse (slurp deps-edn-name))))})
 
 (defmulti ^:private check-package-config
   (fn [_ _ config-type _] config-type))
@@ -38,11 +43,24 @@
 (defmethod check-package-config :shadow-cljs
   [common-dependencies package-name _ config]
   (doseq [[name version] (:dependencies config)]
-    (let [expected-version (get-in common-dependencies [:cljs name])]
+    (let [expected-version (get-in common-dependencies
+                                   [:cljs name :mvn/version])]
       (when (mismatch? expected-version version)
         (throw (js/Error. (str "Package " package-name " has version " version
                                " of dependency " name ", expected "
                                expected-version)))))))
+
+(defmethod check-package-config :deps-edn
+  [common-dependencies package-name _ config]
+  (let [all-deps (concat (:deps config)
+                         (mapcat (fn [[_ v]] (:deps v)) (:aliases config))
+                         (mapcat (fn [[_ v]] (:extra-deps v)) (:aliases config)))]
+    (doseq [[name version] all-deps]
+      (let [expected-version (get-in common-dependencies [:cljs name])]
+        (when (mismatch? expected-version version)
+          (throw (js/Error. (str "Package " package-name " has version " version
+                                 " of dependency " name ", expected "
+                                 expected-version))))))))
 
 (defmethod check-package-config :default
   [_ _ config-type _]
