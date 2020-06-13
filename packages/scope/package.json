@@ -2,7 +2,7 @@
   "name": "@css-gardener/scope",
   "private": true,
   "version": "0.0.0",
-  "description": "",
+  "description": "Common library for working with scopes in css-gardener. Note: Instead of depending on this npm package, you should depend on the Clojars package css-gardener/scope.",
   "main": "index.js",
   "scripts": {
     "repl": "node target/node/dev/dev-main.js",
@@ -13,9 +13,16 @@
     "run-tests": "npm run clj-tests && npm run cljs-tests",
     "test": "npm run compile-tests && npm run run-tests"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "css",
+    "cljs",
+    "clojure",
+    "clojurescript",
+    "stylesheet",
+    "style"
+  ],
+  "author": "Daniel King",
+  "license": "EPL-2.0",
   "devDependencies": {
     "ws": "7.3.0"
   }
