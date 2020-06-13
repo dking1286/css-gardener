@@ -2,15 +2,20 @@
         com.bhauman/figwheel-main {:mvn/version "0.2.8"}
         com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
                                    :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
+        ;; css-gardener/common should only be depended on by local packages
         css-gardener/common {:local/root "../common"}
         integrant {:mvn/version "0.8.0"}
         org.clojure/tools.cli {:mvn/version "1.0.194"}
         org.clojure/tools.namespace {:mvn/version "1.0.0"}
         reagent {:mvn/version "1.0.0-alpha1"}}
 
- :npm {"chokidar" "3.4.0"
+ :npm {;; @css-gardener/core should only be depended on locally by example
+       ;; packages
+       "@css-gardener/core" "file:../core"
+       "chokidar" "3.4.0"
        "fs-extra" "9.0.1"
        "react" "16.13.0"
        "react-dom" "16.13.0"
        "sass" "1.26.8"
-       "shadow-cljs" "2.9.3"}}
+       "shadow-cljs" "2.9.3"
+       "ws" "7.3.0"}}
