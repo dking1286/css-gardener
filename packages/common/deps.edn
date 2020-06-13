@@ -1,1 +1,4 @@
-{:paths ["src"]}
+{:paths ["src"]
+
+ :aliases
+ {:lint {:extra-deps {clj-kondo {:mvn/version "2020.04.05"}}}}}
