@@ -1,6 +1,7 @@
 (ns css-gardener.scope.core
   #?(:clj (:require [cljs.analyzer :as ana]
-                    [clojure.java.io :as io]))
+                    [clojure.java.io :as io]
+                    [css-gardener.common.constants :as constants]))
   #?(:cljs (:require-macros [css-gardener.scope.core])))
 
 (defn scope-from-stylesheet
@@ -39,5 +40,6 @@
      "Infer the scope for the current cljs file based on the scopes declared
       in the style dependencies."
      []
-     (scope-from-style-deps ana/*cljs-file*
-                            (:css-gardener/require (meta ana/*cljs-ns*)))))
+     (scope-from-style-deps
+      ana/*cljs-file*
+      (constants/require-metadata-key (meta ana/*cljs-ns*)))))

@@ -1,12 +1,14 @@
 (ns
   ^{:css-gardener/require ["test_stylesheets/scope.scss"]}
   css-gardener.scope.core-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [css-gardener.scope.core :refer [scope-from-stylesheet
-                                             #?(:clj scope-from-style-deps
-                                                :cljs infer-scope)]]
-            #?(:cljs ["fs" :as fs]))
-  #?(:clj (:import [java.io FileNotFoundException])))
+  #?(:clj (:require [clojure.test :refer [deftest testing is]]
+                    [css-gardener.scope.core :refer [scope-from-stylesheet
+                                                     scope-from-style-deps]]))
+  #?(:clj (:import [java.io FileNotFoundException]))
+  #?(:cljs (:require [clojure.test :refer [deftest testing is]]
+                     [css-gardener.scope.core :refer [scope-from-stylesheet
+                                                      infer-scope]]
+                     [fs])))
 
 (defn- test-stylesheet-content
   [name]
