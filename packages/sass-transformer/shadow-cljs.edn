@@ -1,6 +1,4 @@
-{:dependencies [[clj-kondo "2020.04.05"]]
-
- :source-paths ["src"]
+{:deps true
 
  :builds {:main {:target :node-library
                  :output-to "dist/main.js"
