@@ -7,8 +7,7 @@
 
 (defn- mismatch?
   [expected-version version]
-  (and expected-version
-       (not (= version expected-version))))
+  (not (= version expected-version)))
 
 (defn- read-package-configs
   [package]
