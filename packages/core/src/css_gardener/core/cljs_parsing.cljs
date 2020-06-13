@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [clojure.tools.namespace.parse :as parse]
             [clojure.tools.reader.reader-types :refer [string-push-back-reader]]
+            [css-gardener.common.constants :as constants]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
@@ -159,7 +160,7 @@
   [ns-decl]
   (-> (parse/name-from-ns-decl ns-decl)
       meta
-      :css-gardener/require
+      constants/require-metadata-key
       set))
 
 (defn stylesheet-deps-from-ns-decl
