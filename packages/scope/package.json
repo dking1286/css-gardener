@@ -1,7 +1,7 @@
 {
   "name": "@css-gardener/scope",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Common library for working with scopes in css-gardener. Note: Instead of depending on this npm package, you should depend on the Clojars package css-gardener/scope.",
   "scripts": {
     "repl": "node target/node/dev/dev-main.js",
@@ -10,7 +10,8 @@
     "clj-tests": "clojure -A:test -m cognitect.test-runner -d src",
     "cljs-tests": "node target/node/test/test-main.js",
     "run-tests": "npm run clj-tests && npm run cljs-tests",
-    "test": "npm run compile-tests && npm run run-tests"
+    "test": "npm run compile-tests && npm run run-tests",
+    "deploy": "clojure -A:deploy -Spom && mvn deploy"
   },
   "keywords": [
     "css",

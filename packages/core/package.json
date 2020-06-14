@@ -1,11 +1,18 @@
 {
   "name": "@css-gardener/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "The core functionality of the css-gardener tool",
   "main": "index.js",
   "bin": {
     "css-gardener": "index.js"
   },
+  "files": [
+    "src",
+    "dist",
+    "deps.edn",
+    "index.js",
+    "shadow-cljs.edn"
+  ],
   "scripts": {
     "lint": "shadow-cljs clj-run clj-kondo.main/-main -- --lint src --cache false",
     "repl": "node target/main-dev/main.js",
@@ -13,11 +20,12 @@
     "test-watch": "shadow-cljs watch main-test",
     "compile-tests": "shadow-cljs release main-test",
     "run-tests": "node target/main-test/main.js",
-    "test": "npm run compile-tests && npm run run-tests"
+    "test": "npm run compile-tests && npm run run-tests",
+    "deploy": "npm run release && npm publish --access public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dking1286/css-gardener/packages/css-gardener-core"
+    "url": "https://github.com/dking1286/css-gardener/packages/core"
   },
   "keywords": [
     "css",
