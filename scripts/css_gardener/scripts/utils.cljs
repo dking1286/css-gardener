@@ -13,6 +13,11 @@
   [filename]
   (fs-extra/readFileSync filename "utf8"))
 
+(defn spit
+  "Synchronously writes a file."
+  [filename content]
+  (fs-extra/writeFileSync filename content))
+
 (defn remove-dir
   "Synchronously remove a directory and all of its contents."
   [name]
