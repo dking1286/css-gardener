@@ -1,22 +1,14 @@
 {
   "name": "@css-gardener/common",
+  "version": "0.0.1",
   "private": true,
-  "version": "0.0.0",
-  "description": "Common libraries for css-gardener subpackages. Note: Instead of depending on this npm package, add this as a clj/cljs dependency in deps.edn.",
   "scripts": {
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
     "compile-tests": "echo 'No tests yet.'",
     "run-tests": "echo 'No tests yet.'",
-    "test": "echo 'No tests yet.'"
+    "test": "echo 'No tests yet.'",
+    "deploy": "clojure -Spom && mvn deploy"
   },
-  "keywords": [
-    "css",
-    "cljs",
-    "clojure",
-    "clojurescript",
-    "stylesheet",
-    "style"
-  ],
   "author": "Daniel King",
   "license": "EPL-2.0"
 }

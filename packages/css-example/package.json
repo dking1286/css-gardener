@@ -1,7 +1,7 @@
 {
   "name": "@css-gardener/css-example",
+  "version": "0.0.1",
   "private": true,
-  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "compile-tests": "echo \"No tests yet\"",
     "run-tests": "echo \"No tests yet\"",
     "test": "npm run compile-tests && npm run run-tests",
-    "release": "shadow-cljs release app"
+    "release": "shadow-cljs release app",
+    "deploy": "echo 'Nothing to deploy'"
   },
   "keywords": [],
   "author": "",
