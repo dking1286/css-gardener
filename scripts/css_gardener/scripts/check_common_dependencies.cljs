@@ -7,7 +7,9 @@
 
 (defn- mismatch?
   [expected-version version]
-  (not (= version expected-version)))
+  (if (set? expected-version)
+    (not (contains? expected-version version))
+    (not (= version expected-version))))
 
 (defn- read-package-configs
   [package]
@@ -53,7 +55,8 @@
   [common-dependencies package-name _ config]
   (let [all-deps (concat (:deps config)
                          (mapcat (fn [[_ v]] (:deps v)) (:aliases config))
-                         (mapcat (fn [[_ v]] (:extra-deps v)) (:aliases config)))]
+                         (mapcat (fn [[_ v]] (:extra-deps v)) (:aliases config))
+                         (mapcat (fn [[_ v]] (:override-deps v)) (:aliases config)))]
     (doseq [[name version] all-deps]
       (let [expected-version (get-in common-dependencies [:cljs name])]
         (when (mismatch? expected-version version)
