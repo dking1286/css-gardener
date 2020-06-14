@@ -3,14 +3,15 @@
   "private": true,
   "scripts": {
     "check_common_dependencies": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/check_common_dependencies.cljs",
-    "remove_build_caches": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
+    "clean": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
     "get_packages": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/get_packages.cljs",
     "update_version": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/update_version.cljs",
     "lint": "lerna run lint",
     "release": "lerna run release",
     "compile-tests": "lerna run compile-tests",
     "run-tests": "lerna run run-tests",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "deploy": "npm run clean && npm test && npm run clean && lerna run deploy"
   },
   "dependencies": {
     "fs-extra": "9.0.1"
