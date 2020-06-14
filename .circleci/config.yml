@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Lint
           command: |
-            npm run remove_build_caches
+            npm run clean
             for package in $(npm run --silent get_packages)
             do
               cd $package
@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Tests
           command: |
-            npm run remove_build_caches
+            npm run clean
             for package in $(npm run --silent get_packages)
             do
               cd $package
