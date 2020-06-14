@@ -10,6 +10,8 @@
 
 (def ^:private version-regexp
   #"\d+\.\d+\.\d+")
+(def ^:private update-version-regexp
+  #"\^:update-version\s+{:mvn/version \"\d+\.\d+\.\d+\"}")
 (def ^:private version
   (first (filter #(re-matches version-regexp %) js/process.argv)))
 (def ^:private lerna-json
@@ -48,22 +50,47 @@
                            ;; xml2js
                            (string/replace #"\s*standalone=\"yes\"\s*" ""))))))))
 
+(defmethod update-version :deps
+  [_ content callback]
+  (callback nil (string/replace content
+                                update-version-regexp
+                                (str "^:update-version {:mvn/version \"" version "\"}"))))
+
+(defmethod update-version :default
+  [filetype _ _]
+  (throw (ex-info (str "Unrecognized file type " filetype) {})))
+
+(defn- do-update
+  [& {:keys [file-path file-type start-message-fn error-message-fn]}]
+  (println (start-message-fn file-path version))
+  (update-version file-type (slurp file-path)
+                  (fn [err result]
+                    (if err
+                      (println (error-message-fn err))
+                      (spit file-path result)))))
+
+(let [common-dependencies-edn "common-dependencies.edn"]
+  (do-update :file-path common-dependencies-edn
+             :file-type :deps
+             :start-message-fn (constantly "Updating annotated versions in common-dependencies.edn")
+             :error-message-fn #(str "Error while updating common-dependencies.edn: " %)))
+
 (doseq [package (get lerna-json "packages")]
   (let [package-json (str package "/package.json")
-        pom-xml (str package "/pom.xml")]
+        pom-xml (str package "/pom.xml")
+        deps-edn (str package "/deps.edn")]
     (when (exists? package-json)
-      (println (str "Updating version in " package-json " to " version))
-      (update-version :json (slurp package-json)
-                      (fn [err result]
-                        (if err
-                          (println (str "Error while updating package.json: "
-                                        err))
-                          (spit package-json result)))))
+      (do-update :file-path package-json
+                 :file-type :json
+                 :start-message-fn #(str "Updating version in " %1 " to " %2)
+                 :error-message-fn #(str "Error while updating package.json: " %)))
     (when (exists? pom-xml)
-      (println (str "Updating version in " pom-xml " to " version))
-      (update-version :xml (slurp pom-xml)
-                      (fn [err result]
-                        (if err
-                          (println (str "Error while updating pom.xml: "
-                                        err))
-                          (spit pom-xml result)))))))
+      (do-update :file-path pom-xml
+                 :file-type :xml
+                 :start-message-fn #(str "Updating version in " %1 " to " %2)
+                 :error-message-fn #(str "Error while updating pom.xml: " %)))
+    (when (exists? deps-edn)
+      (do-update :file-path deps-edn
+                 :file-type :deps
+                 :start-message-fn #(str "Updating version in " %1 " to " %2)
+                 :error-message-fn #(str "Error while updating deps.edn: " %)))))
