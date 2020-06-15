@@ -5,7 +5,8 @@
     "packages/css-example",
     "packages/sass-resolver",
     "packages/sass-transformer",
-    "packages/scope"
+    "packages/scope",
+    "packages/scope-transformer"
   ],
   "version": "0.0.0"
 }

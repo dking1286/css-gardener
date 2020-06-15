@@ -1,0 +1,42 @@
+{
+  "name": "@css-gardener/scope-transformer",
+  "version": "0.0.2",
+  "description": "Transformer plugin to add scopes to classnames in a css stylesheet",
+  "main": "index.js",
+  "files": [
+    "src",
+    "dist",
+    "deps.edn",
+    "index.js",
+    "shadow-cljs.edn"
+  ],
+  "scripts": {
+    "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
+    "repl": "node target/main-dev/main.js",
+    "release": "shadow-cljs release main",
+    "compile-tests": "shadow-cljs release main-test",
+    "run-tests": "node target/main-test/main.js",
+    "test": "npm run compile-tests && npm run run-tests",
+    "deploy": "npm run release && npm publish --access public"
+  },
+  "keywords": [
+    "css",
+    "cljs",
+    "clojure",
+    "clojurescript",
+    "stylesheet",
+    "style"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener/packages/scope-transformer"
+  },
+  "author": "Daniel King",
+  "license": "EPL-2.0",
+  "devDependencies": {
+    "shadow-cljs": "2.9.3"
+  },
+  "dependencies": {
+    "css": "2.2.4"
+  }
+}
