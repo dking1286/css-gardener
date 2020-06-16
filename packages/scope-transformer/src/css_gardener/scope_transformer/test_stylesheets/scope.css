@@ -1,0 +1,19 @@
+.hello {
+  color: red;
+}
+
+.two.classes {
+  color: green;
+}
+
+div.tag-class {
+  color: blue;
+}
+
+.foo .bar {
+  color: cornsilk;
+}
+
+.foo, .bar {
+  color: tomato;
+}

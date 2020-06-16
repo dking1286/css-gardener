@@ -1,0 +1,19 @@
+.test__hello {
+  color: red;
+}
+
+.test__two.test__classes {
+  color: green;
+}
+
+div.test__tag-class {
+  color: blue;
+}
+
+.test__foo .test__bar {
+  color: cornsilk;
+}
+
+.test__foo, .test__bar {
+  color: tomato;
+}

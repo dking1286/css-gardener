@@ -12,6 +12,11 @@
 (comment
   (scope-from-stylesheet "{:css-gardener/scope \"hello\"}"))
 
+(defn scoped-classname
+  "Adds a scope to a classname."
+  [scope classname]
+  (str scope "__" classname))
+
 #?(:clj
    (defn- scope-from-style-dep
      [current-file dep]

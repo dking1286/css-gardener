@@ -9,11 +9,11 @@
   (run-tests 'css-gardener.scope-transformer.core-test))
 
 (defn enter
-  "TODO: Add me"
+  "Stub entry function for development."
   [file _ callback]
   (callback nil file))
 
 (defn exit
-  "TODO: Add me"
+  "Stub exit function for development."
   [file _ callback]
   (callback nil file))

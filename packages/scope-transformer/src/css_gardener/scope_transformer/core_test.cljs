@@ -1,7 +1,7 @@
 (ns css-gardener.scope-transformer.core-test
   (:require [clojure.test :refer [deftest testing is async]]
             [css-gardener.common.object :refer [object-merge]]
-            [css-gardener.scope-transformer.core :refer [enter]]
+            [css-gardener.scope-transformer.core :refer [enter exit]]
             [fs]
             [goog.object :as object]
             [path]))
@@ -41,3 +41,32 @@
                  (is (nil? err))
                  (is (object/equals expected result))
                  (done)))))))
+
+(deftest t-exit-no-scope
+  (testing "Yields the file unmodified if no 'scopeTransformerScope' property
+            exists"
+    (async done
+      (let [infile (test-stylesheet "no_scope.css")
+            expected infile]
+        (exit infile
+              #js {}
+              (fn [err result]
+                (is (nil? err))
+                (is (object/equals expected result))
+                (done)))))))
+
+(deftest t-exit-with-scope
+  (testing "Yields the file with all classnames transformed if the scope exists"
+    (async done
+      (let [infile (object-merge
+                    (test-stylesheet "scope.css")
+                    #js {:scopeTransformerScope "test"})
+            expected (object-merge
+                      infile
+                      #js {:content (object/get (test-stylesheet "scope_transformed.css") "content")})]
+        (exit infile
+              #js {}
+              (fn [err result]
+                (is (nil? err))
+                (is (object/equals expected result))
+                (done)))))))
