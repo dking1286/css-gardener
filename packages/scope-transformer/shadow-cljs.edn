@@ -9,6 +9,12 @@
                                  :exit css-gardener.scope-transformer.core-dev/exit}}}
 
           :main-test {:target :node-test
+                      ;; Need to have an explicit allowlist of test namespaces,
+                      ;; otherwise it tries to run the tests in
+                      ;; the scope subpackage as well, which fails because
+                      ;; ana/*cljs-file* isn't relative to the current
+                      ;; working directory.
+                      :ns-regexp "scope-transformer.core-test$"
                       :output-to "target/main-test/main.js"
                       :autorun false
                       :dev {:output-to "target/main-test-dev/main.js"
