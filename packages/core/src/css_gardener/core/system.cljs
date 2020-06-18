@@ -5,6 +5,7 @@
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
             [css-gardener.core.modules :as modules]
+            [css-gardener.core.output :as output]
             [css-gardener.core.transformation :as transformation]
             [css-gardener.core.utils.fs :as fs]
             [integrant.core :as ig]))
@@ -27,6 +28,9 @@
    {}
 
    ::fs/read-file
+   {}
+
+   ::fs/write-file
    {}
 
    ::cljs/deps
@@ -71,4 +75,11 @@
 
    ::changes/consumer
    {:logger (ig/ref ::logging/logger)
-    :input-channel (ig/ref ::changes/input-channel)}})
+    :input-channel (ig/ref ::changes/input-channel)}
+
+   ::output/output-channel
+   {}
+
+   ::output/consumer
+   {:logger (ig/ref ::logging/logger)
+    :output-channel (ig/ref ::output/output-channel)}})

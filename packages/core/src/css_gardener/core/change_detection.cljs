@@ -5,8 +5,8 @@
             [integrant.core :as ig]))
 
 (defmethod ig/init-key ::input-channel
-  [_ _]
-  (chan 100))
+  [_ {:keys [buffer] :or {buffer 100}}]
+  (chan buffer))
 
 (defmethod ig/halt-key! ::input-channel
   [_ input-channel]

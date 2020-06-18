@@ -3,7 +3,7 @@
   (:require [clojure.core.async :refer [go]]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
-            ["fs" :as fs]
+            [fs]
             [integrant.core :as ig]))
 
 (defn exists?
@@ -18,6 +18,12 @@
   (a/node-callback->channel
    fs/readFile filename "utf8" (fn [err contents]
                                  (or err contents))))
+
+(defn write-file
+  "Writes text to a file."
+  [filename data]
+  (a/node-callback->channel
+   fs/writeFile filename data (fn [err] err)))
 
 (defmethod ig/init-key ::exists?
   [_ {:keys [return-value files]}]
@@ -41,3 +47,14 @@
                   (errors/not-found (str filename " not found")))))
     ;; Real read-file implementation
     :else read-file))
+
+(defmethod ig/init-key ::write-file
+  [_ {:keys [;; Atom of a vector. If provided, create a stub implementation
+             ;; that appends the files to the atom instead of writing to the
+             ;; filesystem.
+             written-files]}]
+  (if written-files
+    (fn [filename content]
+      (swap! written-files conj {:absolute-path filename
+                                 :content content}))
+    write-file))
