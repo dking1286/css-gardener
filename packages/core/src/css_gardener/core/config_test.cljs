@@ -17,17 +17,11 @@
 
 (deftest t-matching-rule
   (testing "Returns the rule in the configuration file matching the file"
-    (let [file {:absolute-path "/blah/blah.scss"
-                :content ""}]
-      (is (= {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
-              :transformers [{:node-module "@css-gardener/sass-transformer"}]}
-             (sut/matching-rule config file)))))
+    (is (= {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+            :transformers [{:node-module "@css-gardener/sass-transformer"}]}
+           (sut/matching-rule config "/blah/blah.scss"))))
   (testing "Returns not-found when no rule matches the file"
-    (let [file {:absolute-path "/blah/blah.blah"
-                :content ""}]
-      (is (errors/not-found? (sut/matching-rule config file)))))
+    (is (errors/not-found? (sut/matching-rule config "/blah/blah.blah"))))
   (testing "Returns conflict when more than one rule matches the file"
-    (let [config (assoc-in config [:rules "css"] {:transformers []})
-          file {:absolute-path "/blah/blah.scss"
-                :content ""}]
-      (is (errors/conflict? (sut/matching-rule config file))))))
+    (let [config (assoc-in config [:rules "css"] {:transformers []})]
+      (is (errors/conflict? (sut/matching-rule config "/blah/blah.scss"))))))

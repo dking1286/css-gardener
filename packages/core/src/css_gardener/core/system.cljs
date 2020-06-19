@@ -64,6 +64,11 @@
    {:config (ig/ref ::config/config)
     :transformers (ig/ref ::transformation/transformers)}
 
+   ::transformation/compile-all
+   {:config (ig/ref ::config/config)
+    :read-file (ig/ref ::fs/read-file)
+    :transform (ig/ref ::transformation/transform)}
+
    ::changes/input-channel
    {}
 

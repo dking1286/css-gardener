@@ -80,9 +80,9 @@
    file]
   (logging/debug logger (str "Getting dependencies of "
                              (:absolute-path file)))
-  (let [rule-or-error (config/matching-rule config file)]
+  (let [rule-or-error (config/matching-rule config (:absolute-path file))]
     (cond
-      (cljs/cljs-file? file)
+      (cljs/cljs-file? (:absolute-path file))
       (cljs-deps file (:source-paths config))
 
       (errors/not-found? rule-or-error)

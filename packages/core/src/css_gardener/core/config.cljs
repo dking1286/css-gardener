@@ -3,7 +3,6 @@
   css-gardener.core.config
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [css-gardener.core.file :as file]
             [css-gardener.core.utils.errors :as errors]
             [integrant.core :as ig]))
 
@@ -15,7 +14,8 @@
 (s/def ::depends-on (s/coll-of keyword? :kind set?))
 (s/def ::module (s/keys :req-un [::entries] :opt-un [::depends-on]))
 (s/def ::modules (s/map-of keyword? ::module))
-(s/def ::build (s/keys :req-un [::modules]))
+(s/def ::output-dir string?)
+(s/def ::build (s/keys :req-un [::modules ::output-dir]))
 (s/def ::builds (s/map-of keyword? ::build))
 
 (s/def ::node-module string?)
@@ -34,23 +34,23 @@
 
 (s/fdef matching-rule
   :args (s/cat :config ::config
-               :file ::file/file))
+               :absolute-path string?))
 
 (defn matching-rule
   "Gets the rule in the configuration map matching a file."
-  [config file]
+  [config absolute-path]
   (let [matching-rules (->> (:rules config)
                             (filter (fn [[ending _]]
-                                      (string/ends-with? (:absolute-path file)
+                                      (string/ends-with? absolute-path
                                                          ending)))
                             vec)]
     (case (count matching-rules)
       0 (errors/not-found (str "No rule found in configuration "
                                "matching file "
-                               (:absolute-path file)))
+                               absolute-path))
       1 (second (first matching-rules))
       (errors/conflict (str "More than 1 rule fould matching file "
-                            (:absolute-path file)
+                            absolute-path
                             " : "
                             (string/join "," (map first matching-rules)))))))
 

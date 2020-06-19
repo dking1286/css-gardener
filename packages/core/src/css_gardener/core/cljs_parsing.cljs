@@ -99,8 +99,8 @@
 
 (defn cljs-file?
   "Determines if a file is a cljs file."
-  [file]
-  (contains? cljs-file-extensions (path/extname (:absolute-path file))))
+  [absolute-path]
+  (contains? cljs-file-extensions (path/extname absolute-path)))
 
 (defn ns-name->possible-absolute-paths
   "Returns a set of the possible absolute paths corresponding to a namespace

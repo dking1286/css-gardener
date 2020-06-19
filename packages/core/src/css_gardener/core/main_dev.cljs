@@ -5,7 +5,7 @@
             [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
             [clojure.spec.test.alpha :as stest]
-            [clojure.test :refer [run-all-tests]]
+            [clojure.test :refer [run-tests run-all-tests]]
             [css-gardener.core.arguments-test :as arguments-test]
             [css-gardener.core.change-detection :as changes]
             [css-gardener.core.cljs-parsing-test :as cljs-parsing-test]
@@ -103,6 +103,7 @@
   "Lifecycle function that is called after new code is loaded in development."
   []
   (stest/instrument)
+  (run-tests 'css-gardener.core.transformation-test)
   (println "done!"))
 
 (defn main

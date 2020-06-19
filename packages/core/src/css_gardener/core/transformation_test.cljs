@@ -2,7 +2,8 @@
   (:require [clojure.core.async :refer [<!]]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.test :refer [deftest is use-fixtures run-tests]]
+            [clojure.test :refer [deftest is use-fixtures]]
+            [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
@@ -10,14 +11,63 @@
             [css-gardener.core.system :as system]
             [css-gardener.core.transformation :as transformation]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs :as fs]
             [css-gardener.core.utils.testing :refer [deftest-async
                                                      testing
                                                      with-system
                                                      instrument-specs]]
             [goog.object :as gobj]
-            [integrant.core :as ig]))
+            [integrant.core :as ig]
+            [path]))
 
 (use-fixtures :each instrument-specs)
+
+(def ^:private cwd (path/resolve "."))
+
+(defn- src-file
+  [relative-path]
+  (str cwd "/src/" relative-path))
+
+(def ^:private files
+  {(src-file "hello/world.cljs") "Hello world"
+   (src-file "some/namespace.cljs") "Some namespace"
+   (src-file "some/other/namespace.cljs") "Some other namespace"
+   (src-file "some/third/namespace.cljs") "Some third namespace"
+   (src-file "foo/foo.cljs") "Foo"
+   (src-file "foo/bar.cljs") "Bar"
+   (src-file "foo/bar.scss") "Bar styles"
+   (src-file "foo/baz.cljs") "Baz"
+   (src-file "foo/baz.scss") "Baz styles"
+   (src-file "foo/bang.scss") "Bang styles"})
+
+(def ^:private dependencies
+  {(src-file "some/namespace.cljs") #{(src-file "foo/foo.cljs")}
+   (src-file "foo/foo.cljs") #{(src-file "foo/bar.cljs")
+                               (src-file "foo/baz.cljs")}
+   (src-file "foo/bar.cljs") #{(src-file "foo/baz.cljs")
+                               (src-file "foo/bar.scss")}
+   (src-file "foo/baz.cljs") #{(src-file "foo/baz.scss")}
+   (src-file "foo/bar.scss") #{(src-file "foo/bang.scss")}
+   (src-file "foo/bang.scss") #{}})
+
+(def ^:private dependency-graph
+  (->> dependencies
+       (mapcat (fn [[file deps]]
+                 (map #(vector file %) deps)))
+       (reduce (fn [graph [file dep]]
+                 (ctnd/depend graph file dep))
+               (ctnd/graph))))
+
+(def ^:private no-styles-dependency-graph
+  (->> dependencies
+       (mapcat (fn [[file deps]]
+                 (map #(vector file %) deps)))
+       (filter (fn [[file dep]]
+                 (not (or (string/ends-with? file ".scss")
+                          (string/ends-with? dep ".scss")))))
+       (reduce (fn [graph [file dep]]
+                 (ctnd/depend graph file dep))
+               (ctnd/graph))))
 
 (def ^:private modules
   {{:node-module "@css-gardener/scope-transformer"}
@@ -35,9 +85,7 @@
   {:source-paths ["src"]
 
    :builds
-   {:app {:target :browser
-          :output-dir "public/js"
-          :asset-path "/js"
+   {:app {:output-dir "public/css"
           :modules {:main {:entries ['some.namespace]}
                     :second {:entries ['some.other.namespace
                                        'some.third.namespace]
@@ -59,6 +107,8 @@
 (def ^:private sys-config
   (-> system/config
       (assoc ::config/config config)
+      (assoc-in [::fs/exists? :files] files)
+      (assoc-in [::fs/read-file :files] files)
       (assoc-in [::modules/load :modules] modules)
       (assoc-in [::logging/logger :level] :debug)
       (assoc-in [::logging/logger :sinks] #{:cache})))
@@ -161,5 +211,30 @@
                   :scope-exit "blah"}
                  (<! (transform file)))))))))
 
-(comment
-  (run-tests))
+(deftest-async t-compile-all
+  (testing "yields an empty collection when there are no style files in the
+            dependency graph"
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-sass-transformer
+                         {:node-module "@css-gardener/scope-transformer"}
+                         fake-scope-transformer))]
+      (with-system [system sys-config]
+        (let [compile-all (::transformation/compile-all system)]
+          (is (= [] (<! (compile-all :app no-styles-dependency-graph))))))))
+  (testing "yields a file that concatenates the contents of the transformed
+            stylesheets, but only the root-level stylesheets."
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-sass-transformer
+                         {:node-module "@css-gardener/scope-transformer"}
+                         fake-scope-transformer))]
+      (with-system [system sys-config]
+        (let [compile-all (::transformation/compile-all system)]
+          (is (= [{:absolute-path (str cwd "/public/css/main.css")
+                   :content "Transformed by sass-transformer: Bar styles\n\nTransformed by sass-transformer: Baz styles"}]
+                 (<! (compile-all :app dependency-graph)))))))))
