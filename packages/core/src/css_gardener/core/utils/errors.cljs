@@ -16,6 +16,11 @@
   [err]
   (.-stack err))
 
+(defn invalid-argument
+  "Creates an error indicating that an invalid argument was passed to a
+   function."
+  [message] (ex-info message {:type :invalid-argument}))
+
 (defn invalid-config
   "Creates an error indicating that the configuration was invalid."
   ([message] (ex-info message {:type :invalid-config}))

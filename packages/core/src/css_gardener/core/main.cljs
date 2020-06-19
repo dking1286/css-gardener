@@ -7,7 +7,10 @@
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
+            [css-gardener.core.output :as output]
             [css-gardener.core.system :as system]
+            [css-gardener.core.transformation :as transformation]
+            [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
             [fs]
             [integrant.core :as ig]))
@@ -63,6 +66,33 @@
             (println graph-or-error)
             (consume-changes)))))))
 
+(defn- compile
+  "Compiles the output stylesheet once, without applying optimizations."
+  [config build-id log-level]
+  (let [sys-config (-> system/config
+                       (assoc ::config/config config)
+                       (assoc-in [::changes/watcher :source-paths]
+                                 (:source-paths config))
+                       (assoc-in [::logging/logger :level] log-level))
+        system (ig/init sys-config)
+        {logger ::logging/logger
+         deps-graph ::dependency/deps-graph
+         compile-all ::transformation/compile-all
+         write-output ::output/write-output} system]
+    (go
+      (let [output-or-error
+            (<! (->> (deps-graph build-id)
+                     (a/flat-map #(compile-all build-id %))
+                     (a/flat-map #(->> %
+                                       (map write-output)
+                                       (a/await-all 5000)))))]
+        (if (errors/error? output-or-error)
+          (do
+            (logging/error logger "An error occurred")
+            (logging/error logger output-or-error)
+            (js/process.exit 1))
+          (js/process.exit 0))))))
+
 (defn- release
   "TODO: Implement me"
   [_ _ _])
@@ -86,6 +116,7 @@
                        validate-config)]
         (case command
           :watch (watch config build-id log-level)
+          :compile (compile config build-id log-level)
           :release (release config build-id log-level)
           (throw (js/Error. (str "Invalid command " command))))))))
 

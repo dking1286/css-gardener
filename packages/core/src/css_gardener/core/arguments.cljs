@@ -6,7 +6,7 @@
             [css-gardener.core.config :as config]
             [css-gardener.core.logging :as logging]))
 
-(def ^:private commands #{:watch :release})
+(def ^:private commands #{:watch :compile :release})
 
 (s/def ::command commands)
 

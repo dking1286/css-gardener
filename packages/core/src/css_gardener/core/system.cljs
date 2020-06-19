@@ -85,6 +85,9 @@
    ::output/output-channel
    {}
 
+   ::output/write-output
+   {:logger (ig/ref ::logging/logger)}
+
    ::output/consumer
    {:logger (ig/ref ::logging/logger)
     :output-channel (ig/ref ::output/output-channel)}})

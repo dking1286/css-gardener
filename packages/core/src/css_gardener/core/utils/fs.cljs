@@ -4,7 +4,8 @@
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
             [fs]
-            [integrant.core :as ig]))
+            [integrant.core :as ig]
+            [path]))
 
 (defn exists?
   "Determine if a file exists, and that the process has read permission."
@@ -19,11 +20,23 @@
    fs/readFile filename "utf8" (fn [err contents]
                                  (or err contents))))
 
+(defn make-parents
+  "Creates parent directories of the filename if they do not exist."
+  [filename]
+  (let [dirname (path/dirname filename)]
+    (->> (exists? dirname)
+         (a/flat-map (fn [exists]
+                       (if exists
+                         (go :done)
+                         (a/node-callback->channel
+                          fs/mkdir dirname #js {:recursive true}
+                          (fn [err] (or err :done)))))))))
+
 (defn write-file
   "Writes text to a file."
   [filename data]
   (a/node-callback->channel
-   fs/writeFile filename data (fn [err] err)))
+   fs/writeFile filename data (fn [err] (or err :done))))
 
 (defmethod ig/init-key ::exists?
   [_ {:keys [return-value files]}]
