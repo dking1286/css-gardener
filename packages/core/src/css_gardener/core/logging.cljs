@@ -4,6 +4,21 @@
             [integrant.core :as ig])
   (:import [goog.log Level Logger]))
 
+(defn trace
+  "Logs and then returns a value.
+   
+   If goog.DEBUG is false (e.g. in a release build), the logging statements
+   will be stripped by the compiler.
+   
+   This is intended to be used as a debugging utility in ->> pipelines."
+  ([thing] (trace "" thing))
+  ([prefix thing]
+   (when (identical? js/goog.DEBUG true)
+     (if (seq prefix)
+       (println (str prefix " " (print-str thing)))
+       (println thing)))
+   thing))
+
 (def ^:private root-logger-name "css-gardener.core.logging")
 
 (defn- logger-name

@@ -3,6 +3,7 @@
   (:require [clojure.core.async
              :refer [go go-loop chan put! close! pipe alts! timeout merge
                      <! >!]]
+            [css-gardener.core.logging :as logging]
             [css-gardener.core.utils.errors :as errors]))
 
 (defn callback->channel
@@ -103,12 +104,7 @@
    Useful for debugging chains of async operations."
   ([ch] (trace nil ch))
   ([prefix ch]
-   (transform (cljs.core/map (fn [x]
-                               (if prefix
-                                 (println (str prefix " " x))
-                                 (println x))
-                               x))
-              ch)))
+   (transform (cljs.core/map #(logging/trace prefix %)) ch)))
 
 (defn take-all
   "Repeatedly takes from the input channel until it closes, then yields a

@@ -174,8 +174,10 @@
         add-deps
         (partial add-deps-for-path deps read-file graph config)]
     (->> (get-entries config build-id)
+         (logging/trace "[dependency graph entries]")
          (map ns-name->absolute-path)
          (a/await-all 5000)
+         (a/trace "[dependency graph entry paths]")
          (a/flat-map #(->> %
                            (map add-deps)
                            (a/await-all 5000)))

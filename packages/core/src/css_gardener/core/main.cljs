@@ -89,12 +89,6 @@
           :release (release config build-id log-level)
           (throw (js/Error. (str "Invalid command " command))))))))
 
-(comment
-  (js/process.chdir "../css-example")
-  (js/process.cwd)
-  (main "watch" "app" "--log-level" "debug")
-  js/goog.DEBUG)
-
 (defn entry
   "Entry point for the css-gardener process."
   []

@@ -1,7 +1,8 @@
 {:source-paths ["src"]
 
  :builds
- {:app {:modules {:main {:entries [css-gardener.css-example.main]}}}}
+ {:app {:output-dir "public/css"
+        :modules {:main {:entries [css-gardener.css-example.main]}}}}
 
  :rules
  {".css" {:transformers []}}}
