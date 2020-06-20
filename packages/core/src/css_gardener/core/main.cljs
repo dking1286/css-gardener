@@ -74,7 +74,12 @@
                        (assoc-in [::changes/watcher :source-paths]
                                  (:source-paths config))
                        (assoc-in [::logging/logger :level] log-level))
-        system (ig/init sys-config)
+        system (try
+                 (ig/init sys-config)
+                 (catch js/Error err
+                   (println "An error occurred while starting the system: ")
+                   (println err)
+                   (throw err)))
         {logger ::logging/logger
          deps-graph ::dependency/deps-graph
          compile-all ::transformation/compile-all
@@ -86,12 +91,10 @@
                      (a/flat-map #(->> %
                                        (map write-output)
                                        (a/await-all 5000)))))]
-        (if (errors/error? output-or-error)
-          (do
-            (logging/error logger "An error occurred")
-            (logging/error logger output-or-error)
-            (js/process.exit 1))
-          (js/process.exit 0))))))
+        (when (errors/error? output-or-error)
+          (logging/error logger "An error occurred")
+          (logging/error logger output-or-error)
+          output-or-error)))))
 
 (defn- release
   "TODO: Implement me"
@@ -116,7 +119,9 @@
                        validate-config)]
         (case command
           :watch (watch config build-id log-level)
-          :compile (compile config build-id log-level)
+          :compile (go
+                     (let [error (<! (compile config build-id log-level))]
+                       (js/process.exit (if error 1 0))))
           :release (release config build-id log-level)
           (throw (js/Error. (str "Invalid command " command))))))))
 
