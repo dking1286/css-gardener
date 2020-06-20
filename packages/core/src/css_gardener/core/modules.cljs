@@ -1,7 +1,8 @@
 (ns css-gardener.core.modules
   (:require [clojure.spec.alpha :as s]
             [css-gardener.core.utils.errors :as errors]
-            [integrant.core :as ig]))
+            [integrant.core :as ig]
+            [path]))
 
 (s/def ::node-module string?)
 (s/def ::module (s/or :node (s/keys :req-un [::node-module])))
@@ -19,6 +20,24 @@
   [module]
   (dissoc module :options))
 
+(defmulti load-module
+  "Loads a module from a ::module data structure."
+  (fn [module-type _] module-type))
+
+(defmethod load-module :node
+  [_ module]
+  ;; Calling require with the module path would look for the module in the
+  ;; dependencies of @css-gardener/core. Instead, we want to search for the
+  ;; module in the node_modules of the project that is *using*
+  ;; @css-gardener/core. Therefore, construct the path relative to the
+  ;; current working directory.
+  (js/require (path/resolve "node_modules" (:node-module module))))
+
+(defmethod load-module :default
+  [_ module]
+  (throw (errors/invalid-config (str "Unsupported module format: "
+                                     module))))
+
 (defmethod ig/init-key ::load
   [_ {:keys [modules]}]
   (fn [module]
@@ -28,7 +47,7 @@
         (if (= ::s/invalid conformed)
           (throw (errors/invalid-config (str "Invalid module "
                                              module
-                                             " found in config")))
+                                             " found in config. "
+                                             (s/explain-data ::module module))))
           (let [[module-type module] conformed]
-            (case module-type
-              :node (js/require (:node-module module)))))))))
+            (load-module module-type module)))))))
