@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@css-gardener/core": "file:../core",
+    "@css-gardener/scope-transformer": "file:../scope-transformer",
     "react": "16.13.0",
     "react-dom": "16.13.0"
   },

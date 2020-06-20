@@ -1,3 +1,5 @@
+/* {:css-gardener/scope "todo-item"} */
+
 .todo-item {
   color: red;
 }

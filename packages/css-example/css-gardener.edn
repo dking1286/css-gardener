@@ -5,4 +5,4 @@
         :modules {:main {:entries [css-gardener.css-example.main]}}}}
 
  :rules
- {".css" {:transformers []}}}
+ {".css" {:transformers [{:node-module "@css-gardener/scope-transformer"}]}}}
