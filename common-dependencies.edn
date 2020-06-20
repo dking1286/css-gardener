@@ -15,6 +15,7 @@
  :npm {;; @css-gardener/core should only be depended on locally by example
        ;; packages
        "@css-gardener/core" "file:../core"
+       "@css-gardener/scope-transformer" "file:../scope-transformer"
        "chokidar" "3.4.0"
        "fs-extra" "9.0.1"
        "react" "16.13.0"
