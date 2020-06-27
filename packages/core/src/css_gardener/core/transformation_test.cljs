@@ -4,6 +4,7 @@
             [clojure.string :as string]
             [clojure.test :refer [deftest is use-fixtures]]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.caching :as caching]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
@@ -237,4 +238,23 @@
         (let [compile-all (::transformation/compile-all system)]
           (is (= [{:absolute-path (str cwd "/public/css/main.css")
                    :content "Transformed by sass-transformer: Bar styles\n\nTransformed by sass-transformer: Baz styles"}]
-                 (<! (compile-all :app dependency-graph)))))))))
+                 (<! (compile-all :app dependency-graph))))))))
+  (testing "sets the transformed value in the cache if it doesn't already exist"
+    (let [sys-config
+          (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-sass-transformer
+                         {:node-module "@css-gardener/scope-transformer"}
+                         fake-scope-transformer))]
+      (with-system [system sys-config]
+        (let [cache (::caching/compilation-cache system)
+              compile-all (::transformation/compile-all system)
+              src-file-path (src-file "foo/bar.scss")]
+          (is (not (caching/found? (<! (caching/get cache src-file-path)))))
+          (<! (compile-all :app dependency-graph))
+          (is (= {:absolute-path src-file-path
+                  :content "Transformed by sass-transformer: Bar styles"}
+                 (-> (caching/get cache src-file-path)
+                     <!
+                     (select-keys [:absolute-path :content])))))))))

@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.caching :as caching]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
@@ -110,7 +111,7 @@
   [_ {:keys [config transformers]}]
   (partial transform config transformers))
 
-;; :compile-all ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; :compile-all ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO: Upgrade the compile-all function to support code-splitting. Right now,
 ;; we're just combining everything into a single output file.
@@ -156,9 +157,10 @@
        (filter #(root-style-file? config dependency-graph %))))
 
 (defn- compile-file
-  [read-file transform absolute-path]
-  (->> (file/from-path read-file absolute-path)
-       (a/flat-map transform)))
+  [compilation-cache read-file transform absolute-path]
+  (caching/with-cache compilation-cache absolute-path
+    (->> (file/from-path read-file absolute-path)
+         (a/flat-map transform))))
 
 (defn- create-output-files
   [config build-id output-dir transformed-files]
@@ -174,15 +176,15 @@
   "Compiles all of the style files in the dependency graph into a collection
    of output files to be written."
   [;; Injected dependencies
-   config read-file transform
+   config compilation-cache read-file transform
    ;; Arguments
    build-id dependency-graph]
   (let [output-dir (get-in config [:builds build-id :output-dir])]
     (->> (get-root-styles config dependency-graph)
-         (map #(compile-file read-file transform %))
+         (map #(compile-file compilation-cache read-file transform %))
          (a/await-all 10000)
          (a/map #(create-output-files config build-id output-dir %)))))
 
 (defmethod ig/init-key ::compile-all
-  [_ {:keys [config read-file transform]}]
-  (partial compile-all config read-file transform))
+  [_ {:keys [config compilation-cache read-file transform]}]
+  (partial compile-all config compilation-cache read-file transform))

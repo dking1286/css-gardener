@@ -1,5 +1,6 @@
 (ns css-gardener.core.system
-  (:require [css-gardener.core.change-detection :as changes]
+  (:require [css-gardener.core.caching :as caching]
+            [css-gardener.core.change-detection :as changes]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
@@ -55,6 +56,9 @@
     :read-file (ig/ref ::fs/read-file)
     :deps (ig/ref ::dependency/deps)}
 
+   ::caching/compilation-cache
+   {}
+
    ::transformation/transformers
    {:config (ig/ref ::config/config)
     :logger (ig/ref ::logging/logger)
@@ -66,6 +70,7 @@
 
    ::transformation/compile-all
    {:config (ig/ref ::config/config)
+    :compilation-cache (ig/ref ::caching/compilation-cache)
     :read-file (ig/ref ::fs/read-file)
     :transform (ig/ref ::transformation/transform)}
 
