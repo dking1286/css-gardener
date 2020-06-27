@@ -1,15 +1,21 @@
 (ns css-gardener.core.caching
-  (:refer-clojure :exclude [get set])
+  (:refer-clojure :exclude [get remove set])
   (:require-macros [css-gardener.core.caching])
   (:require [clojure.core.async :refer [go]]
             [css-gardener.core.utils.async :as a]
             [integrant.core :as ig]))
 
 (defprotocol ICache
-  (get [this key])
-  (set [this key value]))
+  "Protocol representing a key-value cache."
+  (get [this key]
+    "Gets the value associated with `key`.")
+  (set [this key value]
+    "Sets the value of `key` to `value`.")
+  (remove [this key]
+    "Removes `key` from the cache."))
 
-(defrecord InMemoryCache
+(defrecord ^{:doc "In memory implementation of a key-value cache."}
+  InMemoryCache
   [cache-atom]
   ICache
   (get [_ key]
@@ -17,7 +23,10 @@
             ::not-found)))
   (set [_ key value]
     (swap! cache-atom assoc key value)
-    (go [key value])))
+    (go [key value]))
+  (remove [_ key]
+    (swap! cache-atom dissoc key)
+    (go ::done)))
 
 (defn new-in-memory-cache
   "Creates a new InMemoryCache instance."

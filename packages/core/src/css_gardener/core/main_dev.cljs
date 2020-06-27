@@ -7,6 +7,8 @@
             [clojure.pprint :refer [pprint]]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer [run-tests run-all-tests]]
+            [css-gardener.core.actions :as actions]
+            [css-gardener.core.actions-test :as actions-test]
             [css-gardener.core.arguments-test :as arguments-test]
             [css-gardener.core.caching :as caching]
             [css-gardener.core.caching-test :as caching-test]
@@ -73,7 +75,7 @@
 (defn ^:dev/after-load after-load
   "Lifecycle function that is called after new code is loaded in development."
   []
-  (run-tests 'css-gardener.core.caching-test))
+  (run-tests 'css-gardener.core.actions-test))
 
 (defn main
   "Entry point for the css-gardener process in development."
