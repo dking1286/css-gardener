@@ -9,6 +9,7 @@
             [clojure.test :refer [run-tests run-all-tests]]
             [css-gardener.core.arguments-test :as arguments-test]
             [css-gardener.core.change-detection :as changes]
+            [css-gardener.core.change-detection-test :as change-detection-test]
             [css-gardener.core.cljs-parsing-test :as cljs-parsing-test]
             [css-gardener.core.config :as config]
             [css-gardener.core.config-test :as config-test]
@@ -70,7 +71,7 @@
 (defn ^:dev/after-load after-load
   "Lifecycle function that is called after new code is loaded in development."
   []
-  (println "done!"))
+  (run-tests 'css-gardener.core.change-detection-test))
 
 (defn main
   "Entry point for the css-gardener process in development."

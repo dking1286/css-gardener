@@ -1,7 +1,14 @@
 (ns css-gardener.core.change-detection
   (:require [chokidar]
             [clojure.core.async :refer [chan close! go-loop <! put!]]
+            [clojure.spec.alpha :as s]
+            [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.actions :as actions]
+            [css-gardener.core.config :as config]
+            [css-gardener.core.dependency :as dependency]
+            [css-gardener.core.file :as file]
             [css-gardener.core.logging :as logging]
+            [css-gardener.core.transformation :as transformation]
             [integrant.core :as ig]))
 
 (defmethod ig/init-key ::input-channel
@@ -47,3 +54,48 @@
             (recur))
           (logging/debug logger
                          "Input channel closed, stopping change consumer"))))))
+
+(defn- in-dependency-graph?
+  [dependency-graph absolute-path]
+  (contains? (ctnd/nodes dependency-graph) absolute-path))
+
+(defn- deps-have-changed?
+  [dependency-graph absolute-path new-deps]
+  (not= (ctnd/immediate-dependencies dependency-graph absolute-path)
+        new-deps))
+
+(s/fdef get-actions
+  :args (s/cat :config ::config/config
+               :dependency-graph ::dependency/dependency-graph
+               :absolute-path ::file/absolute-path
+               :new-deps (s/coll-of ::file/absolute-path :kind set?)))
+
+(defn get-actions
+  "Gets the sequence of actions that should be applied as a result of a change
+   to one of the files in the project."
+  [config dependency-graph absolute-path new-deps]
+  (if (in-dependency-graph? dependency-graph absolute-path)
+    (if (transformation/style-file? config absolute-path)
+      (if (transformation/root-style-file? config
+                                           dependency-graph
+                                           absolute-path)
+        (if (deps-have-changed? dependency-graph absolute-path new-deps)
+          [(actions/update-dependency-graph absolute-path)
+           (actions/remove-from-cache absolute-path)
+           (actions/recompile)]
+          [(actions/remove-from-cache absolute-path)
+           (actions/recompile)])
+        (let [root-styles (transformation/get-root-style config
+                                                         dependency-graph
+                                                         absolute-path)]
+          (if (deps-have-changed? dependency-graph absolute-path new-deps)
+            (vec (concat [(actions/update-dependency-graph absolute-path)]
+                         (map actions/remove-from-cache root-styles)
+                         [(actions/recompile)]))
+            (vec (concat (map actions/remove-from-cache root-styles)
+                         [(actions/recompile)])))))
+      (if (deps-have-changed? dependency-graph absolute-path new-deps)
+        [(actions/update-dependency-graph absolute-path)
+         (actions/recompile)]
+        []))
+    []))

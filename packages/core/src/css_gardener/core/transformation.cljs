@@ -128,19 +128,26 @@
   (let [top-module-name (name (get-top-level-module config build-id))]
     (path/resolve "." output-dir (str  top-module-name ".css"))))
 
-(defn- style-file?
+(defn style-file?
   "Determines if a file is a style file."
   [config absolute-path]
   (and (not (cljs/cljs-file? absolute-path))
        (not (false? (:style? (config/matching-rule config absolute-path))))))
 
-(defn- root-style-file?
+(defn root-style-file?
   "Determines if a file is a style file that is not depended on by any other
    style files."
   [config dependency-graph absolute-path]
   (and (style-file? config absolute-path)
        (empty? (->> (ctnd/immediate-dependents dependency-graph absolute-path)
                     (filter #(style-file? config %))))))
+
+(defn get-root-style
+  "Gets the root style(s) associated with the passed-in absolute path"
+  [config dependency-graph absolute-path]
+  (->> (ctnd/transitive-dependents dependency-graph
+                                   absolute-path)
+       (filter #(root-style-file? config dependency-graph %))))
 
 (defn- get-root-styles
   "Gets a set of all root style files in the dependency graph."
