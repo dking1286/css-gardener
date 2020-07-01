@@ -1,35 +1,73 @@
 (ns css-gardener.core.actions
   (:refer-clojure :exclude [apply])
-  (:require [clojure.core.async :refer [go]]
+  (:require [clojure.core.async :refer [go go-loop <! put!]]
+            [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.arguments :as arguments]
             [css-gardener.core.caching :as caching]
+            [css-gardener.core.dependency :as dependency]
+            [css-gardener.core.logging :as logging]
+            [css-gardener.core.output :as output]
+            [css-gardener.core.transformation :as transformation]
             [css-gardener.core.utils.async :as a]))
 
-(defmulti apply
-  "Performs side-effects in response to an action."
-  (fn [_ action] (:type action)))
+(defprotocol IAction
+  (apply [this system]))
 
-(defn update-dependency-graph
-  "Action indicating that the dependency graph should be updated starting from
-   the passed in node."
-  [absolute-path]
-  {:type ::update-dependency-graph :absolute-path absolute-path})
+(defrecord CreateDependencyGraph []
+  IAction
+  (apply [_ {build-id ::arguments/build-id
+             deps-graph ::dependency/deps-graph
+             dependency-graph-cache ::caching/dependency-graph-cache}]
+    (->> (deps-graph build-id)
+         (a/map (fn [new-deps-graph]
+                  (reset! dependency-graph-cache new-deps-graph)
+                  ::done)))))
 
-(defn remove-from-cache
-  "Action indicating that the given file should be removed from the compilation
-   cache."
-  [absolute-path]
-  {:type ::remove-from-cache :absolute-path absolute-path})
+(defrecord UpdateDependencyGraph [absolute-path]
+  IAction
+  (apply [_ {build-id ::arguments/build-id
+             deps-graph ::dependency/deps-graph
+             dependency-graph-cache ::caching/dependency-graph-cache}]
+    (let [initial-graph (ctnd/remove-node @dependency-graph-cache absolute-path)]
+      (->> (deps-graph build-id
+                       :initial-graph initial-graph
+                       :entry-files [absolute-path])
+           (a/map (fn [new-deps-graph]
+                    (reset! dependency-graph-cache new-deps-graph)
+                    ::done))))))
 
-(defmethod apply ::remove-from-cache
-  [{:keys [compilation-cache]} {:keys [absolute-path]}]
-  (->> (caching/remove compilation-cache absolute-path)
-       (a/map (constantly ::done))))
+(defrecord RemoveFromCache [absolute-path]
+  IAction
+  (apply [_ {compilation-cache ::caching/compilation-cache}]
+    (->> (caching/remove compilation-cache absolute-path)
+         (a/map (constantly ::done)))))
 
-(defn recompile
-  "Action indicating that the outputs should be recompiled."
-  []
-  {:type ::recompile})
+(defrecord CompileOnce []
+  IAction
+  (apply [_ {build-id ::arguments/build-id
+             dependency-graph-cache ::caching/dependency-graph-cache
+             compile-all ::transformation/compile-all
+             logger ::logging/logger}]
+    (->> (compile-all build-id @dependency-graph-cache)
+         (a/flat-map #(go-loop [[outfile outfiles] %]
+                        (when outfile
+                          (<! (output/write-output logger outfile))
+                          (recur outfiles)))))))
 
-(defmethod apply :default
-  [_ {:keys [type]}]
-  (go (js/Error. (str "Unknown action type " type))))
+(defrecord Recompile []
+  IAction
+  (apply [_ {build-id ::arguments/build-id
+             dependency-graph-cache ::caching/dependency-graph-cache
+             compile-all ::transformation/compile-all
+             output-channel ::output/output-channel}]
+    (->> (compile-all build-id @dependency-graph-cache)
+         (a/then #(doseq [outfile %]
+                    (put! output-channel outfile))))))
+
+(defn apply-all
+  [{logger ::logging/logger :as sys} actions]
+  (go-loop [[action & remaining] actions]
+    (when action
+      (logging/debug logger (str "Applying action " (pr-str action)))
+      (<! (apply action sys))
+      (recur remaining))))

@@ -80,22 +80,22 @@
                                            dependency-graph
                                            absolute-path)
         (if (deps-have-changed? dependency-graph absolute-path new-deps)
-          [(actions/update-dependency-graph absolute-path)
-           (actions/remove-from-cache absolute-path)
-           (actions/recompile)]
-          [(actions/remove-from-cache absolute-path)
-           (actions/recompile)])
+          [(actions/->UpdateDependencyGraph absolute-path)
+           (actions/->RemoveFromCache absolute-path)
+           (actions/->Recompile)]
+          [(actions/->RemoveFromCache absolute-path)
+           (actions/->Recompile)])
         (let [root-styles (transformation/get-root-style config
                                                          dependency-graph
                                                          absolute-path)]
           (if (deps-have-changed? dependency-graph absolute-path new-deps)
-            (vec (concat [(actions/update-dependency-graph absolute-path)]
-                         (map actions/remove-from-cache root-styles)
-                         [(actions/recompile)]))
-            (vec (concat (map actions/remove-from-cache root-styles)
-                         [(actions/recompile)])))))
+            (vec (concat [(actions/->UpdateDependencyGraph absolute-path)]
+                         (map actions/->RemoveFromCache root-styles)
+                         [(actions/->Recompile)]))
+            (vec (concat (map actions/->RemoveFromCache root-styles)
+                         [(actions/->Recompile)])))))
       (if (deps-have-changed? dependency-graph absolute-path new-deps)
-        [(actions/update-dependency-graph absolute-path)
-         (actions/recompile)]
+        [(actions/->UpdateDependencyGraph absolute-path)
+         (actions/->Recompile)]
         []))
     []))

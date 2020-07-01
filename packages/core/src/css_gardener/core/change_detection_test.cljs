@@ -57,9 +57,8 @@
           absolute-path "/foo/foo.cljs"
           new-deps #{"/foo/bar.scss"
                      "/foo/bang.scss"}]
-      (is (= [{:type ::actions/update-dependency-graph
-               :absolute-path absolute-path}
-              {:type ::actions/recompile}]
+      (is (= [(actions/->UpdateDependencyGraph absolute-path)
+              (actions/->Recompile)]
              (changes/get-actions config
                                   dependency-graph
                                   absolute-path
@@ -71,9 +70,8 @@
                                (ctnd/depend "/foo/bar.scss" "/foo/bang.scss"))
           absolute-path "/foo/bar.scss"
           new-deps #{"/foo/bang.scss"}]
-      (is (= [{:type ::actions/remove-from-cache
-               :absolute-path absolute-path}
-              {:type ::actions/recompile}]
+      (is (= [(actions/->RemoveFromCache absolute-path)
+              (actions/->Recompile)]
              (changes/get-actions config
                                   dependency-graph
                                   absolute-path
@@ -88,11 +86,9 @@
                                (ctnd/depend "/foo/baz.scss" "/foo/bang.scss"))
           absolute-path "/foo/bang.scss"
           new-deps #{}]
-      (is (= [{:type ::actions/remove-from-cache
-               :absolute-path "/foo/bar.scss"}
-              {:type ::actions/remove-from-cache
-               :absolute-path "/foo/baz.scss"}
-              {:type ::actions/recompile}]
+      (is (= [(actions/->RemoveFromCache "/foo/bar.scss")
+              (actions/->RemoveFromCache "/foo/baz.scss")
+              (actions/->Recompile)]
              (changes/get-actions config
                                   dependency-graph
                                   absolute-path
@@ -104,11 +100,9 @@
                                (ctnd/depend "/foo/bar.scss" "/foo/bang.scss"))
           absolute-path "/foo/bar.scss"
           new-deps #{"/foo/bang.scss" "/foo/baz.scss"}]
-      (is (= [{:type ::actions/update-dependency-graph
-               :absolute-path "/foo/bar.scss"}
-              {:type ::actions/remove-from-cache
-               :absolute-path "/foo/bar.scss"}
-              {:type ::actions/recompile}]
+      (is (= [(actions/->UpdateDependencyGraph "/foo/bar.scss")
+              (actions/->RemoveFromCache "/foo/bar.scss")
+              (actions/->Recompile)]
              (changes/get-actions config
                                   dependency-graph
                                   absolute-path
@@ -122,13 +116,10 @@
                                (ctnd/depend "/foo/baz.scss" "/foo/bang.scss"))
           absolute-path "/foo/bang.scss"
           new-deps #{"/foo/bears.scss"}]
-      (is (= [{:type ::actions/update-dependency-graph
-               :absolute-path "/foo/bang.scss"}
-              {:type ::actions/remove-from-cache
-               :absolute-path "/foo/bar.scss"}
-              {:type ::actions/remove-from-cache
-               :absolute-path "/foo/baz.scss"}
-              {:type ::actions/recompile}]
+      (is (= [(actions/->UpdateDependencyGraph "/foo/bang.scss")
+              (actions/->RemoveFromCache "/foo/bar.scss")
+              (actions/->RemoveFromCache "/foo/baz.scss")
+              (actions/->Recompile)]
              (changes/get-actions config
                                   dependency-graph
                                   absolute-path

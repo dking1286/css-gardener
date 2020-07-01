@@ -11,14 +11,12 @@
     (testing "Does nothing if the path does not exist in the cache"
       (let [initial {"/foo/baz.cljs" {}}
             cache (caching/new-in-memory-cache initial)]
-        (<! (actions/apply {:compilation-cache cache}
-                           {:type ::actions/remove-from-cache
-                            :absolute-path "/foo/bar.cljs"}))
+        (<! (actions/apply (actions/->RemoveFromCache "/foo/bar.cljs")
+                           {::caching/compilation-cache cache}))
         (is (= initial @(:cache-atom cache)))))
     (testing "Removes the path from the cache if it exists"
       (let [initial {"/foo/baz.cljs" {}}
             cache (caching/new-in-memory-cache initial)]
-        (<! (actions/apply {:compilation-cache cache}
-                           {:type ::actions/remove-from-cache
-                            :absolute-path "/foo/baz.cljs"}))
+        (<! (actions/apply (actions/->RemoveFromCache "/foo/baz.cljs")
+                           {::caching/compilation-cache cache}))
         (is (= {} @(:cache-atom cache)))))))
