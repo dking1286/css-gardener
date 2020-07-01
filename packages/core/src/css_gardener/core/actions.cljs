@@ -1,6 +1,6 @@
 (ns css-gardener.core.actions
   (:refer-clojure :exclude [apply])
-  (:require [clojure.core.async :refer [go go-loop <! put!]]
+  (:require [clojure.core.async :refer [go-loop <! put!]]
             [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.arguments :as arguments]
             [css-gardener.core.caching :as caching]
