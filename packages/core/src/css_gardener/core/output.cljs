@@ -16,12 +16,9 @@
   [_ output-channel]
   (close! output-channel))
 
-(defn- write-output
+(defn write-output
   "Writes an output file. Logs a warning and skips the file if it is not valid."
-  [;; Injected dependencies
-   logger
-   ;; Arguments
-   file]
+  [logger file]
   (if (= :s/invalid (s/conform ::file/file file))
     (let [message (str "Received invalid output file: "
                        (s/explain-data ::file/file file))]
@@ -36,10 +33,6 @@
                       (logging/info logger
                                     (str "Wrote output file " absolute-path)))
                     result))))))
-
-(defmethod ig/init-key ::write-output
-  [_ {:keys [logger]}]
-  (partial write-output logger))
 
 (defmethod ig/init-key ::consumer
   [_ {:keys [logger output-channel]}]
