@@ -163,21 +163,24 @@
   [;; Injected dependencies
    config logger exists? read-file deps
    ;; Arguments
-   build-id]
+   build-id & {:keys [initial-graph
+                      entry-files]
+               :or {initial-graph (dependency/graph)}}]
   (logging/info logger "Building dependency graph")
   (let [graph
-        (atom (dependency/graph))
+        (atom initial-graph)
 
         ns-name->absolute-path
         (partial cljs/ns-name->absolute-path exists? (:source-paths config))
 
         add-deps
-        (partial add-deps-for-path deps read-file graph config)]
-    (->> (get-entries config build-id)
-         (logging/trace "[dependency graph entries]")
-         (map ns-name->absolute-path)
-         (a/await-all 5000)
-         (a/trace "[dependency graph entry paths]")
+        (partial add-deps-for-path deps read-file graph config)
+
+        entries (or (and entry-files (go entry-files))
+                    (->> (get-entries config build-id)
+                         (map ns-name->absolute-path)
+                         (a/await-all 5000)))]
+    (->> entries
          (a/flat-map #(->> %
                            (map add-deps)
                            (a/await-all 5000)))
