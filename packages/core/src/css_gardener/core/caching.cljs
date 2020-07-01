@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [get remove set])
   (:require-macros [css-gardener.core.caching])
   (:require [clojure.core.async :refer [go]]
+            [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.utils.async :as a]
             [integrant.core :as ig]))
 
@@ -60,3 +61,7 @@
       :or
       {initial-state {}}}]
   (new-in-memory-cache initial-state))
+
+(defmethod ig/init-key ::dependency-graph-cache
+  [_ _]
+  (atom (ctnd/graph)))
