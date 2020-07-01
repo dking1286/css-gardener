@@ -2,15 +2,13 @@
   (:require [clojure.core.async :refer [go <!]]
             [clojure.edn :as edn]
             [clojure.spec.alpha :as s]
+            [css-gardener.core.actions :as actions]
             [css-gardener.core.arguments :as arguments]
             [css-gardener.core.change-detection :as changes]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
             [css-gardener.core.logging :as logging]
-            [css-gardener.core.output :as output]
             [css-gardener.core.system :as system]
-            [css-gardener.core.transformation :as transformation]
-            [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
             [fs]
             [integrant.core :as ig]))
@@ -69,32 +67,25 @@
 (defn- compile
   "Compiles the output stylesheet once, without applying optimizations."
   [config build-id log-level]
-  (let [sys-config (-> system/config
-                       (assoc ::config/config config)
-                       (assoc-in [::changes/watcher :source-paths]
-                                 (:source-paths config))
-                       (assoc-in [::logging/logger :level] log-level))
-        system (try
-                 (ig/init sys-config)
-                 (catch js/Error err
-                   (println "An error occurred while starting the system: ")
-                   (println err)
-                   (throw err)))
-        {logger ::logging/logger
-         deps-graph ::dependency/deps-graph
-         compile-all ::transformation/compile-all
-         write-output ::output/write-output} system]
-    (go
-      (let [output-or-error
-            (<! (->> (deps-graph build-id)
-                     (a/flat-map #(compile-all build-id %))
-                     (a/flat-map #(->> %
-                                       (map write-output)
-                                       (a/await-all 5000)))))]
-        (when (errors/error? output-or-error)
-          (logging/error logger "An error occurred")
-          (logging/error logger output-or-error)
-          output-or-error)))))
+  (let [sys-config
+        (-> system/config
+            (assoc ::config/config config)
+            (assoc ::arguments/command :compile)
+            (assoc-in [::arguments/build-id :id] build-id)
+            (assoc-in [::logging/logger :level] log-level))
+
+        system
+        (try
+          (ig/init sys-config)
+          (catch js/Error err
+            (println "An error occurred while starting the system: ")
+            (println err)
+            (throw err)))
+
+        actions
+        [(actions/->CreateDependencyGraph)
+         (actions/->CompileOnce)]]
+    (actions/apply-all system actions)))
 
 (defn- release
   "TODO: Implement me"
