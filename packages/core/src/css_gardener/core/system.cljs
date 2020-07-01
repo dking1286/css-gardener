@@ -1,5 +1,6 @@
 (ns css-gardener.core.system
-  (:require [css-gardener.core.caching :as caching]
+  (:require [css-gardener.core.arguments :as arguments]
+            [css-gardener.core.caching :as caching]
             [css-gardener.core.change-detection :as changes]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
@@ -17,6 +18,10 @@
    {:source-paths []
     :builds {}
     :rules {}}
+
+   ::arguments/command :compile
+
+   ::arguments/build-id {:config (ig/ref ::config/config)}
 
    ::logging/logger
    {:level :info
@@ -59,6 +64,9 @@
    ::caching/compilation-cache
    {}
 
+   ::caching/dependency-graph-cache
+   {}
+
    ::transformation/transformers
    {:config (ig/ref ::config/config)
     :logger (ig/ref ::logging/logger)
@@ -89,9 +97,6 @@
 
    ::output/output-channel
    {}
-
-   ::output/write-output
-   {:logger (ig/ref ::logging/logger)}
 
    ::output/consumer
    {:logger (ig/ref ::logging/logger)
