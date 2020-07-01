@@ -4,7 +4,9 @@
             [clojure.string :as string]
             [clojure.tools.cli :refer [parse-opts]]
             [css-gardener.core.config :as config]
-            [css-gardener.core.logging :as logging]))
+            [css-gardener.core.logging :as logging]
+            [css-gardener.core.utils.errors :as errors]
+            [integrant.core :as ig]))
 
 (def ^:private commands #{:watch :compile :release})
 
@@ -56,3 +58,17 @@
   (-> (parse-opts args cli-options)
       (update :arguments #(map keyword %))
       validate-arguments))
+
+(defmethod ig/init-key ::command
+  [_ command]
+  (when-not (s/valid? ::command command)
+    (throw (errors/invalid-argument (str "Command "
+                                         command
+                                         " not recognized"))))
+  command)
+
+(defmethod ig/init-key ::build-id
+  [_ {:keys [id config]}]
+  (when (and id (not (contains? (:builds config) id)))
+    (throw (errors/invalid-config (str "Build id " id " not found in config"))))
+  (or id (first (keys (:builds config)))))
