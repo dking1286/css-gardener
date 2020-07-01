@@ -1,34 +1,35 @@
 (ns css-gardener.core.main
-  (:require [clojure.core.async :refer [go <!]]
+  (:require [clojure.core.async :refer [go go-loop <!]]
             [clojure.edn :as edn]
             [clojure.spec.alpha :as s]
             [css-gardener.core.actions :as actions]
             [css-gardener.core.arguments :as arguments]
+            [css-gardener.core.caching :as caching]
             [css-gardener.core.change-detection :as changes]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
+            [css-gardener.core.file :as file]
             [css-gardener.core.logging :as logging]
+            [css-gardener.core.output :as output]
             [css-gardener.core.system :as system]
             [css-gardener.core.utils.errors :as errors]
+            [css-gardener.core.utils.fs :as fs-utils]
             [fs]
-            [integrant.core :as ig]))
-
-(defn- read-file-sync
-  [path]
-  (fs/readFileSync path "utf8"))
+            [integrant.core :as ig]
+            [path]))
 
 (defn- get-config
   [options]
   (or (:config options)
       (-> (:config-file options)
-          read-file-sync
+          (fs/readFileSync "utf8")
           edn/read-string)))
 
 (defn- normalize-config
   [config]
   (if (:infer-source-paths-and-builds config)
     (let [other-config (-> (:infer-source-paths-and-builds config)
-                           read-file-sync
+                           (fs/readFileSync "utf8")
                            edn/read-string)]
       ;; TODO: Make this support config types other than shadow-cljs
       (assoc config
@@ -44,25 +45,60 @@
                  (s/explain-data ::config/config config)))))
   config)
 
+(defn- start-system
+  [sys-config]
+  (try
+    (ig/init sys-config)
+    (catch js/Error err
+      (println "An error occurred while starting the system: ")
+      (println err)
+      (throw err))))
+
 (defn- watch
   [config build-id log-level]
-  (let [source-paths (:source-paths config)
-        sys-config (-> system/config
-                       (assoc-in [::changes/watcher :source-paths] source-paths)
-                       (assoc-in [::logging/logger :level] log-level))
-        system (ig/init sys-config)
-        logger (::logging/logger system)
-        deps-graph (::dependency/deps-graph system)
-        consume-changes (::changes/consumer system)]
-    (go
-      (let [graph-or-error (<! (deps-graph config build-id))]
-        (if (errors/error? graph-or-error)
+  (let [sys-config
+        (-> system/config
+            (assoc ::config/config config)
+            (assoc ::arguments/command :watch)
+            (assoc-in [::arguments/build-id :id] build-id)
+            (assoc-in [::logging/logger :level] log-level)
+            (assoc-in [::changes/watcher :watch?] true))
+
+        {logger ::logging/logger
+         input-channel ::changes/input-channel
+         output-channel ::output/output-channel
+         dependency-graph-cache ::caching/dependency-graph-cache
+         deps ::dependency/deps
+         read-file ::fs-utils/read-file
+         :as system}
+        (start-system sys-config)]
+    (actions/apply-all system [(actions/->CreateDependencyGraph)
+                               (actions/->CompileOnce)])
+    (logging/debug logger "Starting change consumer")
+    (go-loop []
+      (let [value (<! input-channel)]
+        (if (nil? value)
+          (logging/debug logger "Input channel closed, stopping consumer.")
           (do
-            (logging/error logger (errors/message graph-or-error))
-            (logging/error logger (errors/stack graph-or-error)))
+            (logging/info logger (str "Detected changes: " value))
+            ;; TODO: Make changes to handle adding and removing files
+            (let [absolute-path (path/resolve (:path value))
+                  file (<! (file/from-path read-file absolute-path))
+                  new-deps (<! (deps file))
+                  actions (changes/get-actions config
+                                               @dependency-graph-cache
+                                               absolute-path
+                                               new-deps)]
+              (<! (actions/apply-all system actions))
+              (recur))))))
+    (logging/debug logger "Starting output consumer")
+    (go-loop []
+      (let [value (<! output-channel)]
+        (if (nil? value)
+          (logging/debug logger "Output channel closed, stopping consumer.")
           (do
-            (println graph-or-error)
-            (consume-changes)))))))
+            (<! (output/write-output logger value))
+            (recur)))))))
 
 (defn- compile
   "Compiles the output stylesheet once, without applying optimizations."
@@ -75,17 +111,9 @@
             (assoc-in [::logging/logger :level] log-level))
 
         system
-        (try
-          (ig/init sys-config)
-          (catch js/Error err
-            (println "An error occurred while starting the system: ")
-            (println err)
-            (throw err)))
-
-        actions
-        [(actions/->CreateDependencyGraph)
-         (actions/->CompileOnce)]]
-    (actions/apply-all system actions)))
+        (start-system sys-config)]
+    (actions/apply-all system [(actions/->CreateDependencyGraph)
+                               (actions/->CompileOnce)])))
 
 (defn- release
   "TODO: Implement me"

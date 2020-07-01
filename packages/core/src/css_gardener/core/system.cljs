@@ -91,13 +91,5 @@
     :config (ig/ref ::config/config)
     :input-channel (ig/ref ::changes/input-channel)}
 
-   ::changes/consumer
-   {:logger (ig/ref ::logging/logger)
-    :input-channel (ig/ref ::changes/input-channel)}
-
    ::output/output-channel
-   {}
-
-   ::output/consumer
-   {:logger (ig/ref ::logging/logger)
-    :output-channel (ig/ref ::output/output-channel)}})
+   {}})

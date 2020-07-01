@@ -1,5 +1,5 @@
 (ns css-gardener.core.output
-  (:require [clojure.core.async :refer [chan close! go go-loop <!]]
+  (:require [clojure.core.async :refer [chan close! go]]
             [clojure.spec.alpha :as s]
             [css-gardener.core.file :as file]
             [css-gardener.core.logging :as logging]
@@ -33,15 +33,3 @@
                       (logging/info logger
                                     (str "Wrote output file " absolute-path)))
                     result))))))
-
-(defmethod ig/init-key ::consumer
-  [_ {:keys [logger output-channel]}]
-  (fn []
-    (logging/debug logger "Starting output consumer")
-    (go-loop []
-      (let [value (<! output-channel)]
-        (if (nil? value)
-          (logging/debug logger "Output channel closed, stopping consumer.")
-          (do
-            (<! (write-output logger value))
-            (recur)))))))

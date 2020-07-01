@@ -1,6 +1,6 @@
 (ns css-gardener.core.change-detection
   (:require [chokidar]
-            [clojure.core.async :refer [chan close! go-loop <! put!]]
+            [clojure.core.async :refer [chan close! put!]]
             [clojure.spec.alpha :as s]
             [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.actions :as actions]
@@ -41,19 +41,6 @@
   (when watcher
     (logging/debug logger "Stopping file watcher")
     (.close watcher)))
-
-(defmethod ig/init-key ::consumer
-  [_ {:keys [logger input-channel]}]
-  (fn []
-    (logging/debug logger "Starting change consumer")
-    (go-loop []
-      (let [value (<! input-channel)]
-        (if value
-          (do
-            (logging/debug logger (str "Detected changes: " value))
-            (recur))
-          (logging/debug logger
-                         "Input channel closed, stopping change consumer"))))))
 
 (defn- in-dependency-graph?
   [dependency-graph absolute-path]
