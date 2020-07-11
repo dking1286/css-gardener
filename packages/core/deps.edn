@@ -1,6 +1,7 @@
 {:paths ["src"]
 
- :deps {clj-kondo {:mvn/version "2020.04.05"}
+ :deps {cider/cider-nrepl {:mvn/version "0.23.0"}
+        clj-kondo {:mvn/version "2020.04.05"}
         css-gardener/common {:local/root "../common"}
         integrant {:mvn/version "0.8.0"}
         org.clojure/tools.cli {:mvn/version "1.0.194"}
