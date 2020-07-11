@@ -1,0 +1,6 @@
+/* {:css-gardener/scope "todo-list"} */
+@use '../../colors.scss';
+
+.container {
+  border: 1px solid colors.$green;
+}

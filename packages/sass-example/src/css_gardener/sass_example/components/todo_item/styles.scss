@@ -1,0 +1,6 @@
+/* {:css-gardener/scope "todo-item"} */
+@use '../../colors.scss';
+
+.container {
+  color: colors.$red;
+}

@@ -1,0 +1,9 @@
+{:deps true
+
+ :builds {:app {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:entries [css-gardener.sass-example.main]
+                                 :init-fn css-gardener.sass-example.main/main}}
+                :devtools {:http-port 5432
+                           :http-root "public"}}}}

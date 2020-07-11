@@ -1,0 +1,10 @@
+{:source-paths ["src"]
+
+ :builds
+ {:app {:output-dir "public/css"
+        :modules {:main {:entries [css-gardener.sass-example.main]}}}}
+
+ :rules
+ {".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+           :transformers [{:node-module "@css-gardener/scope-transformer"}
+                          {:node-module "@css-gardener/sass-transformer"}]}}}

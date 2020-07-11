@@ -1,5 +1,5 @@
 {
-  "name": "@css-gardener/css-example",
+  "name": "@css-gardener/sass-example",
   "version": "0.0.2",
   "private": true,
   "description": "",
@@ -17,6 +17,8 @@
   "license": "EPL-2.0",
   "dependencies": {
     "@css-gardener/core": "file:../core",
+    "@css-gardener/sass-resolver": "file:../sass-resolver",
+    "@css-gardener/sass-transformer": "file:../sass-transformer",
     "@css-gardener/scope-transformer": "file:../scope-transformer",
     "react": "16.13.0",
     "react-dom": "16.13.0"
