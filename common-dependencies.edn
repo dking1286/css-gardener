@@ -1,4 +1,5 @@
-{:cljs {clj-kondo {:mvn/version "2020.04.05"}
+{:cljs {cider/cider-nrepl {:mvn/version "0.23.0"}
+        clj-kondo {:mvn/version "2020.04.05"}
         com.bhauman/figwheel-main {:mvn/version "0.2.8"}
         com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
                                    :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
