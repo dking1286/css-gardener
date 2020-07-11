@@ -1,7 +1,6 @@
 (ns css-gardener.core.actions
   (:refer-clojure :exclude [apply])
   (:require [clojure.core.async :refer [go-loop <! put!]]
-            [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.arguments :as arguments]
             [css-gardener.core.caching :as caching]
             [css-gardener.core.dependency :as dependency]
@@ -28,7 +27,8 @@
   (apply [_ {build-id ::arguments/build-id
              deps-graph ::dependency/deps-graph
              dependency-graph-cache ::caching/dependency-graph-cache}]
-    (let [initial-graph (ctnd/remove-node @dependency-graph-cache absolute-path)]
+    (let [initial-graph
+          (dependency/really-remove-node @dependency-graph-cache absolute-path)]
       (->> (deps-graph build-id
                        :initial-graph initial-graph
                        :entry-files [absolute-path])

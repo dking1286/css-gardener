@@ -1,7 +1,7 @@
 (ns css-gardener.core.dependency
   (:require [clojure.core.async :refer [go]]
             [clojure.spec.alpha :as s]
-            [clojure.tools.namespace.dependency :as dependency]
+            [clojure.tools.namespace.dependency :as ctnd]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
@@ -122,8 +122,8 @@
 
 ;; ::deps-graph ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def ::dependency-graph #(and (satisfies? dependency/DependencyGraph %)
-                                (satisfies? dependency/DependencyGraphUpdate %)))
+(s/def ::dependency-graph #(and (satisfies? ctnd/DependencyGraph %)
+                                (satisfies? ctnd/DependencyGraphUpdate %)))
 
 (defn get-entries
   "Gets all entry namespaces from a config map."
@@ -153,7 +153,7 @@
        (a/then
         (fn [dependencies]
           (doseq [dependency dependencies]
-            (swap! graph dependency/depend path dependency))
+            (swap! graph ctnd/depend path dependency))
           (->> dependencies
                (map #(add-deps-for-path deps read-file graph config %))
                (a/await-all 5000))))))
@@ -165,7 +165,7 @@
    ;; Arguments
    build-id & {:keys [initial-graph
                       entry-files]
-               :or {initial-graph (dependency/graph)}}]
+               :or {initial-graph (ctnd/graph)}}]
   (logging/info logger "Building dependency graph")
   (let [graph
         (atom initial-graph)
@@ -189,3 +189,28 @@
 (defmethod ig/init-key ::deps-graph
   [_ {:keys [config logger exists? read-file deps]}]
   (partial deps-graph config logger exists? read-file deps))
+
+(defn- remove-dependency
+  "Removes an outgoing dependency from 'node' to 'dependency'.
+   
+   If 'dependency' has no other dependents, all references to 'dependency' are
+   removed from the graph."
+  [graph node dependency]
+  (if (seq (->> (ctnd/immediate-dependents graph dependency)
+                (filter #(not= % node))))
+    (ctnd/remove-edge graph node dependency)
+    (ctnd/remove-all graph dependency)))
+
+(defn really-remove-node
+  "Removes all outgoing edges from a dependency graph.
+   
+   If an outgoing edge refers to an element that has no other dependents,
+   remove that node from the dependency graph entirely.
+   
+   Note: This is necessary because ctnd/remove-node does not remove the node
+   from the 'dependents' key of the nodes that it depends on. I think this is
+   a bug in clojure.tools.namespace.dependency, need to follow up on this."
+  [graph node]
+  (reduce #(remove-dependency %1 node %2)
+          graph
+          (ctnd/immediate-dependencies graph node)))

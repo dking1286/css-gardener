@@ -314,3 +314,42 @@
           (src-file "some/namespace.cljs") (src-file "foo/bang.scss"))
         (are [x y] (not (ctnd/depends? result x y))
           (src-file "foo/bang.scss") (src-file "some/namespace.cljs"))))))
+
+(deftest t-really-remove-node
+  (testing "Removes outgoing dependencies"
+    (let [graph (-> (ctnd/graph)
+                    (ctnd/depend "foo" "bar")
+                    (ctnd/depend "bar" "baz")
+                    (ctnd/depend "bar" "bang")
+                    (dependency/really-remove-node "bar"))]
+      (is (ctnd/depends? graph "foo" "bar"))
+      (is (not (ctnd/depends? graph "bar" "baz")))
+      (is (not (ctnd/depends? graph "bar" "bang")))))
+  (testing "Removes dependents"
+    (let [graph (-> (ctnd/graph)
+                    (ctnd/depend "foo" "bar")
+                    (ctnd/depend "bar" "baz")
+                    (ctnd/depend "bar" "bang")
+                    (dependency/really-remove-node "bar"))]
+      (is (ctnd/dependent? graph "bar" "foo"))
+      (is (not (ctnd/dependent? graph "baz" "bar")))
+      (is (not (ctnd/dependent? graph "bang" "bar")))))
+  (testing "Removes depended-on nodes entirely if they don't have any other
+            dependents in the graph."
+    (let [graph (-> (ctnd/graph)
+                    (ctnd/depend "foo" "bar")
+                    (ctnd/depend "bar" "baz")
+                    (ctnd/depend "bar" "bang")
+                    (dependency/really-remove-node "bar"))]
+      (is (not (contains? (ctnd/nodes graph) "baz")))
+      (is (not (contains? (ctnd/nodes graph) "bang")))))
+  (testing "Does not remove depended-on nodes if they have other dependents
+            in the graph."
+    (let [graph (-> (ctnd/graph)
+                    (ctnd/depend "foo" "baz")
+                    (ctnd/depend "bar" "baz")
+                    (dependency/really-remove-node "bar"))]
+      (is (contains? (ctnd/nodes graph) "baz"))
+      (is (ctnd/depends? graph "foo" "baz"))
+      (is (ctnd/dependent? graph "baz" "foo"))
+      (is (not (ctnd/dependent? graph "baz" "bar"))))))

@@ -1,5 +1,6 @@
 (ns css-gardener.core.transformation
   (:require [clojure.core.async :refer [go]]
+            [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.tools.namespace.dependency :as ctnd]
@@ -176,15 +177,20 @@
   "Compiles all of the style files in the dependency graph into a collection
    of output files to be written."
   [;; Injected dependencies
-   config compilation-cache read-file transform
+   logger config compilation-cache read-file transform
    ;; Arguments
    build-id dependency-graph]
-  (let [output-dir (get-in config [:builds build-id :output-dir])]
-    (->> (get-root-styles config dependency-graph)
+  (logging/debug logger (str "Compiling styles from dependency graph "
+                             (with-out-str (pprint dependency-graph))))
+  (let [output-dir (get-in config [:builds build-id :output-dir])
+        root-styles (get-root-styles config dependency-graph)]
+    (logging/debug logger (str "Found root style files: "
+                               (with-out-str (pprint root-styles))))
+    (->> root-styles
          (map #(compile-file compilation-cache read-file transform %))
          (a/await-all 10000)
          (a/map #(create-output-files config build-id output-dir %)))))
 
 (defmethod ig/init-key ::compile-all
-  [_ {:keys [config compilation-cache read-file transform]}]
-  (partial compile-all config compilation-cache read-file transform))
+  [_ {:keys [logger config compilation-cache read-file transform]}]
+  (partial compile-all logger config compilation-cache read-file transform))
