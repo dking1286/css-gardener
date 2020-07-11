@@ -73,7 +73,7 @@
          :as system}
         (start-system sys-config)]
     (actions/apply-all system [(actions/->CreateDependencyGraph)
-                               (actions/->CompileOnce)])
+                               (actions/->Recompile)])
     (logging/debug logger "Starting change consumer")
     (go-loop []
       (let [value (<! input-channel)]
