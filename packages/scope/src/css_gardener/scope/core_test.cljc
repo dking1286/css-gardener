@@ -1,13 +1,11 @@
-(ns
-  ^{:css-gardener/require ["test_stylesheets/scope.scss"]}
+(ns ^{:css-gardener/require ["./test_stylesheets/scope.scss"]}
   css-gardener.scope.core-test
   #?(:clj (:require [clojure.test :refer [deftest testing is]]
                     [css-gardener.scope.core :refer [scope-from-stylesheet
                                                      scope-from-style-deps]]))
   #?(:clj (:import [java.io FileNotFoundException]))
   #?(:cljs (:require [clojure.test :refer [deftest testing is]]
-                     [css-gardener.scope.core :refer [scope-from-stylesheet
-                                                      infer-scope]]
+                     [css-gardener.scope.core :refer [scope-from-stylesheet]]
                      [fs])))
 
 (defn- test-stylesheet-content
@@ -51,9 +49,3 @@
             (scope-from-style-deps "src/css_gardener/scope/core_test.cljc"
                                    ["test_stylesheets/scope.scss"
                                     "test_stylesheets/multiple_kv_pairs.scss"]))))))
-
-#?(:cljs
-   (deftest t-infer-scope
-     (testing "Returns the scope of the stylesheets depended on by the
-               current file"
-       (is (= "test-stylesheet" (infer-scope))))))

@@ -45,6 +45,9 @@
      "Infer the scope for the current cljs file based on the scopes declared
       in the style dependencies."
      []
-     (scope-from-style-deps
-      ana/*cljs-file*
-      (constants/require-metadata-key (meta ana/*cljs-ns*)))))
+     (let [current-file (-> ana/*cljs-file*
+                            io/resource
+                            io/file
+                            (.getCanonicalPath))
+           deps (constants/require-metadata-key (meta ana/*cljs-ns*))]
+       (scope-from-style-deps current-file deps))))
