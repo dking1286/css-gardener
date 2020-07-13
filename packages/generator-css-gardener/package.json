@@ -5,8 +5,7 @@
   "homepage": "",
   "author": {
     "name": "Daniel King",
-    "email": "daniel.oliver.king@gmail.com",
-    "url": ""
+    "email": "daniel.oliver.king@gmail.com"
   },
   "files": [
     "generators"
@@ -37,8 +36,9 @@
     "npm": ">= 4.0.0"
   },
   "dependencies": {
-    "yeoman-generator": "^2.0.1",
     "chalk": "^2.1.0",
+    "lodash.camelcase": "^4.3.0",
+    "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
   },
   "jest": {
