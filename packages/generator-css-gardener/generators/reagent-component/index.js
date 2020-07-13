@@ -2,6 +2,10 @@
 const Generator = require('yeoman-generator');
 const camelCase = require('lodash.camelcase');
 const get = require('lodash.get');
+const kebabCase = require('lodash.kebabcase');
+const snakeCase = require('lodash.snakecase');
+
+const STYLESHEET_TYPES = ['scss', 'css'];
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -10,8 +14,8 @@ module.exports = class extends Generator {
     this.option('source-path', { type: String });
     this.option('component-path', { type: String });
     this.option('name', { type: String });
-    this.option('scope', { type: String });
     this.option('stylesheet-type', { type: String });
+    this.option('scope', { type: String });
   }
 
   async prompting() {
@@ -27,6 +31,8 @@ module.exports = class extends Generator {
       saveAnswer: true,
     });
 
+    this._validateSourcePath();
+
     this.componentPath = await this._getFromOptionAndPrompt({
       name: 'component-path',
       type: 'input',
@@ -36,25 +42,37 @@ module.exports = class extends Generator {
       saveAnswer: true,
     });
 
+    this._validateComponentPath();
+
     this.name = await this._getFromOptionAndPrompt({
       name: 'name',
       type: 'input',
-      message: 'What is the name of the component?',
+      message: 'What is the name of the component (in snake_case, no file extension)?',
     });
+
+    this._validateName();
 
     this.stylesheetType = await this._getFromOptionAndPrompt({
       name: 'stylesheet-type',
       type: 'list',
-      message: 'What kind of stylesheet do you want this component to have?',
-      choices: ['scss', 'css']
+      message: 'What kind of stylesheet should be generated for this component?',
+      choices: STYLESHEET_TYPES,
     });
+
+    this._validateStylesheetType();
 
     this.scope = await this._getFromOptionAndPrompt({
       name: 'scope',
       type: 'input',
       message: 'What scope should be used for the stylesheet?',
-      default: this.name,
+      default: kebabCase(this.name),
     });
+
+    this._validateScope();
+  }
+
+  async writing() {
+
   }
 
   async _getFromPrompt(args) {
@@ -96,4 +114,46 @@ module.exports = class extends Generator {
 
     return fromPrompt;
   }
+
+  _validateSourcePath() {
+    // Anything is valid for now
+  }
+
+  _validateComponentPath() {
+    const snakeCased = this.componentPath
+      .split('/')
+      .map(snakeCase)
+      .join('/');
+
+    if (snakeCased !== this.componentPath) {
+      throw new ValueError(
+        'Component path must be a snake_cased relative path, received ' +
+        this.componentPath);
+    }
+  }
+
+  _validateName() {
+    if (!this.name === snakeCase(this.name)) {
+      throw new ValueError(
+        'Component name must be in snake_case, received ' +
+        this.name);
+    }
+  }
+
+  _validateStylesheetType() {
+    if (!STYLESHEET_TYPES.includes(this.stylesheetType)) {
+      throw new ValueError(
+        `Stylesheet type must be one of ${STYLESHEET_TYPES}, received ` +
+        this.stylesheetType);
+    }
+  }
+
+  _validateScope() {
+    // Anything is a valid scope for now.
+    // TODO(https://github.com/dking1286/css-gardener/issues/50):
+    // Validate that the scope can be prepended to a css class selector
+  }
 }
+
+class NotFoundError extends Error { }
+class ValueError extends Error { }
