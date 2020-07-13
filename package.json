@@ -17,8 +17,10 @@
     "fs-extra": "9.0.1"
   },
   "devDependencies": {
+    "generator-generator": "^4.0.2",
     "lerna": "3.20.2",
     "lumo-cljs": "1.10.1",
-    "xml2js": "0.4.23"
+    "xml2js": "0.4.23",
+    "yo": "^3.1.1"
   }
 }

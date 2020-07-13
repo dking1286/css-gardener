@@ -1,0 +1,9 @@
+{
+  "generator-node": {
+    "promptValues": {
+      "authorName": "Daniel King",
+      "authorEmail": "daniel.oliver.king@gmail.com",
+      "authorUrl": ""
+    }
+  }
+}
