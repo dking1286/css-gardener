@@ -1,84 +1,82 @@
-'use strict';
-const Generator = require('yeoman-generator');
-const camelCase = require('lodash.camelcase');
-const get = require('lodash.get');
-const kebabCase = require('lodash.kebabcase');
-const snakeCase = require('lodash.snakecase');
+"use strict";
+const Generator = require("yeoman-generator");
+const camelCase = require("lodash.camelcase");
+const get = require("lodash.get");
+const kebabCase = require("lodash.kebabcase");
+const snakeCase = require("lodash.snakecase");
 
-const STYLESHEET_TYPES = ['scss', 'css'];
+const STYLESHEET_TYPES = ["scss", "css"];
 
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
 
-    this.option('source-path', { type: String });
-    this.option('component-path', { type: String });
-    this.option('name', { type: String });
-    this.option('stylesheet-type', { type: String });
-    this.option('scope', { type: String });
+    this.option("source-path", { type: String });
+    this.option("component-path", { type: String });
+    this.option("name", { type: String });
+    this.option("stylesheet-type", { type: String });
+    this.option("scope", { type: String });
   }
 
   async prompting() {
     this.sourcePath = await this._getFromOptionAndPrompt({
-      name: 'source-path',
-      type: 'input',
+      name: "source-path",
+      type: "input",
       message:
-        'What is the root source directory where you want to generate the ' +
-        'component?\n' +
-        'Note: This should probably be one of the :source-paths in your ' +
-        'project configuration.',
-      default: 'src',
-      saveAnswer: true,
+        "What is the root source directory where you want to generate the " +
+        "component?\n" +
+        "Note: This should probably be one of the :source-paths in your " +
+        "project configuration.",
+      default: "src",
+      saveAnswer: true
     });
 
     this._validateSourcePath();
 
     this.componentPath = await this._getFromOptionAndPrompt({
-      name: 'component-path',
-      type: 'input',
+      name: "component-path",
+      type: "input",
       message:
-        'In what directory should the component be generated, ' +
-        'relative to the source directory?',
-      saveAnswer: true,
+        "In what directory should the component be generated, " +
+        "relative to the source directory?",
+      saveAnswer: true
     });
 
     this._validateComponentPath();
 
     this.name = await this._getFromOptionAndPrompt({
-      name: 'name',
-      type: 'input',
-      message: 'What is the name of the component (in snake_case, no file extension)?',
+      name: "name",
+      type: "input",
+      message:
+        "What is the name of the component (in snake_case, no file extension)?"
     });
 
     this._validateName();
 
     this.stylesheetType = await this._getFromOptionAndPrompt({
-      name: 'stylesheet-type',
-      type: 'list',
-      message: 'What kind of stylesheet should be generated for this component?',
-      choices: STYLESHEET_TYPES,
+      name: "stylesheet-type",
+      type: "list",
+      message:
+        "What kind of stylesheet should be generated for this component?",
+      choices: STYLESHEET_TYPES
     });
 
     this._validateStylesheetType();
 
     this.scope = await this._getFromOptionAndPrompt({
-      name: 'scope',
-      type: 'input',
-      message: 'What scope should be used for the stylesheet?',
-      default: kebabCase(this.name),
+      name: "scope",
+      type: "input",
+      message: "What scope should be used for the stylesheet?",
+      default: kebabCase(this.name)
     });
 
     this._validateScope();
   }
 
-  async writing() {
-
-  }
+  async writing() {}
 
   async _getFromPrompt(args) {
-    const answers = await this.prompt([
-      args,
-    ]);
+    const answers = await this.prompt([args]);
 
     return answers[args.name];
   }
@@ -102,8 +100,8 @@ module.exports = class extends Generator {
       {
         name: name,
         default: fromConfig || defaultValue,
-        ...args,
-      },
+        ...args
+      }
     ]);
 
     const fromPrompt = answers[name];
@@ -121,22 +119,23 @@ module.exports = class extends Generator {
 
   _validateComponentPath() {
     const snakeCased = this.componentPath
-      .split('/')
+      .split("/")
       .map(snakeCase)
-      .join('/');
+      .join("/");
 
     if (snakeCased !== this.componentPath) {
       throw new ValueError(
-        'Component path must be a snake_cased relative path, received ' +
-        this.componentPath);
+        "Component path must be a snake_cased relative path, received " +
+          this.componentPath
+      );
     }
   }
 
   _validateName() {
     if (!this.name === snakeCase(this.name)) {
       throw new ValueError(
-        'Component name must be in snake_case, received ' +
-        this.name);
+        "Component name must be in snake_case, received " + this.name
+      );
     }
   }
 
@@ -144,7 +143,8 @@ module.exports = class extends Generator {
     if (!STYLESHEET_TYPES.includes(this.stylesheetType)) {
       throw new ValueError(
         `Stylesheet type must be one of ${STYLESHEET_TYPES}, received ` +
-        this.stylesheetType);
+          this.stylesheetType
+      );
     }
   }
 
@@ -153,7 +153,7 @@ module.exports = class extends Generator {
     // TODO(https://github.com/dking1286/css-gardener/issues/50):
     // Validate that the scope can be prepended to a css class selector
   }
-}
+};
 
-class NotFoundError extends Error { }
-class ValueError extends Error { }
+class NotFoundError extends Error {}
+class ValueError extends Error {}
