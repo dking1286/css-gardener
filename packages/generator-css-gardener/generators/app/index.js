@@ -1,20 +1,24 @@
-'use strict';
-const Generator = require('yeoman-generator');
-const chalk = require('chalk');
-const yosay = require('yosay');
+"use strict";
+const Generator = require("yeoman-generator");
+const chalk = require("chalk");
+const yosay = require("yosay");
 
 module.exports = class extends Generator {
   prompting() {
     // Have Yeoman greet the user.
     this.log(
-      yosay(`Welcome to the premium ${chalk.red('generator-css-gardener')} generator!`)
+      yosay(
+        `Welcome to the premium ${chalk.red(
+          "generator-css-gardener"
+        )} generator!`
+      )
     );
 
     const prompts = [
       {
-        type: 'confirm',
-        name: 'someAnswer',
-        message: 'Would you like to enable this option?',
+        type: "confirm",
+        name: "someAnswer",
+        message: "Would you like to enable this option?",
         default: true
       }
     ];
@@ -27,8 +31,8 @@ module.exports = class extends Generator {
 
   writing() {
     this.fs.copy(
-      this.templatePath('dummyfile.txt'),
-      this.destinationPath('dummyfile.txt')
+      this.templatePath("dummyfile.txt"),
+      this.destinationPath("dummyfile.txt")
     );
   }
 
