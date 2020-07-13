@@ -1,4 +1,4 @@
-/* {:css-gardener/scope "param-scope-name"} */
+/* {:css-gardener/scope "<%= scope %>"} */
 
 .container {
   color: red;

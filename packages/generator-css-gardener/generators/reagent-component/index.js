@@ -1,11 +1,15 @@
 "use strict";
 const Generator = require("yeoman-generator");
 const camelCase = require("lodash.camelcase");
-const get = require("lodash.get");
 const kebabCase = require("lodash.kebabcase");
+const path = require("path");
 const snakeCase = require("lodash.snakecase");
 
 const STYLESHEET_TYPES = ["scss", "css"];
+
+function stylesheetExtension(type) {
+  return `.${type}`;
+}
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -73,7 +77,40 @@ module.exports = class extends Generator {
     this._validateScope();
   }
 
-  async writing() {}
+  async writing() {
+    const styleName = `styles${stylesheetExtension(this.stylesheetType)}`;
+    const nsPrefix = this.componentPath
+      .split("/")
+      .map(kebabCase)
+      .join(".");
+    const componentName = kebabCase(this.name);
+
+    const componentDestinationPath = path.join(
+      this.sourcePath,
+      this.componentPath,
+      this.name,
+      "core.cljs"
+    );
+
+    const stylesheetDestinationPath = path.join(
+      this.sourcePath,
+      this.componentPath,
+      this.name,
+      styleName
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("core.cljs"),
+      this.destinationPath(componentDestinationPath),
+      { styleName, nsPrefix, componentName }
+    );
+
+    this.fs.copyTpl(
+      this.templatePath(styleName),
+      this.destinationPath(stylesheetDestinationPath),
+      { scope: this.scope }
+    );
+  }
 
   async _getFromPrompt(args) {
     const answers = await this.prompt([args]);
@@ -155,5 +192,4 @@ module.exports = class extends Generator {
   }
 };
 
-class NotFoundError extends Error {}
 class ValueError extends Error {}
