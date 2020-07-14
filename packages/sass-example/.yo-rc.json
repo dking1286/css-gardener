@@ -1,0 +1,7 @@
+{
+  "generator-css-gardener": {
+    "componentsPath": "css_gardener/sass_example/components",
+    "sourcePath": "src",
+    "componentPath": "css_gardener/sass_example/components"
+  }
+}
