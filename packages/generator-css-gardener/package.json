@@ -1,6 +1,6 @@
 {
   "name": "generator-css-gardener",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "Generator for CLJS project boilerplate using css-gardener",
   "homepage": "",
   "author": {
@@ -10,7 +10,6 @@
   "files": [
     "generators"
   ],
-  "main": "generators/index.js",
   "keywords": [
     "clojure",
     "clojurescript",
@@ -21,27 +20,25 @@
     "yeoman-generator"
   ],
   "devDependencies": {
-    "yeoman-test": "^1.7.0",
-    "yeoman-assert": "^3.1.0",
-    "eslint": "^6.6.0",
-    "prettier": "^1.19.1",
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.3",
-    "eslint-config-prettier": "^6.6.0",
-    "eslint-plugin-prettier": "^3.1.1",
-    "eslint-config-xo": "^0.27.2",
-    "jest": "^26.1.0"
+    "yeoman-test": "1.7.0",
+    "yeoman-assert": "3.1.0",
+    "eslint": "6.6.0",
+    "prettier": "1.19.1",
+    "husky": "3.0.9",
+    "lint-staged": "9.4.3",
+    "eslint-config-prettier": "6.6.0",
+    "eslint-plugin-prettier": "3.1.1",
+    "eslint-config-xo": "0.27.2",
+    "jest": "26.1.0"
   },
   "engines": {
     "npm": ">= 4.0.0"
   },
   "dependencies": {
-    "chalk": "^2.1.0",
-    "lodash.camelcase": "^4.3.0",
-    "lodash.kebabcase": "^4.1.1",
-    "lodash.snakecase": "^4.1.1",
-    "yeoman-generator": "^2.0.1",
-    "yosay": "^2.0.1"
+    "lodash.camelcase": "4.3.0",
+    "lodash.kebabcase": "4.1.1",
+    "lodash.snakecase": "4.1.1",
+    "yeoman-generator": "2.0.1"
   },
   "jest": {
     "testEnvironment": "node"
@@ -78,9 +75,15 @@
     ]
   },
   "scripts": {
-    "pretest": "eslint .",
+    "lint": "eslint .",
+    "compile-tests": "echo 'No compilation required for tests'",
+    "run-tests": "jest",
+    "pretest": "npm run lint",
     "test": "jest"
   },
-  "repository": "dking1286/generator-css-gardener",
-  "license": "MIT"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener/packages/generator-css-gardener"
+  },
+  "license": "EPL-2.0"
 }

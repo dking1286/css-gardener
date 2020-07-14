@@ -3,6 +3,7 @@
     "packages/common",
     "packages/core",
     "packages/css-example",
+    "packages/generator-css-gardener",
     "packages/sass-example",
     "packages/sass-resolver",
     "packages/sass-transformer",
