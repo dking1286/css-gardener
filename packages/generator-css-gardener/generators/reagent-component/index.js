@@ -11,6 +11,8 @@ function stylesheetExtension(type) {
   return `.${type}`;
 }
 
+class ValueError extends Error {}
+
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
@@ -191,5 +193,3 @@ module.exports = class extends Generator {
     // Validate that the scope can be prepended to a css class selector
   }
 };
-
-class ValueError extends Error {}
