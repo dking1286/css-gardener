@@ -1,0 +1,8 @@
+{:source-paths ["<%= sourcePath %>"]
+
+ :builds
+ {:<%= buildName %> {:output-dir "<%= outputDir %>"
+                     :modules {:<%= moduleName %> {:entries [<%= entryNs %>]}}}}
+
+ :rules
+ {".css" {:transformers [{:node-module "@css-gardener/scope-transformer"}]}}}

@@ -1,0 +1,10 @@
+{:source-paths ["<%= sourcePath %>"]
+
+ :builds
+ {:<%= buildName %> {:output-dir "<%= outputDir %>"
+                     :modules {:<%= moduleName %> {:entries [<%= entryNs %>]}}}}
+
+ :rules
+ {".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
+           :transformers [{:node-module "@css-gardener/scope-transformer"}
+                          {:node-module "@css-gardener/sass-transformer"}]}}}
