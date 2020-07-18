@@ -4,7 +4,7 @@
         com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
                                    :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
         css-gardener/common #{{:local/root "../common"}
-                              ^:update-version {:mvn/version "0.0.2"}}
+                              ^:update-version {:mvn/version "0.0.3"}}
         css-gardener/scope {:local/root "../scope"}
         integrant {:mvn/version "0.8.0"}
         org.clojure/tools.cli {:mvn/version "1.0.194"}

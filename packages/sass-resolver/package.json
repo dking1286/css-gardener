@@ -1,6 +1,6 @@
 {
   "name": "@css-gardener/sass-resolver",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Dependency resolver for scss and sass stylesheets",
   "main": "index.js",
   "files": [
