@@ -1,6 +1,6 @@
 {
   "name": "@css-gardener/sass-transformer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "css-gardener transformer plugin for scss and sass stylesheets",
   "main": "index.js",
   "files": [
