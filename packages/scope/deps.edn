@@ -9,4 +9,4 @@
                                                  :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
                       com.bhauman/figwheel-main {:mvn/version "0.2.8"}}}
 
-  :deploy {:override-deps {css-gardener/common ^:update-version {:mvn/version "0.0.3"}}}}}
+  :deploy {:override-deps {css-gardener/common ^:update-version {:mvn/version "0.0.4"}}}}}

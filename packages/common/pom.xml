@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>css-gardener</groupId>
   <artifactId>common</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <name>common</name>
   <description>Common libraries for css-gardener subpackages.</description>
   <url>https://github.com/dking1286/css-gardener/packages/common</url>
@@ -31,6 +31,11 @@
   </distributionManagement>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+      </resource>
+    </resources>
   </build>
   <dependencies>
     <dependency>

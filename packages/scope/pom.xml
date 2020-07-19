@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>css-gardener</groupId>
   <artifactId>scope</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <name>scope</name>
   <description>Common library for working with scopes in css-gardener.</description>
   <url>https://github.com/dking1286/css-gardener/packages/scope</url>
@@ -31,6 +31,11 @@
   </distributionManagement>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+      </resource>
+    </resources>
   </build>
   <dependencies>
     <dependency>
@@ -41,7 +46,7 @@
     <dependency>
       <groupId>css-gardener</groupId>
       <artifactId>common</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.4</version>
     </dependency>
   </dependencies>
 </project>
