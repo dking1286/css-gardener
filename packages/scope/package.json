@@ -1,7 +1,7 @@
 {
   "name": "@css-gardener/scope",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Common library for working with scopes in css-gardener. Note: Instead of depending on this npm package, you should depend on the Clojars package css-gardener/scope.",
   "scripts": {
     "repl": "node target/node/dev/dev-main.js",

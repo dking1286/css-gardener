@@ -1,6 +1,6 @@
 {
   "name": "@css-gardener/common",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "scripts": {
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
