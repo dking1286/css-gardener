@@ -79,6 +79,10 @@
    (transformation/transformer-stub
     nil {:absolute-path "" :content ""})
 
+   {:node-module "@css-gardener/postcss-transformer"}
+   (transformation/transformer-stub
+    nil {:absolute-path "" :content ""})
+
    {:node-module "@css-gardener/sass-resolver"}
    (dependency/resolver-stub nil #js [])})
 
@@ -103,7 +107,10 @@
     ".sass"
     {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
      :transformers [{:node-module "@css-gardener/sass-transformer"
-                     :options {:use-indented-syntax true}}]}}})
+                     :options {:use-indented-syntax true}}]}}
+
+   :postprocessing
+   {:transformers [{:node-module "@css-gardener/postcss-transformer"}]}})
 
 (def ^:private sys-config
   (-> system/config
@@ -141,10 +148,13 @@
   (testing "Is a map from module names to the loaded transformers"
     (with-system [system sys-config]
       (let [transformers (::transformation/transformers system)]
-        (is (= 2 (count transformers)))
+        (is (= 3 (count transformers)))
         (is (s/valid? ::transformation/transformer-config
                       (get transformers
-                           {:node-module "@css-gardener/sass-transformer"})))))))
+                           {:node-module "@css-gardener/sass-transformer"})))
+        (is (s/valid? ::transformation/transformer-config
+                      (get transformers
+                           {:node-module "@css-gardener/postcss-transformer"})))))))
 
 (def ^:private fake-scope-transformer
   #js {:enter (fn [file _ callback]
@@ -162,6 +172,17 @@
                 (let [result (gobj/clone file)]
                   (gobj/set result
                             "content" (str "Transformed by sass-transformer: "
+                                           (gobj/get file "content")))
+                  (callback nil result)))
+
+       :exit (fn [file _ callback]
+               (callback nil file))})
+
+(def ^:private fake-postcss-transformer
+  #js {:enter (fn [file _ callback]
+                (let [result (gobj/clone file)]
+                  (gobj/set result
+                            "content" (str "Transformed by postcss-transformer: "
                                            (gobj/get file "content")))
                   (callback nil result)))
 
@@ -221,23 +242,28 @@
                          {:node-module "@css-gardener/sass-transformer"}
                          fake-sass-transformer
                          {:node-module "@css-gardener/scope-transformer"}
-                         fake-scope-transformer))]
+                         fake-scope-transformer
+                         {:node-module "@css-gardener/postcss-transformer"}
+                         fake-postcss-transformer))]
       (with-system [system sys-config]
         (let [compile-all (::transformation/compile-all system)]
           (is (= [] (<! (compile-all :app no-styles-dependency-graph))))))))
   (testing "yields a file that concatenates the contents of the transformed
-            stylesheets, but only the root-level stylesheets."
+            stylesheets, but only the root-level stylesheets, then transformed
+            by the postprocessor transformers."
     (let [sys-config
           (-> sys-config
               (update-in [::modules/load :modules] assoc
                          {:node-module "@css-gardener/sass-transformer"}
                          fake-sass-transformer
                          {:node-module "@css-gardener/scope-transformer"}
-                         fake-scope-transformer))]
+                         fake-scope-transformer
+                         {:node-module "@css-gardener/postcss-transformer"}
+                         fake-postcss-transformer))]
       (with-system [system sys-config]
         (let [compile-all (::transformation/compile-all system)]
           (is (= [{:absolute-path (str cwd "/public/css/main.css")
-                   :content "Transformed by sass-transformer: Bar styles\n\nTransformed by sass-transformer: Baz styles"}]
+                   :content "Transformed by postcss-transformer: Transformed by sass-transformer: Bar styles\n\nTransformed by sass-transformer: Baz styles"}]
                  (<! (compile-all :app dependency-graph))))))))
   (testing "sets the transformed value in the cache if it doesn't already exist"
     (let [sys-config
@@ -246,7 +272,9 @@
                          {:node-module "@css-gardener/sass-transformer"}
                          fake-sass-transformer
                          {:node-module "@css-gardener/scope-transformer"}
-                         fake-scope-transformer))]
+                         fake-scope-transformer
+                         {:node-module "@css-gardener/postcss-transformer"}
+                         fake-postcss-transformer))]
       (with-system [system sys-config]
         (let [cache (::caching/compilation-cache system)
               compile-all (::transformation/compile-all system)

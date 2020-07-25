@@ -75,13 +75,18 @@
    ::transformation/transform
    {:config (ig/ref ::config/config)
     :transformers (ig/ref ::transformation/transformers)}
+   
+   ::transformation/postprocess
+   {:config (ig/ref ::config/config)
+    :transformers (ig/ref ::transformation/transformers)}
 
    ::transformation/compile-all
    {:logger (ig/ref ::logging/logger)
     :config (ig/ref ::config/config)
     :compilation-cache (ig/ref ::caching/compilation-cache)
     :read-file (ig/ref ::fs/read-file)
-    :transform (ig/ref ::transformation/transform)}
+    :transform (ig/ref ::transformation/transform)
+    :postprocess (ig/ref ::transformation/postprocess)}
 
    ::changes/input-channel
    {}

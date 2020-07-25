@@ -38,18 +38,32 @@
        :exit (fn [_ _ callback]
                (go (callback err result)))})
 
-(defmethod ig/init-key ::transformers
-  [_ {:keys [config logger load-module]}]
-  (logging/debug logger "Loading transformers")
-  (->> (:rules config)
-       vals
-       (mapcat :transformers)
+(defn- load-transformer-specs
+  [load-module specs]
+  (->> specs
        (map (fn [config]
               (let [module (modules/extract-module config)]
                 {:module module
                  :transformer (load-module module)})))
        (map #(vector (:module %) %))
        (into {})))
+
+(defn- transformer-specs
+  [config]
+  (->> (:rules config)
+       vals
+       (mapcat :transformers)))
+
+(defn- postprocessor-specs
+  [config]
+  (-> config :postprocessing :transformers))
+
+(defmethod ig/init-key ::transformers
+  [_ {:keys [config logger load-module]}]
+  (logging/debug logger "Loading transformers")
+  (->> (concat (transformer-specs config)
+               (postprocessor-specs config))
+       (load-transformer-specs load-module)))
 
 ;; ::transform ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -83,6 +97,17 @@
                :transformers (s/map-of ::modules/module ::transformer-config)
                :file ::file/file))
 
+(defn- apply-transformer-stack
+  [transformers-stack file]
+  (let [functions (get-transformer-functions transformers-stack)]
+    (loop [result (go (to-js file))
+           remaining-functions functions]
+      (if (empty? remaining-functions)
+        (a/map from-js result)
+        (let [func (first remaining-functions)]
+          (recur (a/flat-map #(apply-transformer-function func %) result)
+                 (rest remaining-functions)))))))
+
 (defn- transform
   "Transforms a file using the transformers specified in the config.
    
@@ -98,19 +123,31 @@
                                       (:absolute-path file))
                                  rule-or-error))
       (let [transformers-stack (get-transformers-stack
-                                transformers (:transformers rule-or-error))
-            functions (get-transformer-functions transformers-stack)]
-        (loop [result (go (to-js file))
-               remaining-functions functions]
-          (if (empty? remaining-functions)
-            (a/map from-js result)
-            (let [func (first remaining-functions)]
-              (recur (a/flat-map #(apply-transformer-function func %) result)
-                     (rest remaining-functions)))))))))
+                                transformers (:transformers rule-or-error))]
+        (apply-transformer-stack transformers-stack file)))))
 
 (defmethod ig/init-key ::transform
   [_ {:keys [config transformers]}]
   (partial transform config transformers))
+
+(defn- postprocess
+  "Transforms an output file using the postprocessing transformers specified in
+   this config.
+   
+   Each transformer's :enter method is called in order, and then each
+   transformer's :exit method is called in reverse order."
+  [;; Injected dependencies
+   config transformers
+   ;; Arguments
+   file]
+  (let [transformers-stack (get-transformers-stack
+                            transformers
+                            (-> config :postprocessing :transformers))]
+    (apply-transformer-stack transformers-stack file)))
+
+(defmethod ig/init-key ::postprocess
+  [_ {:keys [config transformers]}]
+  (partial postprocess config transformers))
 
 ;; :compile-all ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -177,7 +214,7 @@
   "Compiles all of the style files in the dependency graph into a collection
    of output files to be written."
   [;; Injected dependencies
-   logger config compilation-cache read-file transform
+   logger config compilation-cache read-file transform postprocess
    ;; Arguments
    build-id dependency-graph]
   (logging/debug logger (str "Compiling styles from dependency graph "
@@ -189,8 +226,12 @@
     (->> root-styles
          (map #(compile-file compilation-cache read-file transform %))
          (a/await-all 10000)
-         (a/map #(create-output-files config build-id output-dir %)))))
+         (a/map #(create-output-files config build-id output-dir %))
+         (a/flat-map #(->> %
+                           (map postprocess)
+                           (a/await-all 10000))))))
 
 (defmethod ig/init-key ::compile-all
-  [_ {:keys [logger config compilation-cache read-file transform]}]
-  (partial compile-all logger config compilation-cache read-file transform))
+  [_ {:keys [logger config compilation-cache read-file transform postprocess]}]
+  (partial compile-all logger config compilation-cache read-file transform
+           postprocess))

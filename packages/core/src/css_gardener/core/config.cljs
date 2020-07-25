@@ -25,10 +25,12 @@
 (s/def ::transformers (s/coll-of ::transformer :kind vector?))
 (s/def ::rule (s/keys :req-un [::transformers]))
 (s/def ::rules (s/map-of string? ::rule))
+(s/def ::postprocessing (s/keys :opt-un [::transformers]))
 
 (s/def ::config
   (s/and
-   (s/keys :req-un [::rules])
+   (s/keys :req-un [::rules]
+           :opt-un [::postprocessing])
    (s/or :explicit (s/keys :req-un [::source-paths ::builds])
          :inferred (s/keys :req-un [::infer-source-paths-and-builds]))))
 
@@ -72,5 +74,6 @@
 (comment
   (s/conform ::config {:source-paths []
                        :builds {}
-                       :rules {}})
+                       :rules {}
+                       :postprocessing {}})
   (s/conform ::config {:blah :blah}))
