@@ -66,18 +66,8 @@
              " to yield an array of strings, got "
              deps))))))
 
-(s/fdef deps
-  :args (s/cat :config ::config/config
-               :logger ::logging/logger
-               :resolvers (s/map-of ::modules/module ::resolver)
-               :cljs-deps fn?
-               :file ::file/file))
-
 (defn- deps
-  [;; Injected dependencies
-   config logger resolvers cljs-deps
-   ;; Arguments
-   file]
+  [{:keys [config logger resolvers cljs-deps]} file]
   (logging/debug logger (str "Getting dependencies of "
                              (:absolute-path file)))
   (let [rule-or-error (config/matching-rule config (:absolute-path file))]
@@ -109,7 +99,7 @@
              (a/map set))))))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [config logger resolvers cljs-deps fake-dependencies error]}]
+  [_ {:keys [fake-dependencies error] :as dependencies}]
   (cond
     ;; Mock deps with hard-coded map of dependencies
     fake-dependencies (fn [file _]
@@ -118,7 +108,7 @@
     ;; Mock deps that yields an error
     error (fn [_ _] (go error))
     ;; Real deps implementation
-    :else (partial deps config logger resolvers cljs-deps)))
+    :else (partial deps dependencies)))
 
 ;; ::deps-graph ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -160,12 +150,10 @@
 
 (defn- deps-graph
   "Gets a dependency graph of absolute paths based on the configuration map."
-  [;; Injected dependencies
-   config logger exists? read-file deps
-   ;; Arguments
-   build-id & {:keys [initial-graph
-                      entry-files]
-               :or {initial-graph (ctnd/graph)}}]
+  [{:keys [config logger exists? read-file deps]}
+   build-id
+   & {:keys [initial-graph entry-files]
+      :or {initial-graph (ctnd/graph)}}]
   (logging/info logger "Building dependency graph")
   (let [graph
         (atom initial-graph)
@@ -187,8 +175,8 @@
          (a/map (fn [_] @graph)))))
 
 (defmethod ig/init-key ::deps-graph
-  [_ {:keys [config logger exists? read-file deps]}]
-  (partial deps-graph config logger exists? read-file deps))
+  [_ dependencies]
+  (partial deps-graph dependencies))
 
 (defn- remove-dependency
   "Removes an outgoing dependency from 'node' to 'dependency'.

@@ -75,7 +75,7 @@
 (defn ^:dev/after-load after-load
   "Lifecycle function that is called after new code is loaded in development."
   []
-  (run-tests 'css-gardener.core.transformation-test))
+  (run-all-tests))
 
 (defn main
   "Entry point for the css-gardener process in development."

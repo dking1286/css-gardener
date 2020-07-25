@@ -92,11 +92,6 @@
                                 err)
        new-file))))
 
-(s/fdef transform
-  :args (s/cat :config ::config/config
-               :transformers (s/map-of ::modules/module ::transformer-config)
-               :file ::file/file))
-
 (defn- apply-transformer-stack
   [transformers-stack file]
   (let [functions (get-transformer-functions transformers-stack)]
@@ -113,10 +108,7 @@
    
    Each transformer's :enter method is called in order, and then each
    transformer's :exit method is called in reverse order."
-  [;; Injected dependencies
-   config transformers
-   ;; Arguments
-   file]
+  [{:keys [config transformers]} file]
   (let [rule-or-error (config/matching-rule config (:absolute-path file))]
     (if (errors/error? rule-or-error)
       (go (errors/invalid-config (str "Problem finding rule for file "
@@ -127,8 +119,8 @@
         (apply-transformer-stack transformers-stack file)))))
 
 (defmethod ig/init-key ::transform
-  [_ {:keys [config transformers]}]
-  (partial transform config transformers))
+  [_ dependencies]
+  (partial transform dependencies))
 
 (defn- postprocess
   "Transforms an output file using the postprocessing transformers specified in
@@ -136,18 +128,15 @@
    
    Each transformer's :enter method is called in order, and then each
    transformer's :exit method is called in reverse order."
-  [;; Injected dependencies
-   config transformers
-   ;; Arguments
-   file]
+  [{:keys [config transformers]} file]
   (let [transformers-stack (get-transformers-stack
                             transformers
                             (-> config :postprocessing :transformers))]
     (apply-transformer-stack transformers-stack file)))
 
 (defmethod ig/init-key ::postprocess
-  [_ {:keys [config transformers]}]
-  (partial postprocess config transformers))
+  [_ dependencies]
+  (partial postprocess dependencies))
 
 ;; :compile-all ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -214,7 +203,7 @@
   "Compiles all of the style files in the dependency graph into a collection
    of output files to be written."
   [;; Injected dependencies
-   logger config compilation-cache read-file transform postprocess
+   {:keys [logger config compilation-cache read-file transform postprocess]}
    ;; Arguments
    build-id dependency-graph]
   (logging/debug logger (str "Compiling styles from dependency graph "
@@ -232,6 +221,5 @@
                            (a/await-all 10000))))))
 
 (defmethod ig/init-key ::compile-all
-  [_ {:keys [logger config compilation-cache read-file transform postprocess]}]
-  (partial compile-all logger config compilation-cache read-file transform
-           postprocess))
+  [_ dependencies]
+  (partial compile-all dependencies))

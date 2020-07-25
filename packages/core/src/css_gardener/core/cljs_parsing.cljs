@@ -178,14 +178,11 @@
 
 (defn cljs-deps
   "Gets a set of absolute paths of dependencies of a cljs file."
-  [;; Injected dependencies
-   exists? logger
-   ;; Arguments
-   file source-paths]
+  [{:keys [exists? logger]} file source-paths]
   (let [{:keys [absolute-path content]} file
         ns-decl (parse/read-ns-decl (string-push-back-reader content))]
     (all-deps-from-ns-decl exists? logger ns-decl absolute-path source-paths)))
 
 (defmethod ig/init-key ::deps
-  [_ {:keys [exists? logger]}]
-  (partial cljs-deps exists? logger))
+  [_ dependencies]
+  (partial cljs-deps dependencies))
