@@ -80,27 +80,33 @@
           (reverse (map #(assoc % :function (gobj/get (:transformer %) "exit"))
                         transformers-stack))))
 
+(defn- enabled?
+  [module mode]
+  (mode (meta module)))
+
 (defn- apply-transformer-function
-  [{:keys [function options module]} file]
-  (a/callback->channel
-   function
-   file
-   (to-js options)
-   (fn [err new-file]
-     (if err
-       (errors/unexpected-error (str "Error in transformer " module)
-                                err)
-       new-file))))
+  [{:keys [function options module]} mode file]
+  (if-not (enabled? module mode)
+    (go file)
+    (a/callback->channel
+     function
+     file
+     (to-js options)
+     (fn [err new-file]
+       (if err
+         (errors/unexpected-error (str "Error in transformer " module)
+                                  err)
+         new-file)))))
 
 (defn- apply-transformer-stack
-  [transformers-stack file]
+  [transformers-stack mode file]
   (let [functions (get-transformer-functions transformers-stack)]
     (loop [result (go (to-js file))
            remaining-functions functions]
       (if (empty? remaining-functions)
         (a/map from-js result)
         (let [func (first remaining-functions)]
-          (recur (a/flat-map #(apply-transformer-function func %) result)
+          (recur (a/flat-map #(apply-transformer-function func mode %) result)
                  (rest remaining-functions)))))))
 
 (defn- transform
@@ -108,7 +114,7 @@
    
    Each transformer's :enter method is called in order, and then each
    transformer's :exit method is called in reverse order."
-  [{:keys [config transformers]} file]
+  [{:keys [config mode transformers]} file]
   (let [rule-or-error (config/matching-rule config (:absolute-path file))]
     (if (errors/error? rule-or-error)
       (go (errors/invalid-config (str "Problem finding rule for file "
@@ -116,7 +122,7 @@
                                  rule-or-error))
       (let [transformers-stack (get-transformers-stack
                                 transformers (:transformers rule-or-error))]
-        (apply-transformer-stack transformers-stack file)))))
+        (apply-transformer-stack transformers-stack mode file)))))
 
 (defmethod ig/init-key ::transform
   [_ dependencies]
@@ -129,12 +135,10 @@
    Each transformer's :enter method is called in order, and then each
    transformer's :exit method is called in reverse order."
   [{:keys [config mode transformers]} file]
-  (if (= mode :release)
-    (let [transformers-stack (get-transformers-stack
-                              transformers
-                              (-> config :postprocessing :transformers))]
-      (apply-transformer-stack transformers-stack file))
-    (go file)))
+  (let [transformers-stack (get-transformers-stack
+                            transformers
+                            (-> config :postprocessing :transformers))]
+    (apply-transformer-stack transformers-stack mode file)))
 
 (defmethod ig/init-key ::postprocess
   [_ dependencies]

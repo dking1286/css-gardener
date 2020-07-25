@@ -1,5 +1,4 @@
-(ns
-  ^{:doc "Defines the configuration map for css-gardener."}
+(ns ^{:doc "Defines the configuration map for css-gardener."}
   css-gardener.core.config
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -56,6 +55,33 @@
                             " : "
                             (string/join "," (map first matching-rules)))))))
 
+(defn- add-explicit-modes-to-transformers
+  [transformers defaults]
+  (into []
+        (map #(with-meta % (merge defaults (meta %))))
+        transformers))
+
+(defn- add-explicit-modes-to-rules
+  [rules defaults]
+  (into {}
+        (map (fn [rule]
+               (update-in rule [1 :transformers]
+                          add-explicit-modes-to-transformers defaults)))
+        rules))
+
+(defn- add-explicit-modes
+  "Adds mode metadata to each transformer, to indicate which ones
+   should be enabled in :dev and :release modes.
+   
+   Mode metadata specified in the config file takes precedence over the
+   defaults set here."
+  [config]
+  (-> config
+      (update :rules
+              add-explicit-modes-to-rules {:dev true :release true})
+      (update-in [:postprocessing :transformers]
+                 add-explicit-modes-to-transformers {:dev false :release true})))
+
 (defmethod ig/init-key ::config
   [_ config]
   (let [conformed (s/conform ::config config)]
@@ -69,11 +95,20 @@
                                          ::config
                                          " must have explicit source-paths "
                                          "and builds."))))
-    (second conformed)))
+    (add-explicit-modes (second conformed))))
 
 (comment
   (s/conform ::config {:source-paths []
                        :builds {}
                        :rules {}
                        :postprocessing {}})
-  (s/conform ::config {:blah :blah}))
+  (s/conform ::config {:blah :blah})
+  (binding [*print-meta* true]
+    (pr-str
+     (add-explicit-modes
+      {:rules
+       {".scss" {:transformers [{:node-module "something"}
+                                ^{:dev false} {:node-module "something-else"}]}}
+       :postprocessing
+       {:transformers [{:node-module "something"}
+                       ^:dev {:node-module "something-else"}]}}))))

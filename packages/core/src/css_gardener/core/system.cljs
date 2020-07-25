@@ -20,7 +20,7 @@
     :rules {}}
 
    ::arguments/command :compile
-   
+
    ::arguments/mode {:command (ig/ref ::arguments/command)}
 
    ::arguments/build-id {:config (ig/ref ::config/config)}
@@ -76,8 +76,9 @@
 
    ::transformation/transform
    {:config (ig/ref ::config/config)
+    :mode (ig/ref ::arguments/mode)
     :transformers (ig/ref ::transformation/transformers)}
-   
+
    ::transformation/postprocess
    {:config (ig/ref ::config/config)
     :mode (ig/ref ::arguments/mode)
