@@ -128,11 +128,13 @@
    
    Each transformer's :enter method is called in order, and then each
    transformer's :exit method is called in reverse order."
-  [{:keys [config transformers]} file]
-  (let [transformers-stack (get-transformers-stack
-                            transformers
-                            (-> config :postprocessing :transformers))]
-    (apply-transformer-stack transformers-stack file)))
+  [{:keys [config mode transformers]} file]
+  (if (= mode :release)
+    (let [transformers-stack (get-transformers-stack
+                              transformers
+                              (-> config :postprocessing :transformers))]
+      (apply-transformer-stack transformers-stack file))
+    (go file)))
 
 (defmethod ig/init-key ::postprocess
   [_ dependencies]

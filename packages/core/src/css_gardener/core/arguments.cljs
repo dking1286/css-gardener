@@ -12,6 +12,22 @@
 
 (s/def ::command commands)
 
+(def ^:private modes #{:dev :release})
+
+(s/def ::mode modes)
+
+(s/fdef command->mode
+  :args (s/cat :command ::command)
+  :ret ::mode)
+
+(defn- command->mode
+  [command]
+  (case command
+    :watch :dev
+    :compile :dev
+    :release :release
+    :dev))
+
 (def ^:private cli-options
   [["-h" "--help"]
    ["-l" "--log-level LEVEL" "Log level, defaults to 'info' if not provided"
@@ -66,6 +82,10 @@
                                          command
                                          " not recognized"))))
   command)
+
+(defmethod ig/init-key ::mode
+  [_ {:keys [command override]}]
+  (or override (command->mode command)))
 
 (defmethod ig/init-key ::build-id
   [_ {:keys [id config]}]

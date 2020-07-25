@@ -4,6 +4,7 @@
             [clojure.string :as string]
             [clojure.test :refer [deftest is use-fixtures]]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.core.arguments :as arguments]
             [css-gardener.core.caching :as caching]
             [css-gardener.core.config :as config]
             [css-gardener.core.dependency :as dependency]
@@ -249,10 +250,25 @@
         (let [compile-all (::transformation/compile-all system)]
           (is (= [] (<! (compile-all :app no-styles-dependency-graph))))))))
   (testing "yields a file that concatenates the contents of the transformed
-            stylesheets, but only the root-level stylesheets, then transformed
-            by the postprocessor transformers."
+            stylesheets, but only the root-level stylesheets."
     (let [sys-config
           (-> sys-config
+              (update-in [::modules/load :modules] assoc
+                         {:node-module "@css-gardener/sass-transformer"}
+                         fake-sass-transformer
+                         {:node-module "@css-gardener/scope-transformer"}
+                         fake-scope-transformer
+                         {:node-module "@css-gardener/postcss-transformer"}
+                         fake-postcss-transformer))]
+      (with-system [system sys-config]
+        (let [compile-all (::transformation/compile-all system)]
+          (is (= [{:absolute-path (str cwd "/public/css/main.css")
+                   :content "Transformed by sass-transformer: Bar styles\n\nTransformed by sass-transformer: Baz styles"}]
+                 (<! (compile-all :app dependency-graph))))))))
+  (testing "postprocesses the generated output file in :release mode"
+    (let [sys-config
+          (-> sys-config
+              (assoc-in [::arguments/mode :override] :release)
               (update-in [::modules/load :modules] assoc
                          {:node-module "@css-gardener/sass-transformer"}
                          fake-sass-transformer
