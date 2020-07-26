@@ -1,0 +1,40 @@
+{
+  "name": "@css-gardener/postcss-transformer",
+  "version": "0.0.4",
+  "description": "css-gardener transformer to apply postcss processing to generated stylesheets.",
+  "main": "index.js",
+  "files": [
+    "src",
+    "dist",
+    "deps.edn",
+    "index.js",
+    "shadow-cljs.edn"
+  ],
+  "scripts": {
+    "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
+    "start": "shadow-cljs watch main",
+    "repl": "node target/main-dev/main.js",
+    "release": "shadow-cljs release main",
+    "compile-tests": "shadow-cljs release main-test",
+    "run-tests": "node target/main-test/main.js",
+    "test": "npm run compile-tests && npm run run-tests",
+    "deploy": "npm run release && npm publish --access public"
+  },
+  "keywords": [
+    "css",
+    "cljs",
+    "clojure",
+    "clojurescript",
+    "stylesheet",
+    "style"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dking1286/css-gardener/tree/master/packages/postcss-transformer"
+  },
+  "author": "Daniel King",
+  "license": "EPL-2.0",
+  "devDependencies": {
+    "shadow-cljs": "2.9.3"
+  }
+}

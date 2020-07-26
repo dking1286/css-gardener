@@ -1,0 +1,6 @@
+{:paths ["src"]
+
+ :deps {cider/cider-nrepl {:mvn/version "0.23.0"}
+        clj-kondo {:mvn/version "2020.04.05"}
+        css-gardener/common {:local/root "../common"}
+        thheller/shadow-cljs {:mvn/version "2.9.3"}}}
