@@ -1,5 +1,6 @@
 (ns css-gardener.core.modules
   (:require [clojure.spec.alpha :as s]
+            [css-gardener.common.node-modules :as node-modules]
             [css-gardener.core.utils.errors :as errors]
             [integrant.core :as ig]
             [path]))
@@ -31,7 +32,7 @@
   ;; module in the node_modules of the project that is *using*
   ;; @css-gardener/core. Therefore, construct the path relative to the
   ;; current working directory.
-  (js/require (path/resolve "node_modules" (:node-module module))))
+  (js/require (node-modules/root-module-path (:node-module module))))
 
 (defmethod load-module :default
   [_ module]
