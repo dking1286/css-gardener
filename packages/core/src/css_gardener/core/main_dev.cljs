@@ -30,7 +30,6 @@
             [css-gardener.core.utils.async-test :as async-test]
             [css-gardener.core.utils.errors :as errors]
             [css-gardener.core.utils.fs-test :as fs-test]
-            [css-gardener.core.utils.js-test :as js-test]
             [fs]
             [integrant.core :as ig]))
 

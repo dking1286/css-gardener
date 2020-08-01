@@ -1,0 +1,9 @@
+{:deps {:aliases [:shadow]}
+
+ :builds {:main-test {:target :node-test
+                      :output-to "target/main-test/main.js"
+                      :autorun false
+                      :release {:compiler-options {;; Use pseudo-names so that
+                                                   ;; test failures are easier
+                                                   ;; to debug
+                                                   :pseudo-names true}}}}}

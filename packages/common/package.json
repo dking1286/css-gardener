@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
-    "compile-tests": "echo 'No tests yet.'",
-    "run-tests": "echo 'No tests yet.'",
-    "test": "echo 'No tests yet.'",
+    "compile-tests": "shadow-cljs release main-test",
+    "run-tests": "node target/main-test/main.js",
+    "test": "npm run compile-tests && npm run run-tests",
     "deploy": "clojure -Spom && mvn deploy"
   },
   "author": "Daniel King",
-  "license": "EPL-2.0"
+  "license": "EPL-2.0",
+  "devDependencies": {
+    "shadow-cljs": "2.9.3"
+  }
 }

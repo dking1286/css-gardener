@@ -1,5 +1,5 @@
-(ns css-gardener.core.utils.js
-  (:require [goog.string :as gs]))
+(ns css-gardener.common.js
+  (:require [goog.string]))
 
 (defn from-js
   "Converts a js data structure to a cljs data structure, changing string

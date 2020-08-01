@@ -2,6 +2,7 @@
   (:require [clojure.core.async :refer [go]]
             [clojure.spec.alpha :as s]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.common.js :refer [to-js]]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
             [css-gardener.core.file :as file]
@@ -9,7 +10,6 @@
             [css-gardener.core.modules :as modules]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.js :refer [to-js]]
             [css-gardener.core.utils.spec :as su]
             [integrant.core :as ig]))
 

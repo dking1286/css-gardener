@@ -4,6 +4,7 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.tools.namespace.dependency :as ctnd]
+            [css-gardener.common.js :refer [to-js from-js]]
             [css-gardener.core.caching :as caching]
             [css-gardener.core.cljs-parsing :as cljs]
             [css-gardener.core.config :as config]
@@ -12,7 +13,6 @@
             [css-gardener.core.modules :as modules]
             [css-gardener.core.utils.async :as a]
             [css-gardener.core.utils.errors :as errors]
-            [css-gardener.core.utils.js :refer [to-js from-js]]
             [goog.object :as gobj]
             [integrant.core :as ig]
             [path]))

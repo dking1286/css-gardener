@@ -1,11 +1,7 @@
-(ns css-gardener.core.utils.js-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
-            [css-gardener.core.utils.js :refer [from-js to-js]]
-            [css-gardener.core.utils.testing :refer [testing
-                                                     instrument-specs]]
+(ns css-gardener.common.js-test
+  (:require [clojure.test :refer [deftest testing is]]
+            [css-gardener.common.js :refer [from-js to-js]]
             [goog.object :as gobj]))
-
-(use-fixtures :each instrument-specs)
 
 (deftest t-from-js
   (testing "returns a clj data structure, with camelCase keys transformed
