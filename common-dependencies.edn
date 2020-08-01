@@ -16,9 +16,11 @@
  :npm {;; @css-gardener/core should only be depended on locally by example
        ;; packages
        "@css-gardener/core" "file:../core"
+       "@css-gardener/postcss-transformer" "file:../postcss-transformer"
        "@css-gardener/sass-resolver" "file:../sass-resolver"
        "@css-gardener/sass-transformer" "file:../sass-transformer"
        "@css-gardener/scope-transformer" "file:../scope-transformer"
+       "autoprefixer" "9.8.6"
        "chokidar" "3.4.0"
        "cssnano" "4.1.10"
        "eslint" "6.6.0"
