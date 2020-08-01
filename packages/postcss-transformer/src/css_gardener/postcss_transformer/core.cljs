@@ -31,7 +31,10 @@
     :else
     (let [plugins (load-plugins (gobj/get options "plugins"))]
       (-> (postcss plugins)
-          (.process (gobj/get file "content"))
+          (.process (gobj/get file "content")
+                    ;; TODO: Make these not undefined for source mapping
+                    ;; purposes
+                    #js {:from js/undefined :to js/undefined})
           (.then (fn [result]
                    (let [outfile (gobj/clone file)]
                      (gobj/set outfile "content" (gobj/get result "css"))
