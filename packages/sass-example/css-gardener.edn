@@ -7,4 +7,10 @@
  :rules
  {".scss" {:dependency-resolver {:node-module "@css-gardener/sass-resolver"}
            :transformers [{:node-module "@css-gardener/scope-transformer"}
-                          {:node-module "@css-gardener/sass-transformer"}]}}}
+                          {:node-module "@css-gardener/sass-transformer"}]}}
+
+ :postprocessing
+ {:transformers [{:node-module "@css-gardener/postcss-transformer"
+                  :options {:plugins [{:node-module "autoprefixer"}
+                                      {:node-module "cssnano"
+                                       :options {:preset "default"}}]}}]}}

@@ -17,9 +17,12 @@
   "license": "EPL-2.0",
   "dependencies": {
     "@css-gardener/core": "file:../core",
+    "@css-gardener/postcss-transformer": "file:../postcss-transformer",
     "@css-gardener/sass-resolver": "file:../sass-resolver",
     "@css-gardener/sass-transformer": "file:../sass-transformer",
     "@css-gardener/scope-transformer": "file:../scope-transformer",
+    "autoprefixer": "9.8.6",
+    "cssnano": "4.1.10",
     "react": "16.13.0",
     "react-dom": "16.13.0"
   },
