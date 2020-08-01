@@ -116,8 +116,19 @@
                                (actions/->CompileOnce)])))
 
 (defn- release
-  "TODO: Implement me"
-  [_ _ _])
+  "Compiles the output stylesheet once, applying postprocessing optimizations."
+  [config build-id log-level]
+  (let [sys-config
+        (-> system/config
+            (assoc ::config/config config)
+            (assoc ::arguments/command :release)
+            (assoc-in [::arguments/build-id :id] build-id)
+            (assoc-in [::logging/logger :level] log-level))
+
+        system
+        (start-system sys-config)]
+    (actions/apply-all system [(actions/->CreateDependencyGraph)
+                               (actions/->CompileOnce)])))
 
 (defn- main
   "Main function for the css-gardener process."
@@ -141,7 +152,9 @@
           :compile (go
                      (let [error (<! (compile config build-id log-level))]
                        (js/process.exit (if error 1 0))))
-          :release (release config build-id log-level)
+          :release (go
+                     (let [error (<! (release config build-id log-level))]
+                       (js/process.exit (if error 1 0))))
           (throw (js/Error. (str "Invalid command " command))))))))
 
 (defn entry
