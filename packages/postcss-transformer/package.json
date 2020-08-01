@@ -34,7 +34,11 @@
   },
   "author": "Daniel King",
   "license": "EPL-2.0",
+  "dependencies": {
+    "postcss": "^7.0.32"
+  },
   "devDependencies": {
+    "cssnano": "^4.1.10",
     "shadow-cljs": "2.9.3"
   }
 }
