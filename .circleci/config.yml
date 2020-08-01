@@ -8,7 +8,6 @@ jobs:
 
     steps:
       - checkout
-      
       # TODO: Cache the downloaded dependencies
       - run:
           name: Install Clojure CLI
@@ -17,10 +16,17 @@ jobs:
             chmod +x linux-install-1.10.1.536.sh
             ./linux-install-1.10.1.536.sh
 
-      - run: npm install
-      - run: npm run check_common_dependencies
+      - run:
+          name: Install root dependencies
+          command: npm install
 
-      - run: npx lerna bootstrap
+      - run:
+          name: Check if common dependencies are in sync
+          command: npm run check_common_dependencies
+
+      - run:
+          name: Install subpackage dependencies
+          command: npx lerna bootstrap
 
       - run:
           name: Lint
@@ -44,3 +50,15 @@ jobs:
               npm run run-tests
               cd ../..
             done
+
+      - when:
+          condition:
+            equal: [master, << pipeline.git.branch >>]
+          steps:
+            - run: echo "I am on the master branch"
+      - when:
+          condition:
+            not:
+              equal: [master, << pipeline.git.branch >>]
+          steps:
+            - run: echo "I am not on the master branch"
