@@ -1,7 +1,7 @@
 (ns css-gardener.scripts.update-version
   (:refer-clojure :exclude [exists?])
   (:require [clojure.string :as string]
-            [css-gardener.scripts.utils :refer [json-parse
+            [css-gardener.scripts.utils :refer [get-packages
                                                 exists?
                                                 slurp
                                                 spit]]
@@ -14,8 +14,6 @@
   #"\^:update-version\s+{:mvn/version \"\d+\.\d+\.\d+\"}")
 (def ^:private version
   (first (filter #(re-matches version-regexp %) js/process.argv)))
-(def ^:private lerna-json
-  (json-parse (slurp "lerna.json")))
 
 (when-not version
   (println "Did not recognize version number in command line arguments")
@@ -75,7 +73,7 @@
              :start-message-fn (constantly "Updating annotated versions in common-dependencies.edn")
              :error-message-fn #(str "Error while updating common-dependencies.edn: " %)))
 
-(doseq [package (get lerna-json "packages")]
+(doseq [package (get-packages)]
   (let [package-json (str package "/package.json")
         pom-xml (str package "/pom.xml")
         deps-edn (str package "/deps.edn")]

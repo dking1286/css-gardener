@@ -32,3 +32,10 @@
   "Parses EDN into cljs data structures."
   [edn]
   (reader/read-string edn))
+
+(defn get-packages
+  "Gets a list of all packages inside the monorepo."
+  []
+  (-> (slurp "lerna.json")
+      json-parse
+      (get "packages")))

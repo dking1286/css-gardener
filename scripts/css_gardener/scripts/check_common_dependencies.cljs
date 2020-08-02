@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [exists?])
   (:require [css-gardener.scripts.utils :refer [edn-parse
                                                 exists?
+                                                get-packages
                                                 json-parse
                                                 slurp]]))
 
@@ -75,14 +76,11 @@
     (check-package-config
      common-dependencies package-name config-type config)))
 
-(def ^:private lerna-json
-  (json-parse (slurp "lerna.json")))
-
 (def ^:private common-dependencies
   (edn-parse (slurp "common-dependencies.edn")))
 
 (def ^:private package-configs
-  (->> (get lerna-json "packages")
+  (->> (get-packages)
        (map #(vector % (read-package-configs %)))
        (into {})))
 
