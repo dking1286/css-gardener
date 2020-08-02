@@ -1,7 +1,8 @@
 (ns css-gardener.scripts.utils
   (:refer-clojure :exclude [exists?])
   (:require [cljs.reader :as reader]
-            [fs-extra]))
+            [fs-extra]
+            [path]))
 
 (defn exists?
   "Determines whether or not a file exists."
@@ -36,6 +37,5 @@
 (defn get-packages
   "Gets a list of all packages inside the monorepo."
   []
-  (-> (slurp "lerna.json")
-      json-parse
-      (get "packages")))
+  (->> (fs-extra/readdirSync "packages")
+       (map #(path/join "packages" %))))
