@@ -6,21 +6,19 @@
     "clean": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
     "get_packages": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/get_packages.cljs",
     "update_version": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/update_version.cljs",
-    "lint": "lerna run lint",
-    "release": "lerna run release",
-    "compile-tests": "lerna run compile-tests",
-    "run-tests": "lerna run run-tests",
-    "test": "lerna run test",
-    "deploy": "npm run clean && npm test && npm run clean && lerna run deploy"
+    "for_each_package": "scripts/css_gardener/scripts/for_each_package",
+    "lint": "npm run for_each_package -- 'npm run lint'",
+    "release": "npm run for_each_package -- 'npm run release'",
+    "compile-tests": "npm run for_each_package -- 'npm run compile-tests'",
+    "run-tests": "npm run for_each_package -- 'npm run run-tests'",
+    "test": "npm run for_each_package -- 'npm test'",
+    "deploy": "npm run clean && npm test && npm run clean && npm run for_each_package -- 'npm run deploy'"
   },
   "dependencies": {
     "fs-extra": "9.0.1"
   },
   "devDependencies": {
-    "generator-generator": "^4.0.2",
-    "lerna": "3.20.2",
     "lumo-cljs": "1.10.1",
-    "xml2js": "0.4.23",
-    "yo": "^3.1.1"
+    "xml2js": "0.4.23"
   }
 }
