@@ -1,0 +1,10 @@
+#! /bin/bash
+
+set -e
+
+for package in $(npm run --silent get_packages)
+do
+  cd $package
+  echo $1 | bash
+  cd ../..
+done

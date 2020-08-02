@@ -26,30 +26,19 @@ jobs:
 
       - run:
           name: Install subpackage dependencies
-          command: npx lerna bootstrap
+          command: npm run for_each_package -- 'npm install'
 
       - run:
           name: Lint
           command: |
             npm run clean
-            for package in $(npm run --silent get_packages)
-            do
-              cd $package
-              npm run lint
-              cd ../..
-            done
+            npm run lint
 
       - run:
           name: Tests
           command: |
             npm run clean
-            for package in $(npm run --silent get_packages)
-            do
-              cd $package
-              npm run compile-tests
-              npm run run-tests
-              cd ../..
-            done
+            npm test
 
       - when:
           condition:
