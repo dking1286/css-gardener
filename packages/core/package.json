@@ -18,7 +18,7 @@
     "start": "shadow-cljs watch main",
     "repl": "node target/main-dev/main.js",
     "release": "shadow-cljs release main",
-    "test": "npm run compile-tests && npm run run-tests",
+    "test": "shadow-cljs release main-test && node target/main-test/main.js",
     "deploy": "npm run release && npm publish --access public"
   },
   "repository": {
