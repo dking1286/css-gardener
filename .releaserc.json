@@ -1,0 +1,22 @@
+{
+  "repositoryUrl": "https://github.com/dking1286/css-gardener",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    "@css-gardener/semantic-release-plugin",
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "common-dependencies.edn",
+          "packages/**/package.json",
+          "packages/**/deps.edn",
+          "packages/**/pom.xml"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
