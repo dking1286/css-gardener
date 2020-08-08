@@ -79,7 +79,8 @@
     "compile-tests": "echo 'No compilation required for tests'",
     "run-tests": "jest",
     "pretest": "npm run lint",
-    "test": "jest"
+    "test": "jest",
+    "deploy": "npm publish"
   },
   "repository": {
     "type": "git",
