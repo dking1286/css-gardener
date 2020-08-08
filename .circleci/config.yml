@@ -33,10 +33,6 @@ jobs:
           condition:
             equal: [master, << pipeline.git.branch >>]
           steps:
-            - run: echo "I am on the master branch"
-      - when:
-          condition:
-            not:
-              equal: [master, << pipeline.git.branch >>]
-          steps:
-            - run: echo "I am not on the master branch"
+            - run:
+                name: Release
+                command: npx semantic-release
