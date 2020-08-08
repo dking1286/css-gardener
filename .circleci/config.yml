@@ -25,20 +25,21 @@ jobs:
           command: npm run check_common_dependencies
 
       - run:
-          name: Install subpackage dependencies
-          command: npm run for_each_package -- 'npm install'
-
-      - run:
-          name: Lint
+          name: Subpackage lint and tests
           command: |
-            npm run clean
-            npm run lint
+            npm run for_each_package -- 'npm install && npm run lint && npm test'
 
-      - run:
-          name: Tests
-          command: |
-            npm run clean
-            npm test
+      # - run:
+      #     name: Lint
+      #     command: |
+      #       npm run clean
+      #       npm run lint
+
+      # - run:
+      #     name: Tests
+      #     command: |
+      #       npm run clean
+      #       npm test
 
       - when:
           condition:
