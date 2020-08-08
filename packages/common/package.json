@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
-    "compile-tests": "echo 'No tests yet.'",
-    "run-tests": "echo 'No tests yet.'",
     "test": "echo 'No tests yet.'",
     "deploy": "clojure -Spom && mvn deploy"
   },

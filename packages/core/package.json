@@ -15,11 +15,9 @@
   ],
   "scripts": {
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
+    "start": "shadow-cljs watch main",
     "repl": "node target/main-dev/main.js",
     "release": "shadow-cljs release main",
-    "test-watch": "shadow-cljs watch main-test",
-    "compile-tests": "shadow-cljs release main-test",
-    "run-tests": "node target/main-test/main.js",
     "test": "npm run compile-tests && npm run run-tests",
     "deploy": "npm run release && npm publish --access public"
   },
