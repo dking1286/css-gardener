@@ -3,4 +3,5 @@
 
 {:paths ["scripts"]
 
- :deps {org.clojure/data.json {:mvn/version "1.0.0"}}}
+ :deps {me.raynes/fs {:mvn/version "1.4.6"}
+        org.clojure/data.json {:mvn/version "1.0.0"}}}
