@@ -3,6 +3,7 @@
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
   "conventionalCommits.scopes": [
-    "release-config"
+    "release-config",
+    "scripts"
   ]
 }
