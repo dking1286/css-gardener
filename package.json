@@ -5,7 +5,7 @@
     "check_common_dependencies": "clojure -m css-gardener.scripts.check-common-dependencies",
     "clean": "clojure -m css-gardener.scripts.remove-build-caches",
     "get_packages": "clojure -m css-gardener.scripts.get-packages",
-    "update_version": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/update_version.cljs",
+    "update_version": "clojure -m css-gardener.scripts.update-version",
     "for_each_package": "scripts/css_gardener/scripts/for_each_package",
     "lint": "npm run for_each_package -- 'npm run lint'",
     "release": "npm run for_each_package -- 'npm run release'",
