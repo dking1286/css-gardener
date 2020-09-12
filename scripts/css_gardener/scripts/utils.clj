@@ -1,11 +1,12 @@
 (ns css-gardener.scripts.utils
   (:require [clojure.data.json :as json]
+            [clojure.data.xml :as xml]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs]))
 
 (defn edn-parse
-  "Parses EDN into cljs data structures."
+  "Parses EDN into Clojure data structures."
   [edn]
   (edn/read-string edn))
 
@@ -19,6 +20,11 @@
   [json]
   (json/read-str json))
 
+(defn json-serialize
+  "Serializes Clojure data structures into JSON"
+  [data]
+  (json/write-str data))
+
 (defn get-packages
   "Gets a seq of all packages inside the mororepo."
   []
@@ -30,3 +36,13 @@
   "Synchronously remove a directory and all of its contents."
   [name]
   (fs/delete-dir name))
+
+(defn xml-parse
+  "Parses an xml string into Clojure data structures."
+  [xml]
+  (xml/parse-str xml))
+
+(defn xml-serialize
+  "Serializes Clojure data into an xml string."
+  [data]
+  (xml/indent-str data))
