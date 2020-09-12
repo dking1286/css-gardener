@@ -5,3 +5,11 @@
 # CSS Gardener
 
 A delightful stylesheet experience for ClojureScript applications.
+
+## Development
+
+### Top-level scripts
+
+The `deps.edn` file at the top level is provided for the development of
+`.clj` files inside the `scripts` directory. Use your favorite editor to
+"Jack-in" for development.
