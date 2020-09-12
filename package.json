@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "check_common_dependencies": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/check_common_dependencies.cljs",
+    "check_common_dependencies": "clojure -m css-gardener.scripts.check-common-dependencies",
     "clean": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
     "get_packages": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/get_packages.cljs",
     "update_version": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/update_version.cljs",
