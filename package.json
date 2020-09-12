@@ -4,7 +4,7 @@
   "scripts": {
     "check_common_dependencies": "clojure -m css-gardener.scripts.check-common-dependencies",
     "clean": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/remove_build_caches.cljs",
-    "get_packages": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/get_packages.cljs",
+    "get_packages": "clojure -m css-gardener.scripts.get-packages",
     "update_version": "lumo --auto-cache -c scripts scripts/css_gardener/scripts/update_version.cljs",
     "for_each_package": "scripts/css_gardener/scripts/for_each_package",
     "lint": "npm run for_each_package -- 'npm run lint'",
