@@ -8,6 +8,7 @@
   "author": "",
   "license": "EPL-2.0",
   "scripts": {
+    "install-clj-deps": "echo \"Nothing to install\"",
     "lint": "echo 'Nothing to lint'",
     "test": "echo 'Nothing to test'",
     "deploy": "echo 'Nothing to deploy'"

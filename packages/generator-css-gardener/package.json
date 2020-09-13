@@ -75,9 +75,8 @@
     ]
   },
   "scripts": {
+    "install-clj-deps": "echo \"Nothing to install\"",
     "lint": "eslint .",
-    "compile-tests": "echo 'No compilation required for tests'",
-    "run-tests": "jest",
     "pretest": "npm run lint",
     "test": "jest",
     "deploy": "npm publish"

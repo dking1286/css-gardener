@@ -14,6 +14,7 @@
     "shadow-cljs.edn"
   ],
   "scripts": {
+    "install-clj-deps": "clojure -e \"nil\"",
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
     "start": "shadow-cljs watch main",
     "repl": "node target/main-dev/main.js",
