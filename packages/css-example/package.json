@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install-clj-deps": "echo \"Nothing to install\"",
     "lint": "echo \"No lint command yet\"",
     "test": "echo 'Nothing to test'",
     "release": "shadow-cljs release app",

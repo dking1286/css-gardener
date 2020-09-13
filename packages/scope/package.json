@@ -4,6 +4,7 @@
   "version": "0.0.4",
   "description": "Common library for working with scopes in css-gardener. Note: Instead of depending on this npm package, you should depend on the Clojars package css-gardener/scope.",
   "scripts": {
+    "install-clj-deps": "clojure -A:lint:test:deploy -e \"nil\"",
     "repl": "node target/node/dev/dev-main.js",
     "lint": "clojure -A:lint -m clj-kondo.main --lint src --cache false",
     "compile-tests": "clojure -A:test -m figwheel.main --build-once test",
