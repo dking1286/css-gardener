@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Test subpackages
           command: |
-            npm run for_each_packages -- 'npm test'
+            npm run for_each_package -- 'npm test'
 
       - when:
           condition:
