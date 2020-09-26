@@ -15,7 +15,7 @@
                          [:dir (io/file package)])
         {:keys [exit out err]} (apply sh segments)]
     (if-not (zero? exit)
-      (do
+      (binding [*out* *err*]
         (println out)
         (println err)
         (throw (ex-info (str "Failed to run command \""
