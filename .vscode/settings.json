@@ -4,6 +4,7 @@
   "editor.formatOnType": true,
   "conventionalCommits.scopes": [
     "release-config",
-    "scripts"
+    "scripts",
+    "project-management"
   ]
 }

@@ -1,0 +1,25 @@
+# Workflow to automatically assign newly-created issues and PRs to the
+# CSS Gardener project.
+# (It's amazing that this isn't a built-in feature of Github)
+
+name: Assign to project
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  assign_to_project:
+    runs-on: ubuntu-latest
+    name: Assign to main project
+    steps:
+      - name: Assign new issues and pull requests to main project
+        uses: srggrs/assign-one-project-github-action@1.2.0
+        if: github.event.action == 'opened'
+        with:
+          project: "https://github.com/dking1286/css-gardener/projects/1"
