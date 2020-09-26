@@ -1,7 +1,7 @@
 {
   "name": "@css-gardener/semantic-release-plugin",
   "private": true,
-  "version": "1.0.0",
+  "version": "",
   "description": "",
   "main": "index.js",
   "keywords": [],

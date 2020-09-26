@@ -1,6 +1,6 @@
 {
   "name": "@css-gardener/core",
-  "version": "0.0.4",
+  "version": "",
   "description": "The core functionality of the css-gardener tool",
   "main": "index.js",
   "bin": {

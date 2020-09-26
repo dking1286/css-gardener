@@ -1,6 +1,6 @@
 {
   "name": "@css-gardener/common",
-  "version": "0.0.4",
+  "version": "",
   "private": true,
   "scripts": {
     "install-clj-deps": "clojure -A:lint -e \"nil\"",
