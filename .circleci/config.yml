@@ -1,4 +1,12 @@
 version: 2.1
+
+workflows:
+  main-workflow:
+    jobs:
+      - build:
+          context:
+            - github-access # Add Github access token to env variables
+
 jobs:
   build:
     docker:
